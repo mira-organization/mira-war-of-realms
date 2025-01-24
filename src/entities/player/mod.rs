@@ -31,7 +31,7 @@ fn create_world_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Velocity::default())
         .insert(Damping {
             angular_damping: 1.0,
-            linear_damping: 0.5
+            linear_damping: 1.0
         })
         .insert(LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z)
         .insert(Collider::capsule(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2))
@@ -40,9 +40,10 @@ fn create_world_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             min_slope_slide_angle: 30_f32.to_radians(),
             autostep: Some(CharacterAutostep {
                 include_dynamic_bodies: true,
-                min_width: CharacterLength::Absolute(0.2),
-                max_height: CharacterLength::Absolute(1.0)
+                min_width: CharacterLength::Relative(0.15),
+                max_height: CharacterLength::Relative(0.35)
             }),
+            snap_to_ground: Some(CharacterLength::Absolute(0.5)),
             ..default()
         });
 }
