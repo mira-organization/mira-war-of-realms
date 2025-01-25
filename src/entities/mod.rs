@@ -1,6 +1,8 @@
 mod player;
+mod enemies;
 
 use bevy::prelude::*;
+use crate::entities::enemies::EnemiesPlugin;
 use crate::entities::player::PlayerPlugin;
 
 pub struct EntitiesPlugin;
@@ -10,7 +12,8 @@ impl Plugin for EntitiesPlugin {
         app.register_type::<AccountPlayer>();
         app.register_type::<WorldPlayer>();
         app.register_type::<Character>();
-        app.add_plugins(PlayerPlugin);
+        app.register_type::<Elements>();
+        app.add_plugins((PlayerPlugin, EnemiesPlugin));
     }
 }
 
@@ -216,4 +219,17 @@ impl Default for CharacterDamageAttributes {
             dark_wds: 10.0,
         }
     }
+}
+
+#[derive(Component, Resource, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub enum Elements {
+    Fire,
+    Water,
+    Earth,
+    Air,
+    Lightning,
+    Ice,
+    Dark,
+    Light
 }
