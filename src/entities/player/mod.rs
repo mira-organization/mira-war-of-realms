@@ -1,28 +1,69 @@
 mod input;
+mod animation;
 
 use bevy::core_pipeline::bloom::Bloom;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{CharacterAutostep, CharacterLength, Collider, Damping, KinematicCharacterController, LockedAxes, RigidBody, Velocity};
 use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarget, Zoom};
 use crate::entities::player::input::PlayerInputPlugin;
-use crate::entities::WorldPlayer;
+use crate::entities::{Animations, WorldPlayer};
+use crate::entities::player::animation::PlayerAnimationPlugin;
 use crate::manager::GameState;
 
+/// A plugin for managing the player's systems, including input, animations,
+/// and spawning the player entity and camera in the game world.
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
+    /// Configures the application to add player-related plugins and systems.
+    ///
+    /// - Adds the `PlayerInputPlugin` and `PlayerAnimationPlugin`.
+    /// - Registers systems for creating the player entity and player camera
+    ///   when entering the `GameState::InGame` state.
     fn build(&self, app: &mut App) {
-        app.add_plugins(PlayerInputPlugin);
+        app.add_plugins((PlayerInputPlugin, PlayerAnimationPlugin));
         app.add_systems(OnEnter(GameState::InGame), create_world_player);
         app.add_systems(OnEnter(GameState::InGame), create_player_camera);
     }
 }
 
+/// A marker component for the player's world camera.
+///
+/// This component is used to identify the camera entity associated with the player.
 #[derive(Component, Reflect, Debug, Clone)]
 pub struct PlayerWorldCamera;
 
-fn create_world_player(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/player/player_idle_2.glb"))))
+/// Spawns the player entity in the game world with its associated components.
+///
+/// The player is initialized with animations, physics properties, and other game-relevant
+/// components. This function also creates and assigns an animation graph to the player.
+///
+/// # Parameters
+/// - `commands`: Provides access to entity creation and command buffers.
+/// - `graphs`: A mutable resource containing all loaded `AnimationGraph` assets.
+/// - `asset_server`: Used to load assets such as animations and 3D models.
+fn create_world_player(
+    mut commands: Commands,
+    mut graphs: ResMut<Assets<AnimationGraph>>,
+    asset_server: Res<AssetServer>,
+) {
+    let mut graph = AnimationGraph::new();
+    let animations = graph
+        .add_clips(
+            [
+                GltfAssetLabel::Animation(0).from_asset("entities/player/player_idle.glb"),
+                GltfAssetLabel::Animation(0).from_asset("entities/player/player_idle_2.glb"),
+                GltfAssetLabel::Animation(0).from_asset("entities/player/player_slow_run.glb"),
+                GltfAssetLabel::Animation(1).from_asset("entities/player/player_fast_run.glb")
+            ].into_iter().map(|path| asset_server.load(path)),
+        1.0, graph.root).collect();
+    let graph = graphs.add(graph);
+    commands.insert_resource(Animations {
+        animations,
+        graph: graph.clone()
+    });
+
+    commands.spawn(SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/player/player_idle.glb"))))
         .insert(Name::new("WorldPlayer"))
         .insert(Transform::from_xyz(0.0, 0.0, 0.0))
         .insert(ThirdPersonCameraTarget)
@@ -48,6 +89,13 @@ fn create_world_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 }
 
+/// Spawns the camera entity associated with the player.
+///
+/// The camera is positioned behind the player with a third-person perspective
+/// and includes various visual effects such as bloom and distance fog.
+///
+/// # Parameters
+/// - `commands`: Provides access to entity creation and command buffers.
 fn create_player_camera(mut commands: Commands) {
     commands.spawn((
         Name::new("PlayerCamera"),
