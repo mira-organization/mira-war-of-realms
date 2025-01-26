@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::{CharacterAutostep, CharacterLength, Collider, Damping, KinematicCharacterController, LockedAxes, RigidBody, Velocity};
 use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarget, Zoom};
 use crate::entities::player::input::PlayerInputPlugin;
-use crate::entities::{Animations, WorldPlayer};
+use crate::entities::{AnimatedPlayer, Animations, WorldPlayer};
 use crate::entities::player::animation::PlayerAnimationPlugin;
 use crate::manager::GameState;
 
@@ -42,7 +42,7 @@ pub struct PlayerWorldCamera;
 /// - `commands`: Provides access to entity creation and command buffers.
 /// - `graphs`: A mutable resource containing all loaded `AnimationGraph` assets.
 /// - `asset_server`: Used to load assets such as animations and 3D models.
-fn create_world_player(
+pub fn create_world_player(
     mut commands: Commands,
     mut graphs: ResMut<Assets<AnimationGraph>>,
     asset_server: Res<AssetServer>,
@@ -65,6 +65,7 @@ fn create_world_player(
 
     commands.spawn(SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/player/player_idle.glb"))))
         .insert(Name::new("WorldPlayer"))
+        .insert(AnimatedPlayer)
         .insert(Transform::from_xyz(0.0, 0.0, 0.0))
         .insert(ThirdPersonCameraTarget)
         .insert(WorldPlayer::default())

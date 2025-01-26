@@ -1,6 +1,8 @@
 mod player;
+mod enemies;
 
 use bevy::prelude::*;
+use crate::entities::enemies::EnemiesPlugin;
 use crate::entities::player::PlayerPlugin;
 
 pub struct EntitiesPlugin;
@@ -252,6 +254,14 @@ pub struct Animations {
     /// asset and used by the entity to determine its current animation state.
     pub graph: Handle<AnimationGraph>,
 }
+
+#[derive(Component, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct AnimatedPlayer;
+
+#[derive(Component, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct AnimatedMob;
 
 #[derive(Component, Resource, Reflect, Debug, Clone)]
 #[reflect(Component)]

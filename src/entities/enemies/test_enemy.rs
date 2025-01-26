@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::dynamics::{Damping, LockedAxes, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
+use crate::entities::AnimatedMob;
 use crate::entities::enemies::WorldEnemy;
 use crate::manager::GameState;
 
@@ -33,6 +34,7 @@ fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
             asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/enemies/test_enemy/placeholder.glb"))
         ))
         .insert(Name::new("Enemy-Test"))
+        .insert(AnimatedMob)
         .insert(Transform::from_xyz(5.0, 0.0, 5.0))
         .insert(WorldEnemy::default())
         .insert(RigidBody::Dynamic)
