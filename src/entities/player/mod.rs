@@ -52,7 +52,7 @@ fn create_world_player(
         .add_clips(
             [
                 GltfAssetLabel::Animation(0).from_asset("entities/player/player_idle.glb"),
-                GltfAssetLabel::Animation(0).from_asset("entities/player/player_idle_2.glb"),
+                GltfAssetLabel::Animation(1).from_asset("entities/player/player_idle_2.glb"),
                 GltfAssetLabel::Animation(0).from_asset("entities/player/player_slow_run.glb"),
                 GltfAssetLabel::Animation(1).from_asset("entities/player/player_fast_run.glb")
             ].into_iter().map(|path| asset_server.load(path)),

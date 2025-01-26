@@ -47,16 +47,41 @@ fn setup(
 /// - `animations`: The resource containing animation data.
 /// - `animation_players`: Query to access animation players and their transitions.
 fn update(
+    time: Res<Time>,
     mut players: Query<&mut WorldPlayer>,
     animations: Res<Animations>,
     mut animation_players: Query<(&mut AnimationPlayer, &mut AnimationTransitions)>,
+    mut timers: Local<Vec<Timer>>
 ) {
-    for player in players.iter_mut() {
+    if timers.len() < players.iter().len() {
+        timers.resize_with(players.iter().len(), || Timer::new(Duration::from_secs(20), TimerMode::Repeating));
+    }
+
+    for (i, player) in players.iter_mut().enumerate() {
         if let Ok((mut animation_player, mut animation_transitions)) = animation_players.get_single_mut() {
+            let timer = &mut timers[i];
+            timer.tick(time.delta());
+
             match player.state {
                 WorldPlayerState::Idle => {
-                    if !animation_player.is_playing_animation(animations.animations[0]) {
-                        animation_transitions.play(&mut animation_player, animations.animations[0], Duration::from_millis(425)).repeat();
+                    if timer.finished() {
+                        let idle_animation_entries = [1, 1, 1];
+                        let random_index = rand::random::<usize>() % idle_animation_entries.len();
+                        let random_idle = animations.animations[idle_animation_entries[random_index]];
+
+                        animation_transitions.play(&mut animation_player, random_idle, Duration::from_millis(425));
+                        timer.reset();
+                    } else {
+                        if !animation_player.is_playing_animation(animations.animations[0]) {
+                            for (current_index, active_animation) in animation_player.playing_animations_mut() {
+                                if !active_animation.is_finished() {
+                                    if current_index.index() == 2 {
+                                        return;
+                                    }
+                                }
+                            }
+                            animation_transitions.play(&mut animation_player, animations.animations[0], Duration::from_millis(425)).repeat();
+                        }
                     }
                 }
 
@@ -64,12 +89,14 @@ fn update(
                     if !animation_player.is_playing_animation(animations.animations[2]) {
                         animation_transitions.play(&mut animation_player, animations.animations[2], Duration::from_millis(450)).repeat();
                     }
+                    timer.reset();
                 }
 
                 WorldPlayerState::Sprinting => {
                     if !animation_player.is_playing_animation(animations.animations[3]) {
                         animation_transitions.play(&mut animation_player, animations.animations[3], Duration::from_millis(550)).repeat();
                     }
+                    timer.reset();
                 }
             }
         }
