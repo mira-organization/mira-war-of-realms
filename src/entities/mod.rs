@@ -1,8 +1,6 @@
 mod player;
-mod enemies;
 
 use bevy::prelude::*;
-use crate::entities::enemies::EnemiesPlugin;
 use crate::entities::player::PlayerPlugin;
 
 pub struct EntitiesPlugin;
@@ -45,6 +43,7 @@ pub struct WorldPlayer {
     pub sprinting_speed: f32,
     /// The player's step height which is allowed.
     pub max_step_height: f32,
+    pub state: WorldPlayerState,
 }
 
 impl Default for WorldPlayer {
@@ -55,11 +54,21 @@ impl Default for WorldPlayer {
     fn default() -> Self {
         Self {
             actions_points: 3,
-            walk_speed: 4.0,
-            sprinting_speed: 5.15,
+            walk_speed: 4.3,
+            sprinting_speed: 5.55,
             max_step_height: 1.0,
+            state: WorldPlayerState::default()
         }
     }
+}
+
+#[derive(Component, Resource, Reflect, Default, Debug, Clone)]
+#[reflect(Component)]
+pub enum WorldPlayerState {
+    #[default]
+    Idle,
+    Walking,
+    Sprinting
 }
 
 /// Represents a character with base, extra, and damage-related attributes.
@@ -219,6 +228,29 @@ impl Default for CharacterDamageAttributes {
             dark_wds: 10.0,
         }
     }
+}
+
+/// Represents a collection of animations and their associated animation graph for an entity.
+///
+/// This component is used to define and manage animations for entities, such as enemies or characters,
+/// by linking a series of animation nodes and an animation graph that dictates how these animations
+/// transition and interact with one another.
+#[derive(Component, Resource, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct Animations {
+    /// A list of animation node indices that represent individual animations
+    /// or states within the animation graph.
+    ///
+    /// These nodes can correspond to specific animation clips or poses, which are
+    /// dynamically accessed and updated during gameplay.
+    pub(crate) animations: Vec<AnimationNodeIndex>,
+
+    /// A handle to the animation graph resource.
+    ///
+    /// The animation graph defines how animations transition between different states,
+    /// such as walking, running, or attacking. This graph is typically loaded as an external
+    /// asset and used by the entity to determine its current animation state.
+    pub graph: Handle<AnimationGraph>,
 }
 
 #[derive(Component, Resource, Reflect, Debug, Clone)]
