@@ -8,7 +8,7 @@ on:
 env:
   # update with the name of the main binary
   binary: mira-war-of-realms
-  add_binaries_to_github_release: true
+  add_binaries_to_github_release: false
   use_git_lfs: false
 
 jobs:
@@ -46,7 +46,7 @@ jobs:
            zip --recurse-paths ../${{ env.binary }}.zip .
 
       - name: Upload binaries to artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: ${{ env.binary }}.zip
           name: linux
