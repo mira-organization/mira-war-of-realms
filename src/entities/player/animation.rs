@@ -30,11 +30,21 @@ fn setup(
     mut commands: Commands,
     animations: Res<Animations>,
     mut players: Query<(Entity, &mut AnimationPlayer), Added<AnimationPlayer>>,
+    parents: Query<&Parent>,
+    world_players: Query<Entity, With<WorldPlayer>>,
 ) {
     for (entity, mut animation_player) in players.iter_mut() {
-        let mut animation_transitions = AnimationTransitions::new();
-        animation_transitions.play(&mut animation_player, animations.animations[0], Duration::ZERO).repeat();
-        commands.entity(entity).insert(AnimationGraphHandle(animations.graph.clone())).insert(animation_transitions);
+        let mut current_entity = entity;
+
+        while let Ok(parent) = parents.get(current_entity) {
+            current_entity = parent.get();
+            if world_players.contains(current_entity) {
+                let mut animation_transitions = AnimationTransitions::new();
+                animation_transitions.play(&mut animation_player, animations.animations[0], Duration::ZERO).repeat();
+                commands.entity(entity).insert(AnimationGraphHandle(animations.graph.clone())).insert(animation_transitions);
+                break;
+            }
+        }
     }
 }
 
