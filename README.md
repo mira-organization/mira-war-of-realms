@@ -83,4 +83,22 @@ or task in the JIRA system. This helps track changes and associate them with the
 By following this structure, we ensure a clear and maintainable commit history.
 ___
 
+## Release and Publishing
+
+We create releases using the git tag system. Pushing a new tag activates the release.yml ci.
+This creates a new release with the name that you set as follows:
+```shell
+  git tag -a "mira-wor-0.1.1.dev" -m "test(Test-ID): include new tag..."
+```
+
+With the next command you then push the tag to GitHub:
+```shell
+  git push --tags
+```
+Please only create releases with permission. This is for clarity. 
+Releases with the end name "dev" are meant for staging. 
+Ends with "pre" are versions that are used as test releases. 
+Without any text at the end it is always a real release!
+___
+
 
