@@ -76,7 +76,7 @@ pub fn create_world_player(
             linear_damping: 1.0
         })
         .insert(LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z)
-        .insert(Collider::capsule(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2))
+        .insert(Collider::capsule(Vec3::new(0.0, 0.2, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2))
         .insert(KinematicCharacterController {
             max_slope_climb_angle: 45_f32.to_radians(),
             min_slope_slide_angle: 30_f32.to_radians(),

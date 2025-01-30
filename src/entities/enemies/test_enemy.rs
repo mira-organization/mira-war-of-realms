@@ -45,7 +45,7 @@ fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
         })
         .insert(LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z)
         .insert(Collider::capsule(
-            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.0, 0.2, 0.0),
             Vec3::new(0.0, 1.6, 0.0),
             0.2,
         ));
