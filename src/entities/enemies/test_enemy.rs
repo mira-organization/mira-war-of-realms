@@ -35,7 +35,7 @@ fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
         ))
         .insert(Name::new("Enemy-Test"))
         .insert(AnimatedMob)
-        .insert(Transform::from_xyz(5.0, 0.0, 5.0))
+        .insert(Transform::from_xyz(4.0, 0.0, 2.0))
         .insert(WorldEnemy::default())
         .insert(RigidBody::Dynamic)
         .insert(Velocity::default())

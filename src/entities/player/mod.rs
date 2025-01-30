@@ -3,7 +3,7 @@ mod animation;
 
 use bevy::core_pipeline::bloom::Bloom;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::{CharacterAutostep, CharacterLength, Collider, Damping, KinematicCharacterController, LockedAxes, RigidBody, Velocity};
+use bevy_rapier3d::prelude::{CharacterAutostep, CharacterLength, Collider, Damping, GravityScale, KinematicCharacterController, LockedAxes, RigidBody, Velocity};
 use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarget, Zoom};
 use crate::entities::player::input::PlayerInputPlugin;
 use crate::entities::{AnimatedPlayer, Animations, WorldPlayer};
@@ -71,6 +71,7 @@ pub fn create_world_player(
         .insert(WorldPlayer::default())
         .insert(RigidBody::Dynamic)
         .insert(Velocity::default())
+        .insert(GravityScale(2.5))
         .insert(Damping {
             angular_damping: 1.0,
             linear_damping: 1.0
@@ -82,10 +83,10 @@ pub fn create_world_player(
             min_slope_slide_angle: 30_f32.to_radians(),
             autostep: Some(CharacterAutostep {
                 include_dynamic_bodies: true,
-                min_width: CharacterLength::Relative(0.15),
-                max_height: CharacterLength::Relative(0.35)
+                min_width: CharacterLength::Relative(0.1),
+                max_height: CharacterLength::Relative(0.375)
             }),
-            snap_to_ground: Some(CharacterLength::Absolute(0.5)),
+            //snap_to_ground: Some(CharacterLength::Absolute(0.5)),
             ..default()
         });
 }
