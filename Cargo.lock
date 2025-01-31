@@ -3036,7 +3036,6 @@ dependencies = [
  "fluent-bundle",
  "rand",
  "serde",
- "serde_yaml",
  "unic-langid",
 ]
 

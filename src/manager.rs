@@ -6,12 +6,14 @@ use bevy_third_person_camera::ThirdPersonCameraPlugin;
 use crate::entities::EntitiesPlugin;
 use crate::environment::EnvironmentPlugin;
 use crate::events::EventManagerPlugin;
+use crate::languages::LanguagesPlugin;
 
 pub struct ManagerPlugin;
 
 impl Plugin for ManagerPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<GameState>();
+        app.add_plugins(LanguagesPlugin);
         app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
         app.add_plugins(RapierDebugRenderPlugin::default());
         app.add_plugins(WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::F3)));

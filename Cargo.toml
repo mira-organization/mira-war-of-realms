@@ -27,7 +27,6 @@ fluent-bundle = {version = "^0.15"}
 unic-langid = { version = "^0.9", features = ["unic-langid-macros"] }
 rand = "0.8.5"
 serde = { version = "1.0.217", features = ["derive"] }
-serde_yaml = "0.9.34+deprecated"
 
 [dependencies.bevy]
 version = "0.15.1"
