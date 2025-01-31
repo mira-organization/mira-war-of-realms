@@ -1,0 +1,7 @@
+# Include languages files here for internal bevy usage.
+# Note we use bevy_fluent from https://github.com/kgv/bevy_fluent
+
+locale: de-DE
+resources:
+  - system.ftl
+  - warning_screen.ftl
