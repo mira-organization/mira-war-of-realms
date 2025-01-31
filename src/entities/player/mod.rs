@@ -73,8 +73,8 @@ pub fn create_world_player(
         .insert(Velocity::default())
         .insert(GravityScale(2.5))
         .insert(Damping {
-            angular_damping: 1.0,
-            linear_damping: 1.0
+            angular_damping: 2.0,
+            linear_damping: 2.0
         })
         .insert(LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z)
         .insert(Collider::capsule(Vec3::new(0.0, 0.2, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2))
@@ -83,10 +83,10 @@ pub fn create_world_player(
             min_slope_slide_angle: 30_f32.to_radians(),
             autostep: Some(CharacterAutostep {
                 include_dynamic_bodies: true,
-                min_width: CharacterLength::Relative(0.1),
-                max_height: CharacterLength::Relative(0.375)
+                min_width: CharacterLength::Absolute(0.05),
+                max_height: CharacterLength::Absolute(0.55)
             }),
-            //snap_to_ground: Some(CharacterLength::Absolute(0.5)),
+            //snap_to_ground: Some(CharacterLength::Absolute(0.1)),
             ..default()
         });
 }
