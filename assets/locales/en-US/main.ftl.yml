@@ -4,4 +4,3 @@
 locale: en-US
 resources:
   - system.ftl
-  - warning_screen.ftl
