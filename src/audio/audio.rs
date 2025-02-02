@@ -12,5 +12,6 @@ impl Plugin for AudioHandlerPlugin {
 }
 
 fn setup(asset_server: Res<AssetServer>, mut audio: ResMut<DynamicAudioChannels>, mut audio_manager: ResMut<AudioManager>) {
-    audio_manager.add_audio("test", AudioType::Environment, "audio/env_test.ogg", &mut audio, &asset_server);
+    audio_manager.add_audio("environment_test", AudioType::Environment, "audio/env_test.ogg", &mut audio, &asset_server);
+    audio_manager.add_audio("sfx_test", AudioType::Sfx, "audio/sfx_test.ogg", &mut audio, &asset_server);
 }

@@ -64,6 +64,41 @@ impl AudioManager {
             return;
         }
 
+        let looped = self.looped_time(audio_type.clone());
+        let mut binding = audio_kira_handle.create_channel(channel_name)
+            .play(asset_server.load(track_path));
+        let build = binding
+            .fade_in(AudioTween::new(Duration::from_secs(2), AudioEasing::OutPowi(2)))
+            .with_volume(0.05);
+        if looped { build.looped(); }
+
+        self.audio.insert(channel_name.to_string(), audio_type);
+        debug!("AudioManager added to {}", channel_name);
+    }
+
+    pub fn remove_audio(&mut self, channel_name: &str, audio_kira_handle: &mut DynamicAudioChannels) {
+        if !self.audio.contains_key(channel_name) {
+            warn!("Audio not in use: {}", channel_name);
+            return;
+        }
+
+        self.stop_channel(channel_name, audio_kira_handle);
+        audio_kira_handle.remove_channel(channel_name);
+        self.audio.remove(channel_name);
+        debug!("Audio removed: {}", channel_name);
+    }
+
+    pub fn stop_channel(&mut self, channel_name: &str, audio_kira_handle: &mut DynamicAudioChannels) {
+        if !self.audio.contains_key(channel_name) {
+            warn!("Audio not in use: {}", channel_name);
+            return;
+        }
+
+        audio_kira_handle.channel(channel_name).stop().fade_out(AudioTween::new(Duration::from_secs(2), AudioEasing::InPowi(2)));
+        debug!("Stopped audio {}", channel_name);
+    }
+
+    fn looped_time(&self, audio_type: AudioType) -> bool {
         let looped;
         match audio_type {
             AudioType::Environment => { looped = true; }
@@ -73,14 +108,7 @@ impl AudioManager {
             AudioType::Character => { looped = false; }
             AudioType::Unknown => { looped = false; }
         }
-        let mut binding = audio_kira_handle.create_channel(channel_name)
-            .play(asset_server.load(track_path));
-        let build = binding
-            .fade_in(AudioTween::new(Duration::from_millis(2000), AudioEasing::OutPowi(2)))
-            .with_volume(0.05);
-        if looped { build.looped(); }
-
-        self.audio.insert(channel_name.to_string(), audio_type);
+        looped
     }
 }
 
