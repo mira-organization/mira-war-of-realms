@@ -4,6 +4,7 @@ mod manager;
 mod entities;
 mod events;
 mod languages;
+mod audio;
 
 use bevy::prelude::*;
 
