@@ -1,0 +1,16 @@
+# This TOML file contains all relevant game settings.
+# It serves as a central configuration file for the game backend and other core functionalities.
+
+# Defines the primary game backend to be used.
+# Possible values might include "PRIMARY", "VULKAN", "OPENGL", or "DIRECTX".
+# Note "DIRECTX" is supported for microsoft operating systems and will break unix based
+# operating systems.
+bevy_backend = "PRIMARY"
+
+# Defines the text language for in-game text and UI elements.
+# Example values: "en-US" for English, "de-DE" for German, etc.
+lang_text = "de-DE"
+
+# Defines the voice-over language used for spoken dialogue.
+# Example values: "en-US" for English, "de-DE" for German, etc.
+lang_voice = "en-US"

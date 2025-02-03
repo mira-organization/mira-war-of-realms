@@ -5,6 +5,7 @@ mod entities;
 mod events;
 mod languages;
 mod audio;
+mod utils;
 
 use bevy::prelude::*;
 

@@ -8,7 +8,7 @@ use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarge
 use crate::entities::player::input::PlayerInputPlugin;
 use crate::entities::{AnimatedPlayer, Animations, WorldPlayer};
 use crate::entities::player::animation::PlayerAnimationPlugin;
-use crate::manager::GameState;
+use crate::manager::{ConfigService, GameState};
 
 /// A plugin for managing the player's systems, including input, animations,
 /// and spawning the player entity and camera in the game world.
@@ -98,7 +98,7 @@ pub fn create_world_player(
 ///
 /// # Parameters
 /// - `commands`: Provides access to entity creation and command buffers.
-fn create_player_camera(mut commands: Commands) {
+fn create_player_camera(mut commands: Commands, general_config: Res<ConfigService>) {
     commands.spawn((
         Name::new("PlayerCamera"),
         Camera3d::default(),
@@ -106,7 +106,8 @@ fn create_player_camera(mut commands: Commands) {
         GlobalTransform::default(),
         PlayerWorldCamera,
         ThirdPersonCamera {
-            sensitivity: Vec2::new(2.0, 2.0),
+            sensitivity: Vec2::new(general_config.input_config.camera_horizontal_sensitivity,
+                                   general_config.input_config.camera_vertical_sensitivity),
             zoom: Zoom::new(3.5, 12.75),
             cursor_lock_key: KeyCode::Escape,
             offset: Offset::new(0.0, 0.8),

@@ -3,7 +3,8 @@ use bevy_rapier3d::prelude::{KinematicCharacterController};
 use crate::entities::player::PlayerWorldCamera;
 use crate::entities::{WorldPlayer, WorldPlayerState};
 use crate::events::player_events::PlayerActionEvent;
-use crate::manager::GameState;
+use crate::manager::{ConfigService, GameState};
+use crate::utils::key_code::convert;
 
 /// A plugin that handles player input and movement behavior.
 ///
@@ -32,14 +33,16 @@ fn fetch_keyboard_input(
     mut input_event_writer: EventWriter<PlayerActionEvent>,
     keyboard: Res<ButtonInput<KeyCode>>,
     camera_query: Query<&Transform, With<PlayerWorldCamera>>,
+    general_config: Res<ConfigService>,
 ) {
-    if let Ok(camera_transform) = camera_query.get_single() {
-        let forward_key = KeyCode::KeyW;
-        let backward_key = KeyCode::KeyS;
-        let left_key = KeyCode::KeyA;
-        let right_key = KeyCode::KeyD;
 
-        let sprint_key = KeyCode::ShiftLeft;
+    if let Ok(camera_transform) = camera_query.get_single() {
+        let forward_key = convert(general_config.input_config.player_up.as_str()).expect("Fetch key for (forward) was failed!");
+        let backward_key = convert(general_config.input_config.player_down.as_str()).expect("Fetch key for (backward) was failed!");
+        let left_key = convert(general_config.input_config.player_left.as_str()).expect("Fetch key for (left) was failed!");
+        let right_key = convert(general_config.input_config.player_right.as_str()).expect("Fetch key for (right) was failed!");
+
+        let sprint_key = convert(general_config.input_config.player_sprint.as_str()).expect("Fetch key for (sprinting) was failed!");
 
         let mut direction = Vec3::ZERO;
         if keyboard.pressed(forward_key) {

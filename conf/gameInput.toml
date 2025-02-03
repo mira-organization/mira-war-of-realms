@@ -1,0 +1,14 @@
+# This TOML file contains the input settings for the game.
+# It defines keybindings and camera sensitivity settings.
+
+# Player movement keybindings
+player_up = "W"
+player_down = "S"
+player_left = "A"
+player_right = "D"
+player_sprint = "ShiftLeft"
+
+# Camera sensitivity settings
+# Higher values result in faster camera movement.
+camera_vertical_sensitivity = 2.5
+camera_horizontal_sensitivity = 2.5
