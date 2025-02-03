@@ -13,12 +13,18 @@ use crate::environment::EnvironmentPlugin;
 use crate::events::EventManagerPlugin;
 use crate::languages::LanguagesPlugin;
 
+/// The main plugin responsible for initializing game states, resources, and sub-plugins.
 pub struct ManagerPlugin;
 
 impl Plugin for ManagerPlugin {
     fn build(&self, app: &mut App) {
+        // Initialize the game state
         app.init_state::<GameState>();
+
+        // Insert global configuration resource
         app.insert_resource(ConfigService::new());
+
+        // Add various game-related plugins
         app.add_plugins(LanguagesPlugin);
         app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
         app.add_plugins(RapierDebugRenderPlugin::default());
@@ -30,6 +36,7 @@ impl Plugin for ManagerPlugin {
     }
 }
 
+/// Configuration for general game settings.
 #[derive(Deserialize, Debug)]
 pub struct GameConfig {
     pub(crate) bevy_backend: String,
@@ -47,6 +54,7 @@ impl Default for GameConfig {
     }
 }
 
+/// Configuration for graphics settings such as resolution and fullscreen mode.
 #[derive(Deserialize, Debug)]
 pub struct GraphicsConfig {
     pub(crate) resolution: String,
@@ -62,6 +70,7 @@ impl Default for GraphicsConfig {
     }
 }
 
+/// Configuration for input mappings and camera sensitivity.
 #[derive(Deserialize, Debug)]
 pub struct InputConfig {
     pub(crate) player_up: String,
@@ -87,6 +96,7 @@ impl Default for InputConfig {
     }
 }
 
+/// Enum representing different game states.
 #[derive(Component, States, Default, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
 pub enum GameState {
@@ -97,6 +107,7 @@ pub enum GameState {
     InGame
 }
 
+/// A service that loads and stores game configuration settings.
 #[derive(Resource, Debug, Deserialize)]
 pub struct ConfigService {
     pub game_config: GameConfig,
@@ -105,11 +116,19 @@ pub struct ConfigService {
 }
 
 impl ConfigService {
+    /// Loads a configuration file and deserializes it into the specified type.
+    ///
+    /// # Arguments
+    /// * `path` - A string slice representing the file path.
+    ///
+    /// # Panics
+    /// This function will panic if the file cannot be read or parsed.
     fn load<T: for<'de> Deserialize<'de>>(path: &str) -> T {
         let content = fs::read_to_string(Path::new(path)).expect("Failed to read config file");
         toml::from_str(&content).expect("Failed to parse toml file")
     }
 
+    /// Creates a new `ConfigService` instance and loads all configuration files.
     fn new() -> Self {
         Self {
             game_config: Self::load("conf/gameConfig.toml"),
