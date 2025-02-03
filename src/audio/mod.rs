@@ -98,6 +98,16 @@ impl AudioManager {
         debug!("Stopped audio {}", channel_name);
     }
 
+    pub fn play_channel(&mut self, channel_name: &str, audio_kira_handle: &mut DynamicAudioChannels) {
+        if !self.audio.contains_key(channel_name) {
+            warn!("Audio not in use: {}", channel_name);
+            return;
+        }
+
+        audio_kira_handle.channel(channel_name).resume().fade_in(AudioTween::new(Duration::from_secs(2), AudioEasing::InPowi(2)));
+        debug!("Resume audio {}", channel_name);
+    }
+
     fn looped_time(&self, audio_type: AudioType) -> bool {
         let looped;
         match audio_type {
