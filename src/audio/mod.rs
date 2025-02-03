@@ -101,12 +101,8 @@ impl AudioManager {
     fn looped_time(&self, audio_type: AudioType) -> bool {
         let looped;
         match audio_type {
-            AudioType::Environment => { looped = true; }
-            AudioType::Battle => { looped = true; }
-            AudioType::Sfx => { looped = false; }
-            AudioType::Ui => { looped = false; }
-            AudioType::Character => { looped = false; }
-            AudioType::Unknown => { looped = false; }
+            AudioType::Environment | AudioType::Battle => { looped = true; }
+            _ => { looped = false; }
         }
         looped
     }
