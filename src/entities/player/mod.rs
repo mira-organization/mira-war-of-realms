@@ -3,7 +3,7 @@ mod animation;
 
 use bevy::core_pipeline::bloom::Bloom;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::{CharacterAutostep, CharacterLength, Collider, Damping, GravityScale, KinematicCharacterController, LockedAxes, RigidBody, Velocity};
+use bevy_rapier3d::prelude::*;
 use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarget, Zoom};
 use crate::entities::player::input::PlayerInputPlugin;
 use crate::entities::{AnimatedPlayer, Animations, WorldPlayer};
