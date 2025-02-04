@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{KinematicCharacterController};
+use bevy_third_person_camera::ThirdPersonCamera;
 use crate::entities::player::PlayerWorldCamera;
 use crate::entities::{WorldPlayer, WorldPlayerState};
 use crate::events::player_events::PlayerActionEvent;
@@ -16,7 +17,7 @@ impl Plugin for PlayerInputPlugin {
     /// Configures the application to add systems for handling player input and movement,
     /// which are only active during the `GameState::InGame` state.
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (fetch_keyboard_input, update_movement).run_if(in_state(GameState::InGame)));
+        app.add_systems(Update, (fetch_keyboard_input, update_movement, limit_camera_pitch).run_if(in_state(GameState::InGame)));
     }
 }
 
@@ -76,6 +77,18 @@ fn fetch_keyboard_input(
         if keyboard.pressed(sprint_key) {
             input_event_writer.send(PlayerActionEvent::Sprinting(direction.normalize()));
         }
+    }
+}
+
+fn limit_camera_pitch(mut query: Query<&mut Transform, With<ThirdPersonCamera>>) {
+    for mut transform in query.iter_mut() {
+        let (yaw, mut pitch, roll) = transform.rotation.to_euler(EulerRot::YXZ);
+
+        let min_pitch: f32 = -std::f32::consts::FRAC_PI_2;
+        let max_pitch: f32 = -0.075;
+
+        pitch = pitch.clamp(min_pitch, max_pitch);
+        transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
     }
 }
 

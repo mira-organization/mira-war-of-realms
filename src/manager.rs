@@ -4,8 +4,8 @@ use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_kira_audio::AudioPlugin;
-use bevy_rapier3d::prelude::{NoUserData, RapierDebugRenderPlugin, RapierPhysicsPlugin};
-use bevy_third_person_camera::ThirdPersonCameraPlugin;
+use bevy_rapier3d::prelude::{NoUserData, PhysicsSet, RapierDebugRenderPlugin, RapierPhysicsPlugin};
+use bevy_third_person_camera::{CameraSyncSet, ThirdPersonCameraPlugin};
 use serde::Deserialize;
 use crate::audio::AudioStorePlugin;
 use crate::entities::EntitiesPlugin;
@@ -33,6 +33,7 @@ impl Plugin for ManagerPlugin {
         app.add_plugins(AudioPlugin);
         app.add_plugins(AudioStorePlugin);
         app.add_plugins((EventManagerPlugin, EntitiesPlugin, EnvironmentPlugin));
+        app.configure_sets(PostUpdate, CameraSyncSet.after(PhysicsSet::StepSimulation));
     }
 }
 
