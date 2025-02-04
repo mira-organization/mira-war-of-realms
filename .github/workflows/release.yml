@@ -65,6 +65,7 @@ jobs:
           asset_name: ${{ env.binary }}-linux-${{ steps.get_version.outputs.tag }}.zip
           tag: ${{ github.ref }}
           overwrite: true
+
   # Build for Windows Environments
   release-windows:
     runs-on: windows-latest
