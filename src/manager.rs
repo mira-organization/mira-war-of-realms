@@ -81,6 +81,8 @@ pub struct InputConfig {
     pub(crate) player_sprint: String,
     pub(crate) camera_vertical_sensitivity: f32,
     pub(crate) camera_horizontal_sensitivity: f32,
+    pub(crate) camera_zoom_in: f32,
+    pub(crate) camera_zoom_out: f32,
 }
 
 impl Default for InputConfig {
@@ -93,6 +95,8 @@ impl Default for InputConfig {
             player_sprint: String::from("ShiftLeft"),
             camera_horizontal_sensitivity: 1.0,
             camera_vertical_sensitivity: 1.0,
+            camera_zoom_in: 3.5,
+            camera_zoom_out: 10.0
         }
     }
 }

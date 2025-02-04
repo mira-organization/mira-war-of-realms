@@ -108,10 +108,11 @@ fn create_player_camera(mut commands: Commands, general_config: Res<ConfigServic
         ThirdPersonCamera {
             sensitivity: Vec2::new(general_config.input_config.camera_horizontal_sensitivity,
                                    general_config.input_config.camera_vertical_sensitivity),
-            zoom: Zoom::new(3.5, 12.75),
+            zoom: Zoom::new(general_config.input_config.camera_zoom_in, general_config.input_config.camera_zoom_out),
             cursor_lock_key: KeyCode::Escape,
             offset: Offset::new(0.0, 0.8),
             offset_enabled: true,
+            offset_toggle_enabled: false,
             ..default()
         },
         Bloom::default(),
@@ -122,7 +123,13 @@ fn create_player_camera(mut commands: Commands, general_config: Res<ConfigServic
                 end: 600.0
             },
             ..default()
-        }
+        },
+        Projection::Perspective(PerspectiveProjection {
+            near: 0.1,
+            far: 1000.0,
+            fov: std::f32::consts::FRAC_PI_4,
+            ..default()
+        })
     ));
 }
 

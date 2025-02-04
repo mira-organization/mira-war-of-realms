@@ -34,9 +34,11 @@ fn create_game_floor(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         },
         CascadeShadowConfigBuilder {
-            first_cascade_far_bound: 4.0,
-            maximum_distance: 10.0,
-            ..default()
+            num_cascades: 4,
+            first_cascade_far_bound: 10.0,
+            minimum_distance: 0.5,
+            maximum_distance: 200.0,
+            overlap_proportion: 0.2
         }
             .build(),
     ));

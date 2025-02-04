@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::{KinematicCharacterController};
+use bevy_rapier3d::dynamics::RigidBody;
+use bevy_rapier3d::prelude::{KinematicCharacterController, QueryFilter, ReadDefaultRapierContext};
 use bevy_third_person_camera::ThirdPersonCamera;
 use crate::entities::player::PlayerWorldCamera;
 use crate::entities::{WorldPlayer, WorldPlayerState};
@@ -17,7 +18,11 @@ impl Plugin for PlayerInputPlugin {
     /// Configures the application to add systems for handling player input and movement,
     /// which are only active during the `GameState::InGame` state.
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (fetch_keyboard_input, update_movement, limit_camera_pitch).run_if(in_state(GameState::InGame)));
+        app.add_systems(Update, (fetch_keyboard_input,
+                                 update_movement,
+                                 limit_camera_pitch,
+                                 prevent_camera_clipping
+        ).run_if(in_state(GameState::InGame)));
     }
 }
 
@@ -80,18 +85,6 @@ fn fetch_keyboard_input(
     }
 }
 
-fn limit_camera_pitch(mut query: Query<&mut Transform, With<ThirdPersonCamera>>) {
-    for mut transform in query.iter_mut() {
-        let (yaw, mut pitch, roll) = transform.rotation.to_euler(EulerRot::YXZ);
-
-        let min_pitch: f32 = -std::f32::consts::FRAC_PI_2;
-        let max_pitch: f32 = -0.075;
-
-        pitch = pitch.clamp(min_pitch, max_pitch);
-        transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
-    }
-}
-
 /// Updates the player's movement and state based on the received `PlayerActionEvent` events.
 ///
 /// This system handles movement translation, rotation, and state transitions
@@ -132,6 +125,51 @@ fn update_movement(
                 PlayerActionEvent::Idle => {
                     controller.translation = None;
                     world_player.state = WorldPlayerState::Idle;
+                }
+            }
+        }
+    }
+}
+
+fn limit_camera_pitch(mut query: Query<&mut Transform, With<ThirdPersonCamera>>) {
+    for mut transform in query.iter_mut() {
+        let (yaw, mut pitch, roll) = transform.rotation.to_euler(EulerRot::YXZ);
+
+        let min_pitch: f32 = -std::f32::consts::FRAC_PI_2;
+        let max_pitch: f32 = -0.075;
+
+        pitch = pitch.clamp(min_pitch, max_pitch);
+        transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
+    }
+}
+
+fn prevent_camera_clipping(mut camera_query: Query<(&mut Transform, &ThirdPersonCamera)>,
+                           player_query: Query<(Entity, &GlobalTransform), With<WorldPlayer>>,
+                           rapier_context: ReadDefaultRapierContext
+) {
+    for (mut cam_transform, camera) in camera_query.iter_mut() {
+        if let Ok((player_entity, player_transform)) = player_query.get_single() {
+            let player_pos = player_transform.translation();
+            let camera_pos = cam_transform.translation;
+            let direction = camera_pos - player_pos;
+            let max_distance = direction.length();
+
+            let ray_origin = player_pos + direction.normalize() * 0.2;
+
+            if let Some((entity, toi)) = rapier_context.cast_ray(
+                ray_origin,
+                direction.normalize(),
+                max_distance - 0.2,
+                true,
+                QueryFilter::default()
+                    .exclude_sensors()
+                    .exclude_rigid_body(player_entity)
+            ) {
+                if entity != player_entity {
+                    info!("================= [ 1 ] =================");
+                    let new_distance = toi - 0.1_f32;
+                    let target_position = player_pos + direction.normalize() * new_distance;
+                    cam_transform.translation = cam_transform.translation.lerp(target_position, 0.2);
                 }
             }
         }

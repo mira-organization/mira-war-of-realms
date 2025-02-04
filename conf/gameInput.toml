@@ -12,3 +12,8 @@ player_sprint = "ShiftLeft"
 # Higher values result in faster camera movement.
 camera_vertical_sensitivity = 2.0
 camera_horizontal_sensitivity = 2.0
+
+# Camera zoom settings
+# Higher values will set the camera far from the character.
+camera_zoom_out = 10.0
+camera_zoom_in = 3.5
