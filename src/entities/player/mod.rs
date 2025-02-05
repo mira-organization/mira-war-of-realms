@@ -84,13 +84,13 @@ pub fn create_world_player(
         .insert(Collider::capsule(Vec3::new(0.0, 0.2, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2))
         .insert(KinematicCharacterController {
             max_slope_climb_angle: 45_f32.to_radians(),
-            min_slope_slide_angle: 30_f32.to_radians(),
+            min_slope_slide_angle: 35_f32.to_radians(),
             autostep: Some(CharacterAutostep {
                 include_dynamic_bodies: true,
                 min_width: CharacterLength::Absolute(0.05),
                 max_height: CharacterLength::Absolute(0.55)
             }),
-            //snap_to_ground: Some(CharacterLength::Absolute(0.1)),
+            snap_to_ground: Some(CharacterLength::Absolute(0.075)),
             ..default()
         });
 }
