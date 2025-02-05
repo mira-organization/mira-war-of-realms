@@ -21,6 +21,7 @@ impl Plugin for PlayerPlugin {
     /// - Registers systems for creating the player entity and player camera
     ///   when entering the `GameState::InGame` state.
     fn build(&self, app: &mut App) {
+        app.insert_resource(LastStableGround(Vec3::ZERO));
         app.add_plugins((PlayerInputPlugin, PlayerAnimationPlugin));
         app.add_systems(OnEnter(GameState::InGame), create_world_player);
         app.add_systems(OnEnter(GameState::InGame), create_player_camera);
@@ -32,6 +33,9 @@ impl Plugin for PlayerPlugin {
 /// This component is used to identify the camera entity associated with the player.
 #[derive(Component, Reflect, Debug, Clone)]
 pub struct PlayerWorldCamera;
+
+#[derive(Resource, Debug, Default)]
+pub struct LastStableGround(pub Vec3);
 
 /// Spawns the player entity in the game world with its associated components.
 ///

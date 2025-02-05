@@ -13,6 +13,8 @@ use crate::environment::EnvironmentPlugin;
 use crate::events::EventManagerPlugin;
 use crate::languages::LanguagesPlugin;
 
+pub const PLAYER_VOID_THRESHOLD: f32 = -5.0;
+
 /// The main plugin responsible for initializing game states, resources, and sub-plugins.
 pub struct ManagerPlugin;
 

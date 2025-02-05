@@ -1,10 +1,10 @@
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::{KinematicCharacterController};
+use bevy_rapier3d::prelude::*;
 use bevy_third_person_camera::ThirdPersonCamera;
-use crate::entities::player::{PlayerWorldCamera};
+use crate::entities::player::{LastStableGround, PlayerWorldCamera};
 use crate::entities::{WorldPlayer, WorldPlayerState};
 use crate::events::player_events::PlayerActionEvent;
-use crate::manager::{ConfigService, GameState};
+use crate::manager::{ConfigService, GameState, PLAYER_VOID_THRESHOLD};
 use crate::utils::key_code::convert;
 
 /// A plugin that handles player input and movement behavior.
@@ -20,6 +20,8 @@ impl Plugin for PlayerInputPlugin {
         app.add_systems(Update, (fetch_keyboard_input,
                                  update_movement,
                                  limit_camera_pitch,
+                                 track_stable_ground,
+                                 check_void_fall
         ).run_if(in_state(GameState::InGame)));
     }
 }
@@ -138,5 +140,26 @@ fn limit_camera_pitch(mut query: Query<&mut Transform, With<ThirdPersonCamera>>)
 
         pitch = pitch.clamp(min_pitch, max_pitch);
         transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
+    }
+}
+
+fn track_stable_ground(mut players: Query<&Transform, With<WorldPlayer>>,
+                       mut last_stable_ground: ResMut<LastStableGround>
+) {
+    for transform in players.iter_mut() {
+        if transform.translation.y >= -0.001 {
+            last_stable_ground.0 = transform.translation;
+        }
+    }
+}
+
+fn check_void_fall(mut players: Query<&mut Transform, With<WorldPlayer>>,
+                   mut last_stable_ground: ResMut<LastStableGround>
+) {
+    for mut transform in players.iter_mut() {
+        if transform.translation.y < PLAYER_VOID_THRESHOLD {
+            transform.translation = last_stable_ground.0;
+            info!("Player was send to {:?}", last_stable_ground.0);
+        }
     }
 }
