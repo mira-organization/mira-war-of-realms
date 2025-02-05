@@ -134,7 +134,7 @@ fn limit_camera_pitch(mut query: Query<&mut Transform, With<ThirdPersonCamera>>)
         let (yaw, mut pitch, roll) = transform.rotation.to_euler(EulerRot::YXZ);
 
         let min_pitch: f32 = -std::f32::consts::FRAC_PI_2;
-        let max_pitch: f32 = -0.075;
+        let max_pitch: f32 = 123.123;
 
         pitch = pitch.clamp(min_pitch, max_pitch);
         transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
