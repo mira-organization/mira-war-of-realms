@@ -41,12 +41,13 @@ fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(AiSetup {
             state: AiState::Idle,
             path: vec![
-                Vec3::new(4.0, 0.0, 2.0),
-                Vec3::new(6.0, 0.0, 4.0),
-                Vec3::new(8.0, 0.0, 2.0),
+                Vec3::new(16.0, 0.0, 2.0),
+                Vec3::new(8.0, 0.0, 8.0),
+                Vec3::new(1.5, 0.0, -9.0),
             ],
             current_path_index: 0,
             idle_timer: rand::thread_rng().gen_range(2.0..6.0),
+            ..default()
         })
         .insert(WorldEnemy::default())
         .insert(RigidBody::Dynamic)
