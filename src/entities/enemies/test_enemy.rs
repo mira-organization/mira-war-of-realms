@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use bevy_rapier3d::dynamics::{Damping, LockedAxes, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
+use rand::Rng;
 use crate::entities::AnimatedMob;
+use crate::entities::enemies::ai::{AiSetup, AiState};
 use crate::entities::enemies::WorldEnemy;
 use crate::manager::GameState;
 
@@ -36,6 +38,16 @@ fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Name::new("Enemy-Test"))
         .insert(AnimatedMob)
         .insert(Transform::from_xyz(4.0, 0.0, 2.0))
+        .insert(AiSetup {
+            state: AiState::Idle,
+            path: vec![
+                Vec3::new(4.0, 0.0, 2.0),
+                Vec3::new(6.0, 0.0, 4.0),
+                Vec3::new(8.0, 0.0, 2.0),
+            ],
+            current_path_index: 0,
+            idle_timer: rand::thread_rng().gen_range(2.0..6.0),
+        })
         .insert(WorldEnemy::default())
         .insert(RigidBody::Dynamic)
         .insert(Velocity::default())

@@ -2,6 +2,7 @@ mod player;
 mod enemies;
 
 use bevy::prelude::*;
+use crate::entities::enemies::ai::AiPlugin;
 use crate::entities::enemies::EnemiesPlugin;
 use crate::entities::player::PlayerPlugin;
 
@@ -13,7 +14,7 @@ impl Plugin for EntitiesPlugin {
         app.register_type::<WorldPlayer>();
         app.register_type::<Character>();
         app.register_type::<Elements>();
-        app.add_plugins((PlayerPlugin, EnemiesPlugin));
+        app.add_plugins((PlayerPlugin, EnemiesPlugin, AiPlugin));
     }
 }
 

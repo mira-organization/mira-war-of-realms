@@ -1,4 +1,5 @@
 mod test_enemy;
+pub mod ai;
 
 use bevy::prelude::*;
 use crate::entities::Elements;
