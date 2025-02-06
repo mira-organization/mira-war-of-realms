@@ -35,6 +35,7 @@ pub struct AiSetup {
     pub observing_timer: f32,
     pub detection_cone_angle: f32,
     pub detection_range: f32,
+    pub aggression_range: f32,
 }
 
 impl Default for AiSetup {
@@ -49,6 +50,7 @@ impl Default for AiSetup {
             observing_timer: 5.0,
             detection_cone_angle: 45.0_f32.to_radians(),
             detection_range: 10.0,
+            aggression_range: 15.0
         }
     }
 }
