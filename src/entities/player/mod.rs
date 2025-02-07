@@ -148,5 +148,6 @@ fn setup_attack_hit_box(mut commands: Commands) {
         Sensor,
         ActiveEvents::COLLISION_EVENTS,
         Visibility::Hidden,
+        ColliderDebugColor(Hsla::from(Srgba::new(0.0, 0.0, 0.0, 0.0)))
     ));
 }

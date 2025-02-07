@@ -139,7 +139,7 @@ fn update_movement(
 fn detect_player_hit(
     mut param_set: ParamSet<(
         Query<&Transform, With<WorldPlayer>>,
-        Query<(&mut Transform, &mut AttackHitBox, &mut ActiveEvents, &mut Visibility)>,
+        Query<(&mut Transform, &mut AttackHitBox, &mut ActiveEvents, &mut Visibility, &mut ColliderDebugColor)>,
     )>,
     mut input_event_writer: EventWriter<PlayerActionEvent>,
     mouse: Res<ButtonInput<MouseButton>>,
@@ -151,7 +151,7 @@ fn detect_player_hit(
             let forward = player_transform.forward();
             let hit_box_position = player_transform.translation + forward * 3.0 + Vec3::Y * 0.8;
 
-            if let Ok((mut hit_box_transform, mut hit_box, mut active_events, mut visibility)) =
+            if let Ok((mut hit_box_transform, mut hit_box, mut active_events, mut visibility, mut debug_color)) =
                 param_set.p1().get_single_mut()
             {
                 hit_box_transform.translation = hit_box_position;
@@ -159,6 +159,8 @@ fn detect_player_hit(
                 hit_box.active = true;
                 *visibility = Visibility::Visible;
                 *active_events = ActiveEvents::COLLISION_EVENTS;
+
+                *debug_color = ColliderDebugColor(Hsla::from(Srgba::new(0.6, 0.0, 0.4, 1.0)));
             }
         }
     }
@@ -166,9 +168,9 @@ fn detect_player_hit(
 
 fn update_attack_hit_box(
     time: Res<Time>,
-    mut hit_box_query: Query<(&mut AttackHitBox, &mut ActiveEvents, &mut Visibility)>,
+    mut hit_box_query: Query<(&mut AttackHitBox, &mut ActiveEvents, &mut Visibility, &mut ColliderDebugColor)>,
 ) {
-    for (mut hit_box, mut active_events, mut visibility) in &mut hit_box_query {
+    for (mut hit_box, mut active_events, mut visibility, mut debug_color) in &mut hit_box_query {
         if hit_box.active {
             hit_box.timer.tick(time.delta());
 
@@ -176,6 +178,7 @@ fn update_attack_hit_box(
                 hit_box.active = false;
                 *visibility = Visibility::Hidden;
                 *active_events = ActiveEvents::empty();
+                *debug_color = ColliderDebugColor(Hsla::from(Srgba::new(0.0, 0.0, 0.0, 0.0)));
             }
         }
     }
