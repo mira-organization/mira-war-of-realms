@@ -18,6 +18,12 @@ impl Plugin for EntitiesPlugin {
     }
 }
 
+#[derive(Component)]
+pub struct AttackHitBox {
+    pub timer: Timer,
+    pub active: bool,
+}
+
 /// Represents an account-level player with information such as account level,
 /// name, email, and a unique identifier.
 #[derive(Component, Resource, Reflect, Debug, Clone)]

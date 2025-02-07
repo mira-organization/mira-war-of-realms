@@ -1,8 +1,10 @@
+use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_third_person_camera::ThirdPersonCamera;
 use crate::entities::player::{LastStableGround, PlayerWorldCamera};
-use crate::entities::{WorldPlayer, WorldPlayerState};
+use crate::entities::{AttackHitBox, WorldPlayer, WorldPlayerState};
+use crate::entities::enemies::WorldEnemy;
 use crate::events::player_events::PlayerActionEvent;
 use crate::manager::{ConfigService, GameState, PLAYER_VOID_THRESHOLD};
 use crate::utils::key_code::convert;
@@ -18,6 +20,9 @@ impl Plugin for PlayerInputPlugin {
     /// which are only active during the `GameState::InGame` state.
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (fetch_keyboard_input,
+                                 detect_player_hit,
+                                 detect_hit_events,
+                                 update_attack_hit_box,
                                  update_movement,
                                  limit_camera_pitch,
                                  track_stable_ground,
@@ -122,10 +127,68 @@ fn update_movement(
                     }
                 }
 
-                PlayerActionEvent::Idle => {
+                PlayerActionEvent::Idle | PlayerActionEvent::Attacking => {
                     controller.translation = None;
                     world_player.state = WorldPlayerState::Idle;
                 }
+            }
+        }
+    }
+}
+
+fn detect_player_hit(
+    mut param_set: ParamSet<(
+        Query<&Transform, With<WorldPlayer>>,
+        Query<(&mut Transform, &mut AttackHitBox, &mut ActiveEvents, &mut Visibility)>,
+    )>,
+    mut input_event_writer: EventWriter<PlayerActionEvent>,
+    mouse: Res<ButtonInput<MouseButton>>,
+) {
+    if mouse.just_pressed(MouseButton::Left) {
+        input_event_writer.send(PlayerActionEvent::Attacking);
+
+        if let Ok(player_transform) = param_set.p0().get_single() {
+            let forward = player_transform.forward();
+            let hit_box_position = player_transform.translation + forward * 3.0 + Vec3::Y * 0.8;
+
+            if let Ok((mut hit_box_transform, mut hit_box, mut active_events, mut visibility)) =
+                param_set.p1().get_single_mut()
+            {
+                hit_box_transform.translation = hit_box_position;
+                hit_box.timer.reset();
+                hit_box.active = true;
+                *visibility = Visibility::Visible;
+                *active_events = ActiveEvents::COLLISION_EVENTS;
+            }
+        }
+    }
+}
+
+fn update_attack_hit_box(
+    time: Res<Time>,
+    mut hit_box_query: Query<(&mut AttackHitBox, &mut ActiveEvents, &mut Visibility)>,
+) {
+    for (mut hit_box, mut active_events, mut visibility) in &mut hit_box_query {
+        if hit_box.active {
+            hit_box.timer.tick(time.delta());
+
+            if hit_box.timer.finished() {
+                hit_box.active = false;
+                *visibility = Visibility::Hidden;
+                *active_events = ActiveEvents::empty();
+            }
+        }
+    }
+}
+
+fn detect_hit_events(
+    mut collision_events: EventReader<CollisionEvent>,
+    enemies: Query<Entity, With<WorldEnemy>>,
+) {
+    for event in collision_events.read() {
+        if let CollisionEvent::Started(sender, recipient, _) = event {
+            if enemies.contains(*recipient) {
+                println!("Hit detected from {:?} and {:?}", sender, recipient);
             }
         }
     }

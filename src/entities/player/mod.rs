@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarget, Zoom};
 use crate::entities::player::input::PlayerInputPlugin;
-use crate::entities::{AnimatedPlayer, Animations, WorldPlayer};
+use crate::entities::{AnimatedPlayer, Animations, AttackHitBox, WorldPlayer};
 use crate::entities::player::animation::PlayerAnimationPlugin;
 use crate::manager::{ConfigService, GameState};
 
@@ -23,7 +23,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(LastStableGround(Vec3::ZERO));
         app.add_plugins((PlayerInputPlugin, PlayerAnimationPlugin));
-        app.add_systems(OnEnter(GameState::InGame), create_world_player);
+        app.add_systems(OnEnter(GameState::InGame), (create_world_player, setup_attack_hit_box));
         app.add_systems(OnEnter(GameState::InGame), create_player_camera);
     }
 }
@@ -137,3 +137,16 @@ fn create_player_camera(mut commands: Commands, general_config: Res<ConfigServic
     ));
 }
 
+fn setup_attack_hit_box(mut commands: Commands) {
+    commands.spawn((
+        AttackHitBox {
+            timer: Timer::from_seconds(0.05, TimerMode::Once),
+            active: false,
+        },
+        Transform::IDENTITY,
+        Collider::ball(0.75),
+        Sensor,
+        ActiveEvents::COLLISION_EVENTS,
+        Visibility::Hidden,
+    ));
+}

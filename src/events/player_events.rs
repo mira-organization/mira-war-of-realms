@@ -12,5 +12,6 @@ impl Plugin for PlayerEvents {
 pub enum PlayerActionEvent {
     Idle,
     Move(Vec3),
-    Sprinting(Vec3)
+    Sprinting(Vec3),
+    Attacking,
 }

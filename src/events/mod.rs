@@ -1,4 +1,5 @@
 pub mod player_events;
+mod world_events;
 
 use bevy::prelude::*;
 use crate::events::player_events::PlayerEvents;
