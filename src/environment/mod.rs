@@ -13,10 +13,14 @@ impl Plugin for EnvironmentPlugin {
     }
 }
 
+#[derive(Component, Debug, Clone)]
+pub struct Environment;
+
 fn create_game_floor(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("world/test-room.glb"))))
         .insert(Name::new("Floor"))
         .insert(RigidBody::Fixed)
+        .insert(Environment)
         .insert(AsyncSceneCollider {
             shape: Some(ComputedColliderShape::TriMesh(TriMeshFlags::MERGE_DUPLICATE_VERTICES)),
             ..default()

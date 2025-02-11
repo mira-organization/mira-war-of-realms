@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarget, Zoom};
 use crate::entities::player::input::PlayerInputPlugin;
-use crate::entities::{AnimatedPlayer, Animations, AttackHitBox, WorldPlayer};
+use crate::entities::{AnimatedPlayer, Animations, LivingEntity, WorldPlayer};
 use crate::entities::player::animation::PlayerAnimationPlugin;
 use crate::manager::{ConfigService, GameState};
 
@@ -23,7 +23,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(LastStableGround(Vec3::ZERO));
         app.add_plugins((PlayerInputPlugin, PlayerAnimationPlugin));
-        app.add_systems(OnEnter(GameState::InGame), (create_world_player, setup_attack_hit_box));
+        app.add_systems(OnEnter(GameState::InGame), create_world_player);
         app.add_systems(OnEnter(GameState::InGame), create_player_camera);
     }
 }
@@ -73,6 +73,7 @@ pub fn create_world_player(
         .insert(Transform::from_xyz(0.0, 0.0, 0.0))
         .insert(ThirdPersonCameraTarget)
         .insert(WorldPlayer::default())
+        .insert(LivingEntity)
         .insert(RigidBody::Dynamic)
         .insert(Velocity::default())
         .insert(GravityScale(2.5))
@@ -134,20 +135,5 @@ fn create_player_camera(mut commands: Commands, general_config: Res<ConfigServic
             fov: std::f32::consts::FRAC_PI_4,
             ..default()
         })
-    ));
-}
-
-fn setup_attack_hit_box(mut commands: Commands) {
-    commands.spawn((
-        AttackHitBox {
-            timer: Timer::from_seconds(0.05, TimerMode::Once),
-            active: false,
-        },
-        Transform::IDENTITY,
-        Collider::ball(0.75),
-        Sensor,
-        ActiveEvents::COLLISION_EVENTS,
-        Visibility::Hidden,
-        ColliderDebugColor(Hsla::from(Srgba::new(0.0, 0.0, 0.0, 0.0)))
     ));
 }

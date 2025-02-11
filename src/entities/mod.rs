@@ -1,5 +1,5 @@
 mod player;
-mod enemies;
+pub mod enemies;
 
 use bevy::prelude::*;
 use crate::entities::enemies::ai::AiPlugin;
@@ -18,11 +18,21 @@ impl Plugin for EntitiesPlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Debug, Clone)]
 pub struct AttackHitBox {
     pub timer: Timer,
-    pub active: bool,
 }
+
+impl Default for AttackHitBox {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(0.05, TimerMode::Once),
+        }
+    }
+}
+
+#[derive(Component, Debug, Clone)]
+pub struct LivingEntity;
 
 /// Represents an account-level player with information such as account level,
 /// name, email, and a unique identifier.
@@ -52,7 +62,10 @@ pub struct WorldPlayer {
     pub sprinting_speed: f32,
     /// The player's step height which is allowed.
     pub max_step_height: f32,
+    /// The in world state for handle animations.
     pub state: WorldPlayerState,
+    /// The attack box for hit detection.
+    pub attack_hit_box: AttackHitBox
 }
 
 impl Default for WorldPlayer {
@@ -66,7 +79,8 @@ impl Default for WorldPlayer {
             walk_speed: 4.65,
             sprinting_speed: 6.5,
             max_step_height: 1.0,
-            state: WorldPlayerState::default()
+            state: WorldPlayerState::default(),
+            attack_hit_box: AttackHitBox::default()
         }
     }
 }

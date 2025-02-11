@@ -39,6 +39,8 @@ pub struct AudioManager {
     pub audio: HashMap<String, AudioType>
 }
 
+
+#[allow(dead_code)]
 impl AudioManager {
     pub fn new() -> Self {
         Self {
@@ -119,6 +121,7 @@ impl AudioManager {
 }
 
 #[derive(Component, Resource, Debug)]
+#[allow(dead_code)]
 pub struct EnvironmentAudio {
     pub base_track: String,
     pub battle_track: String,

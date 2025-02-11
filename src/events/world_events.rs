@@ -4,13 +4,12 @@ pub struct WorldEvents;
 
 impl Plugin for WorldEvents {
     fn build(&self, app: &mut App) {
-        app.add_event::<WorldPlayerHitWorldEnemyEvent>();
+        app.add_event::<WorldEntityHitEntityEvent>();
     }
 }
 
 #[derive(Event)]
-pub struct WorldPlayerHitWorldEnemyEvent {
-    pub player: Entity,
-    pub enemy: Entity,
-    pub location: Vec3,
+pub struct WorldEntityHitEntityEvent {
+    pub sender: Entity,
+    pub entity: Entity,
 }

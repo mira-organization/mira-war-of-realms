@@ -2,7 +2,7 @@ mod test_enemy;
 pub mod ai;
 
 use bevy::prelude::*;
-use crate::entities::Elements;
+use crate::entities::{AttackHitBox, Elements};
 use crate::entities::enemies::test_enemy::TestEnemy;
 
 /// A plugin for managing enemy entities in the game.
@@ -23,7 +23,7 @@ impl Plugin for EnemiesPlugin {
     }
 }
 
-/// Represents an enemy entity that exists in the overworld.
+/// Represents an enemy entity that exists in the over-world.
 ///
 /// A `WorldEnemy` has a location, a list of possible battle configurations,
 /// weaknesses to certain elements, and a current state.
@@ -43,6 +43,9 @@ pub struct WorldEnemy {
 
     /// The current state of the enemy, representing its behavior or activity level.
     pub state: EnemyState,
+
+    /// The enemy attack hit box.
+    pub attack_hit_box: AttackHitBox
 }
 
 impl Default for WorldEnemy {
@@ -57,6 +60,7 @@ impl Default for WorldEnemy {
             enemy_list: Vec::new(),
             weakness_elements: Vec::new(),
             state: Default::default(),
+            attack_hit_box: AttackHitBox::default(),
         }
     }
 }

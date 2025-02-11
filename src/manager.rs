@@ -12,6 +12,7 @@ use crate::entities::EntitiesPlugin;
 use crate::environment::EnvironmentPlugin;
 use crate::events::EventManagerPlugin;
 use crate::languages::LanguagesPlugin;
+use crate::service::ServicePlugin;
 
 pub const PLAYER_VOID_THRESHOLD: f32 = -5.0;
 
@@ -34,13 +35,14 @@ impl Plugin for ManagerPlugin {
         app.add_plugins(ThirdPersonCameraPlugin);
         app.add_plugins(AudioPlugin);
         app.add_plugins(AudioStorePlugin);
-        app.add_plugins((EventManagerPlugin, EntitiesPlugin, EnvironmentPlugin));
+        app.add_plugins((EventManagerPlugin, EntitiesPlugin, EnvironmentPlugin, ServicePlugin));
         app.configure_sets(PostUpdate, CameraSyncSet.after(PhysicsSet::StepSimulation));
     }
 }
 
 /// Configuration for general game settings.
 #[derive(Deserialize, Debug)]
+#[allow(dead_code)]
 pub struct GameConfig {
     pub(crate) bevy_backend: String,
     pub(crate) lang_text: String,
@@ -59,6 +61,7 @@ impl Default for GameConfig {
 
 /// Configuration for graphics settings such as resolution and fullscreen mode.
 #[derive(Deserialize, Debug)]
+#[allow(dead_code)]
 pub struct GraphicsConfig {
     pub(crate) resolution: String,
     pub(crate) fullscreen: bool,
@@ -116,6 +119,7 @@ pub enum GameState {
 
 /// A service that loads and stores game configuration settings.
 #[derive(Resource, Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct ConfigService {
     pub game_config: GameConfig,
     pub graphics_config: GraphicsConfig,
