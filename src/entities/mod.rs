@@ -6,24 +6,49 @@ use crate::entities::enemies::ai::AiPlugin;
 use crate::entities::enemies::EnemiesPlugin;
 use crate::entities::player::PlayerPlugin;
 
+/// The `EntitiesPlugin` plugin is responsible for registering and adding various components and plugins related to entities in the game.
+///
+/// This plugin registers several types for reflection and adds multiple plugins, such as the `PlayerPlugin`, `EnemiesPlugin`, and `AiPlugin`.
+/// It is responsible for setting up and managing entity-related systems, such as player and enemy entities.
+///
+/// # Example
+/// This plugin is used to handle entity creation and registration of player, enemy, and other related components in the game.
 pub struct EntitiesPlugin;
 
 impl Plugin for EntitiesPlugin {
+    /// Registers types for reflection and adds necessary plugins for managing entities.
+    ///
+    /// # Arguments
+    /// * `app` - The Bevy app to which the types and plugins are added.
     fn build(&self, app: &mut App) {
+        // Registering types for reflection, which enables dynamic access to components
         app.register_type::<AccountPlayer>();
         app.register_type::<WorldPlayer>();
         app.register_type::<Character>();
         app.register_type::<Elements>();
+
+        // Adding additional plugins for player, enemies, and AI management
         app.add_plugins((PlayerPlugin, EnemiesPlugin, AiPlugin));
     }
 }
 
+/// The `AttackHitBox` component represents the hit_box for an attack, which is used to detect collisions during combat.
+///
+/// It includes a timer that manages the duration of the hit_box being active, ensuring it only persists for a short amount of time.
+///
+/// # Fields
+/// - `timer`: The timer that controls the duration for which the attack hit_box is active.
 #[derive(Component, Reflect, Debug, Clone)]
 pub struct AttackHitBox {
+    /// The timer that controls the attack hit_box's duration.
     pub timer: Timer,
 }
 
 impl Default for AttackHitBox {
+    /// Creates a new `AttackHitBox` component with a default timer duration.
+    ///
+    /// # Returns
+    /// A new `AttackHitBox` component with a timer set to 0.05 seconds in `Once` mode.
     fn default() -> Self {
         Self {
             timer: Timer::from_seconds(0.05, TimerMode::Once),
@@ -31,8 +56,13 @@ impl Default for AttackHitBox {
     }
 }
 
+/// The `LivingEntity` component is used to mark entities as living, such as characters, NPCs, or monsters.
+///
+/// This component is primarily used for categorization, and it doesn't carry any additional data on its own.
+/// It is used to identify entities that are alive in the game world.
 #[derive(Component, Debug, Clone)]
 pub struct LivingEntity;
+
 
 /// Represents an account-level player with information such as account level,
 /// name, email, and a unique identifier.
@@ -85,14 +115,29 @@ impl Default for WorldPlayer {
     }
 }
 
+/// The `WorldPlayerState` enum represents the different possible states of a player in the world.
+///
+/// This enum is used to track and manage the state of a player, such as whether the player is idle, walking, or sprinting.
+/// It is particularly useful for controlling player movement and behavior within the game world.
+///
+/// # Variants
+/// - `Idle`: The player is not moving and is in a resting state.
+/// - `Walking`: The player is walking at a normal speed.
+/// - `Sprinting`: The player is moving at an increased speed (sprinting).
 #[derive(Component, Resource, Reflect, Default, Debug, Clone)]
 #[reflect(Component)]
 pub enum WorldPlayerState {
+    /// The default state, representing when the player is idle and not moving.
     #[default]
     Idle,
+
+    /// The state when the player is walking at normal speed.
     Walking,
-    Sprinting
+
+    /// The state when the player is sprinting and moving at a faster speed.
+    Sprinting,
 }
+
 
 /// Represents a character with base, extra, and damage-related attributes.
 #[derive(Component, Resource, Reflect, Debug, Clone)]
@@ -276,14 +321,36 @@ pub struct Animations {
     pub graph: Handle<AnimationGraph>,
 }
 
+/// The `AnimatedPlayer` component is used to mark an entity as an animated player character.
+///
+/// This component is used for entities that represent the player in the game and have animations associated with them.
+/// It does not carry any data but is used to identify player entities for animation purposes, such as handling character movement or combat animations.
 #[derive(Component, Reflect, Debug, Clone)]
 #[reflect(Component)]
 pub struct AnimatedPlayer;
 
+/// The `AnimatedMob` component is used to mark an entity as an animated mob (e.g., enemy or NPC).
+///
+/// This component is used for entities that represent mobs or non-player characters (NPCs) that have animations.
+/// It helps to distinguish these entities from others in the game world, and can be used to control their animation behavior, such as attack or movement animations.
 #[derive(Component, Reflect, Debug, Clone)]
 #[reflect(Component)]
 pub struct AnimatedMob;
 
+/// The `Elements` enum represents different elemental types that can be associated with entities or abilities.
+///
+/// This enum is used for categorizing elements like fire, water, earth, etc., and can be applied to characters, abilities, or environmental effects.
+/// Each element type represents a different force or attribute, often influencing gameplay through various effects or interactions.
+///
+/// # Variants
+/// - `Fire`: Represents the fire element, often associated with heat or damage over time.
+/// - `Water`: Represents the water element, associated with fluidity or healing.
+/// - `Earth`: Represents the earth element, often associated with stability or physical attacks.
+/// - `Air`: Represents the air element, associated with movement or agility.
+/// - `Lightning`: Represents the lightning element, often associated with speed or electrical damage.
+/// - `Ice`: Represents the ice element, associated with freezing or slowing effects.
+/// - `Dark`: Represents the dark element, often associated with shadow or de-buffs.
+/// - `Light`: Represents the light element, often associated with healing or buffing effects.
 #[derive(Component, Resource, Reflect, Debug, Clone)]
 #[reflect(Component)]
 pub enum Elements {
@@ -294,5 +361,5 @@ pub enum Elements {
     Lightning,
     Ice,
     Dark,
-    Light
+    Light,
 }

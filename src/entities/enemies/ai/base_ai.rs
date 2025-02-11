@@ -9,12 +9,22 @@ use crate::service::attack_service::spawn_attack_hit_box;
 
 pub struct BaseAI;
 
+/// Plugin that manages the base AI behavior for enemies in the game.
+/// It adds the logic system that runs on each fixed update during the `InGame` state.
 impl Plugin for BaseAI {
     fn build(&self, app: &mut App) {
         app.add_systems(FixedUpdate, logic_system.run_if(in_state(GameState::InGame)));
     }
 }
 
+/// System that handles the AI behavior for enemies. The AI follows different states
+/// like Idle, Walking, Alert, Observing, Aggressive, and Attacking, based on the player’s position
+/// and other conditions. The AI will move towards the player if detected and perform attacks when in range.
+///
+/// # Arguments
+/// - `commands`: A mutable reference to `Commands` to spawn entities like attack hit_boxes.
+/// - `query`: A set of queries to get enemy data (transform, setup, velocity) and player position.
+/// - `time`: A resource containing the delta time (used for timers and movement speed).
 fn logic_system(
     mut commands: Commands,
     mut query: ParamSet<(
@@ -23,8 +33,11 @@ fn logic_system(
     time: Res<Time>
 ) {
     let player_transform = query.p1().get_single().ok().map(|t| t.translation);
+
+    // Iterate through each enemy entity and apply AI logic
     for (entity, mut transform, mut setup, mut velocity) in query.p0().iter_mut() {
         if let Some(player_pos) = player_transform {
+            // Calculate direction and distance to the player
             let direction_to_player = (player_pos - transform.translation).normalize_or_zero();
             let forward = transform.forward();
             let angle = forward.dot(direction_to_player).acos();
@@ -58,6 +71,7 @@ fn logic_system(
                         continue;
                     }
 
+                    // Move towards the next path point
                     let target = setup.path[setup.current_path_index];
                     let direction = (target - transform.translation).normalize_or_zero();
                     let speed = 2.0;
@@ -105,6 +119,7 @@ fn logic_system(
                     }
                 }
                 AiState::Attacking => {
+                    // Spawn an attack hit_box when the AI is attacking
                     spawn_attack_hit_box(
                         &mut commands,
                         entity,
@@ -114,7 +129,6 @@ fn logic_system(
                         0.05
                     );
                     setup.state = AiState::Observing;
-
                 }
             }
         }

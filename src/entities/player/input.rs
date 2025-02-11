@@ -133,13 +133,28 @@ fn update_movement(
     }
 }
 
-fn input_attack(mouse_input: Res<ButtonInput<MouseButton>>,
-                mut commands: Commands,
-                query: Query<Entity, With<WorldPlayer>>,
-                mut input_event_writer: EventWriter<PlayerActionEvent>,
+/// Handles the player input for attacking, including detecting when the left mouse button is pressed.
+///
+/// When the left mouse button is pressed, this function triggers an attack event and spawns an attack hit_box
+/// at the player's current location to register the attack's collision. It also sends a `PlayerActionEvent::Attacking`
+/// event to notify other systems of the player's attack action.
+///
+/// # Arguments
+/// - `mouse_input`: A resource to check the input state of the mouse buttons.
+/// - `commands`: A mutable reference to the Bevy `Commands` to spawn entities.
+/// - `query`: A query to get the player entity in the game world.
+/// - `input_event_writer`: An event writer to send the player's action event (Attacking).
+fn input_attack(
+    mouse_input: Res<ButtonInput<MouseButton>>,
+    mut commands: Commands,
+    query: Query<Entity, With<WorldPlayer>>,
+    mut input_event_writer: EventWriter<PlayerActionEvent>,
 ) {
     if mouse_input.just_pressed(MouseButton::Left) {
+        // Trigger the player's attack event
         input_event_writer.send(PlayerActionEvent::Attacking);
+
+        // Spawn the attack hit_box if the player exists in the query
         if let Ok(player) = query.get_single() {
             let hit_box_position = Vec3::new(0.0, 0.8, -3.0);
             spawn_attack_hit_box(
@@ -154,21 +169,38 @@ fn input_attack(mouse_input: Res<ButtonInput<MouseButton>>,
     }
 }
 
+/// Limits the pitch (vertical angle) of the camera rotation to prevent it from rotating too far up or down.
+///
+/// This system ensures the camera's pitch angle stays within a specified range to avoid unrealistic or uncomfortable camera angles
+/// during gameplay. It calculates the camera's current rotation, clamps the pitch, and then applies the corrected rotation.
+///
+/// # Arguments
+/// - `query`: A query to retrieve the camera's transform for rotation manipulation.
 fn limit_camera_pitch(mut query: Query<&mut Transform, With<ThirdPersonCamera>>) {
     for mut transform in query.iter_mut() {
         let (yaw, mut pitch, roll) = transform.rotation.to_euler(EulerRot::YXZ);
 
+        // Define the pitch limits (vertical rotation boundaries)
         let min_pitch: f32 = -std::f32::consts::FRAC_PI_2;
         let max_pitch: f32 = 123.123;
 
+        // Clamp the pitch within the specified boundaries
         pitch = pitch.clamp(min_pitch, max_pitch);
         transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
     }
 }
 
+/// Tracks the last stable ground position of the player, updating it when the player is above a threshold height.
+///
+/// This system monitors the player's position and updates the stored "last stable ground" position if the player is above
+/// a certain height threshold (indicating they are standing on stable ground).
+///
+/// # Arguments
+/// - `players`: A query to access the player’s position in the world.
+/// - `last_stable_ground`: A resource to store the last known stable ground position.
 fn track_stable_ground(mut players: Query<&Transform, With<WorldPlayer>>,
-                       mut last_stable_ground: ResMut<LastStableGround>
-) {
+                       mut last_stable_ground: ResMut<LastStableGround>)
+{
     for transform in players.iter_mut() {
         if transform.translation.y >= -0.001 {
             last_stable_ground.0 = transform.translation;
@@ -176,13 +208,22 @@ fn track_stable_ground(mut players: Query<&Transform, With<WorldPlayer>>,
     }
 }
 
+/// Checks if the player has fallen below a certain threshold, and if so, resets the player’s position to the last stable ground.
+///
+/// This system prevents the player from falling into the void by checking the player's height. If the player’s position
+/// falls below a predefined threshold (`PLAYER_VOID_THRESHOLD`), it resets the player's position to the stored last stable ground.
+///
+/// # Arguments
+/// - `players`: A query to access the player’s position in the world.
+/// - `last_stable_ground`: A resource containing the player’s last stable ground position.
 fn check_void_fall(mut players: Query<&mut Transform, With<WorldPlayer>>,
-                   last_stable_ground: ResMut<LastStableGround>
-) {
+                   last_stable_ground: ResMut<LastStableGround>)
+{
     for mut transform in players.iter_mut() {
         if transform.translation.y < PLAYER_VOID_THRESHOLD {
+            // Reset the player's position to the last stable ground
             transform.translation = last_stable_ground.0;
-            info!("Player was send to {:?}", last_stable_ground.0);
+            info!("Player was sent to {:?}", last_stable_ground.0);
         }
     }
 }

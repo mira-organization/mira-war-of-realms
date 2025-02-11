@@ -1,5 +1,7 @@
 use bevy::prelude::KeyCode;
 
+/// Function for create a [`KeyCode`] from a plain string.
+/// Use this if you try to make a config for inputs.
 pub fn convert(key: &str) -> Option<KeyCode> {
     match key {
         "Escape" => Some(KeyCode::Escape),
