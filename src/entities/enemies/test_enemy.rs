@@ -46,7 +46,7 @@ fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
                 Vec3::new(1.5, 0.0, -9.0),
             ],
             current_path_index: 0,
-            idle_timer: rand::thread_rng().gen_range(2.0..6.0),
+            idle_timer: rand::rng().random_range(2.0..6.0),
             ..default()
         })
         .insert(WorldEnemy::default())

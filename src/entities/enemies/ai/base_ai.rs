@@ -56,7 +56,7 @@ fn logic_system(
                     velocity.linvel = Vec3::new(0.0, velocity.linvel.y, 0.0);
                     if setup.idle_timer <= 0.0 {
                         setup.state = AiState::Walking;
-                        setup.idle_timer = rand::thread_rng().gen_range(2.0..6.0);
+                        setup.idle_timer = rand::rng().random_range(2.0..6.0);
                     }
                 }
                 AiState::Walking => {

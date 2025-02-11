@@ -48,12 +48,12 @@ pub struct AiSetup {
 
 impl Default for AiSetup {
     fn default() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         Self {
             state: AiState::default(),    // Start with the default state (Idle)
             path: Vec::new(),             // No path defined initially
             current_path_index: 0,       // Start at the first path index
-            idle_timer: rng.gen_range(2.0..5.0), // Random idle time between 2 and 5 seconds
+            idle_timer: rng.random_range(2.0..5.0), // Random idle time between 2 and 5 seconds
             alert_timer: 0.0,            // Alert timer starts at 0
             observing_timer: 5.0,        // Observing timer starts at 5 seconds
             detection_cone_angle: 45.0_f32.to_radians(), // Default detection cone angle (45°)
