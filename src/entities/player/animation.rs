@@ -77,8 +77,8 @@ fn update(
                 WorldPlayerState::Idle => {
                     if timer.finished() {
                         let idle_animation_entries = [1, 1, 1];
-                        let random_index = rand::random::<usize>() % idle_animation_entries.len();
-                        let random_idle = animations.animations[idle_animation_entries[random_index]];
+                        let random_index = rand::random::<i32>() % idle_animation_entries.len() as i32;
+                        let random_idle = animations.animations[idle_animation_entries[random_index as usize] as usize];
 
                         animation_transitions.play(&mut animation_player, random_idle, Duration::from_millis(425));
                         timer.reset();
