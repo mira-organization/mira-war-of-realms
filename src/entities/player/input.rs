@@ -136,14 +136,19 @@ fn update_movement(
 fn input_attack(mouse_input: Res<ButtonInput<MouseButton>>,
                 commands: Commands,
                 query: Query<Entity, With<WorldPlayer>>,
+                mut input_event_writer: EventWriter<PlayerActionEvent>,
 ) {
     if mouse_input.just_pressed(MouseButton::Left) {
+        input_event_writer.send(PlayerActionEvent::Attacking);
         if let Ok(player) = query.get_single() {
+            let hit_box_position = Vec3::new(0.0, 0.8, -3.0);
+            info!("Hit box position: {}", hit_box_position);
             spawn_attack_hit_box(
                 commands,
                 player,
                 Collider::ball(0.75),
-                Transform::from_translation(Vec3::new(0.0, 0.8, 0.0)),
+                Transform::from_translation(hit_box_position),
+                Some(Color::srgb_u8(0, 255, 155)),
                 0.05
             );
         }
@@ -173,7 +178,7 @@ fn track_stable_ground(mut players: Query<&Transform, With<WorldPlayer>>,
 }
 
 fn check_void_fall(mut players: Query<&mut Transform, With<WorldPlayer>>,
-                   mut last_stable_ground: ResMut<LastStableGround>
+                   last_stable_ground: ResMut<LastStableGround>
 ) {
     for mut transform in players.iter_mut() {
         if transform.translation.y < PLAYER_VOID_THRESHOLD {

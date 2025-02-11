@@ -1,8 +1,6 @@
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::{ActiveCollisionTypes, Collider, ReadDefaultRapierContext, RigidBody, Sensor};
-use bevy_rapier3d::rapier::prelude::RigidBodyType;
+use bevy_rapier3d::prelude::{ActiveCollisionTypes, Collider, ColliderDebugColor, ReadDefaultRapierContext, RigidBody, Sensor};
 use crate::entities::{AttackHitBox, LivingEntity};
-use crate::environment::Environment;
 use crate::events::world_events::WorldEntityHitEntityEvent;
 use crate::manager::GameState;
 
@@ -15,11 +13,19 @@ impl Plugin for AttackService {
 }
 
 pub fn spawn_attack_hit_box(mut commands: Commands,
-                        parent: Entity,
-                        shape: Collider,
-                        transform: Transform,
-                        duration: f32
+                            parent: Entity,
+                            shape: Collider,
+                            transform: Transform,
+                            color: Option<Color>,
+                            duration: f32
 ) {
+    let debug_color;
+    if color.is_none() {
+        debug_color = Color::WHITE;
+    } else {
+        debug_color = color.unwrap();
+    }
+
     let collider_entity = commands
         .spawn(
             AttackHitBox {
@@ -30,6 +36,7 @@ pub fn spawn_attack_hit_box(mut commands: Commands,
         .insert(ActiveCollisionTypes::default())
         .insert(Sensor)
         .insert(Transform::from(transform))
+        .insert(ColliderDebugColor(Hsla::from(debug_color)))
         .set_parent(parent)
         .id();
 
