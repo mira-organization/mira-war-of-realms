@@ -1,10 +1,11 @@
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::Velocity;
+use bevy_rapier3d::prelude::{Collider, Velocity};
 use rand::Rng;
 use crate::entities::enemies::ai::{AiSetup, AiState};
 use crate::entities::enemies::WorldEnemy;
 use crate::entities::WorldPlayer;
 use crate::manager::GameState;
+use crate::service::attack_service::spawn_attack_hit_box;
 
 pub struct BaseAI;
 
@@ -15,14 +16,14 @@ impl Plugin for BaseAI {
 }
 
 fn logic_system(
+    mut commands: Commands,
     mut query: ParamSet<(
-        Query<(&mut Transform, &mut AiSetup, &mut Velocity), With<WorldEnemy>>,
+        Query<(Entity, &mut Transform, &mut AiSetup, &mut Velocity), With<WorldEnemy>>,
         Query<&Transform, With<WorldPlayer>>)>,
     time: Res<Time>
 ) {
     let player_transform = query.p1().get_single().ok().map(|t| t.translation);
-
-    for (mut transform, mut setup, mut velocity) in query.p0().iter_mut() {
+    for (entity, mut transform, mut setup, mut velocity) in query.p0().iter_mut() {
         if let Some(player_pos) = player_transform {
             let direction_to_player = (player_pos - transform.translation).normalize_or_zero();
             let forward = transform.forward();
@@ -95,11 +96,26 @@ fn logic_system(
                         setup.observing_timer = 5.0;
                         setup.alert_timer = 0.0;
                     } else {
-                        velocity.linvel = Vec3::new(direction_to_player.x * 4.0, velocity.linvel.y, direction_to_player.z * 4.0);
-                        transform.look_to(direction_to_player, Vec3::Y);
+                        if transform.translation.distance(player_pos) > 2.0 {
+                            velocity.linvel = Vec3::new(direction_to_player.x * 4.0, velocity.linvel.y, direction_to_player.z * 4.0);
+                            transform.look_to(direction_to_player, Vec3::Y);
+                            continue;
+                        }
+                        setup.state = AiState::Attacking;
                     }
                 }
-                _ => {}
+                AiState::Attacking => {
+                    spawn_attack_hit_box(
+                        &mut commands,
+                        entity,
+                        Collider::ball(2.0),
+                        Transform::from_translation(Vec3::ZERO),
+                        Some(Color::srgb_u8(255, 0, 155)),
+                        0.05
+                    );
+                    setup.state = AiState::Observing;
+
+                }
             }
         }
     }

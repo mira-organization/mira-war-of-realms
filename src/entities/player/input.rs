@@ -134,7 +134,7 @@ fn update_movement(
 }
 
 fn input_attack(mouse_input: Res<ButtonInput<MouseButton>>,
-                commands: Commands,
+                mut commands: Commands,
                 query: Query<Entity, With<WorldPlayer>>,
                 mut input_event_writer: EventWriter<PlayerActionEvent>,
 ) {
@@ -142,9 +142,8 @@ fn input_attack(mouse_input: Res<ButtonInput<MouseButton>>,
         input_event_writer.send(PlayerActionEvent::Attacking);
         if let Ok(player) = query.get_single() {
             let hit_box_position = Vec3::new(0.0, 0.8, -3.0);
-            info!("Hit box position: {}", hit_box_position);
             spawn_attack_hit_box(
-                commands,
+                &mut commands,
                 player,
                 Collider::ball(0.75),
                 Transform::from_translation(hit_box_position),

@@ -8,11 +8,15 @@ pub struct AttackService;
 
 impl Plugin for AttackService {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (attack_timer_system, attack_collision_system).run_if(in_state(GameState::InGame)));
+        app.add_systems(Update, (
+            attack_timer_system,
+            attack_collision_system,
+            debug_event_log
+        ).run_if(in_state(GameState::InGame)));
     }
 }
 
-pub fn spawn_attack_hit_box(mut commands: Commands,
+pub fn spawn_attack_hit_box(commands: &mut Commands,
                             parent: Entity,
                             shape: Collider,
                             transform: Transform,
@@ -59,21 +63,26 @@ fn attack_timer_system(mut commands: Commands,
 fn attack_collision_system(
     mut event_writer: EventWriter<WorldEntityHitEntityEvent>,
     query: Query<(Entity, &Parent), With<AttackHitBox>>,
-    collider_query: Query<Entity, With<LivingEntity>>, // Only check for LivingEntity
+    collider_query: Query<Entity, With<LivingEntity>>,
     rapier_context: ReadDefaultRapierContext,
 ) {
     for (attack_entity, parent) in &query {
         for collider_entity in collider_query.iter() {
             if rapier_context.intersection_pair(attack_entity, collider_entity).is_some() {
                 if parent.get() == collider_entity {
-                    return;
+                    continue;
                 }
                 event_writer.send(WorldEntityHitEntityEvent {
                     sender: parent.get(),
                     entity: collider_entity,
                 });
-                info!("Detect: {:?} hit {:?}", attack_entity, collider_entity);
             }
         }
+    }
+}
+
+fn debug_event_log(mut event_reader: EventReader<WorldEntityHitEntityEvent>) {
+    for event in event_reader.read() {
+        info!("Entity [ {:?} ] has hit Entity [ {:?} ]", event.sender, event.entity);
     }
 }
