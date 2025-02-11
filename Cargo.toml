@@ -15,15 +15,27 @@ opt-level = 3
 debug = true
 
 [dependencies]
-bevy-inspector-egui = {version = "0.28.1"}
+# Audio
+bevy_kira_audio = { version = "^0.22.0", features = ["ogg"] }
+
+# Camera
 bevy_third_person_camera = {version = "0.2.0"}
 
-bevy_rapier3d = {version = "0.28.0", features = ["simd-stable", "debug-render-3d", "default"]}
+# Debug
+bevy-inspector-egui = {version = "0.28.1"}
 
 # Fluent
+bevy_fluent = {version = "0.11"}
 fluent = {version = "^0.15"}
 fluent-bundle = {version = "^0.15"}
-unic-langid = {version = "^0.9"}
+
+# Phisyc
+bevy_rapier3d = {version = "0.28.0", features = ["simd-nightly", "debug-render-3d", "default"]}
+
+# Utils
+rand = "0.8.5"
+toml = {version = "^0.8.0", features = ["parse", "display"]}
+serde = { version = "1.0.217", features = ["derive"] }
 
 [dependencies.bevy]
 version = "0.15.1"

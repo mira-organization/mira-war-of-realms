@@ -3,6 +3,10 @@ mod environment;
 mod manager;
 mod entities;
 mod events;
+mod languages;
+mod audio;
+mod utils;
+mod service;
 
 use bevy::prelude::*;
 

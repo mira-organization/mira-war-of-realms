@@ -1,0 +1,10 @@
+# This TOML file contains the graphics settings for the game.
+# It defines resolution, fullscreen mode, and other visual options.
+
+# Defines the screen resolution in WIDTHxHEIGHT format.
+# Example values: "1920x1080" for Full HD, "1280x720" for HD.
+resolution = "1270x720"
+
+# Enables or disables fullscreen mode.
+# true = Fullscreen, false = Windowed mode.
+fullscreen = false

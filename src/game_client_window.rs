@@ -71,7 +71,7 @@ pub fn create<'a>(app: &'a mut App, title: &'a str, width: f32, height: f32) -> 
 pub fn create_gpu_settings() -> WgpuSettings {
     WgpuSettings {
         features: WgpuFeatures::POLYGON_MODE_LINE,
-        backends: Some(Backends::VULKAN),
+        backends: Some(Backends::PRIMARY),
         ..default()
     }
 }
