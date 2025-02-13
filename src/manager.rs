@@ -12,6 +12,7 @@ use crate::entities::EntitiesPlugin;
 use crate::environment::EnvironmentPlugin;
 use crate::events::EventManagerPlugin;
 use crate::languages::LanguagesPlugin;
+use crate::service::load_service::PipelinesReady;
 use crate::service::ServicePlugin;
 
 pub const PLAYER_VOID_THRESHOLD: f32 = -5.0;
@@ -37,6 +38,12 @@ impl Plugin for ManagerPlugin {
         app.add_plugins(AudioStorePlugin);
         app.add_plugins((EventManagerPlugin, EntitiesPlugin, EnvironmentPlugin, ServicePlugin));
         app.configure_sets(PostUpdate, CameraSyncSet.after(PhysicsSet::StepSimulation));
+        app.add_systems(
+            Update,
+            transition
+                .run_if(in_state(GameState::PreLoad))
+                .run_if(resource_changed::<PipelinesReady>),
+        );
     }
 }
 
@@ -110,10 +117,11 @@ impl Default for InputConfig {
 #[derive(Component, States, Default, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
 pub enum GameState {
+    #[default]
+    PreLoad,
     SplashScreen,
     TitleScreen,
     AccountScreen,
-    #[default]
     InGame
 }
 
@@ -146,5 +154,13 @@ impl ConfigService {
             graphics_config: Self::load("conf/graphicsConfig.toml"),
             input_config: Self::load("conf/gameInput.toml"),
         }
+    }
+}
+
+fn transition(ready: Res<PipelinesReady>, mut next_state: ResMut<NextState<GameState>>) {
+    info!("transitioning state {:?}", ready.get());
+    if ready.get() >= 6 {
+        info!("Finished Loading!");
+        next_state.set(GameState::InGame);
     }
 }
