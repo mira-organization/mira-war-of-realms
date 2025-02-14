@@ -4,7 +4,7 @@ use bevy_third_person_camera::ThirdPersonCamera;
 use crate::entities::player::{LastStableGround, PlayerWorldCamera};
 use crate::entities::{WorldPlayer, WorldPlayerState};
 use crate::events::player_events::PlayerActionEvent;
-use crate::manager::{ConfigService, GameState, InGameState, PLAYER_VOID_THRESHOLD};
+use crate::manager::{in_game_states, ConfigService, PLAYER_VOID_THRESHOLD};
 use crate::service::attack_service::spawn_attack_hit_box;
 use crate::utils::key_code::convert;
 
@@ -24,7 +24,7 @@ impl Plugin for PlayerInputPlugin {
                                  limit_camera_pitch,
                                  track_stable_ground,
                                  check_void_fall
-        ).run_if(in_state(GameState::InGame(InGameState::Main))));
+        ).run_if(in_game_states));
     }
 }
 

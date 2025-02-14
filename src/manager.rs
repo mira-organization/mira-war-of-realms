@@ -164,6 +164,10 @@ impl ConfigService {
     }
 }
 
+pub fn in_game_states(game_state: Res<State<GameState>>) -> bool {
+    matches!(*game_state.get(), GameState::InGame(_))
+}
+
 fn transition(ready: Res<PipelinesReady>, mut next_state: ResMut<NextState<GameState>>) {
     info!("transitioning state {:?}", ready.get());
     if ready.get() >= 6 {
