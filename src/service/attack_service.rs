@@ -1,8 +1,9 @@
 use bevy::prelude::*;
+use bevy::utils::HashSet;
 use bevy_rapier3d::prelude::{ActiveCollisionTypes, Collider, ColliderDebugColor, ReadDefaultRapierContext, RigidBody, Sensor};
 use crate::entities::{AttackHitBox, LivingEntity};
 use crate::events::world_events::WorldEntityHitEntityEvent;
-use crate::manager::GameState;
+use crate::manager::{GameState, InGameState};
 
 pub struct AttackService;
 
@@ -18,7 +19,7 @@ impl Plugin for AttackService {
             attack_timer_system,
             attack_collision_system,
             debug_event_log
-        ).run_if(in_state(GameState::InGame)));
+        ).run_if(in_state(GameState::InGame(InGameState::Main))));
     }
 }
 
@@ -99,19 +100,25 @@ fn attack_collision_system(
     query: Query<(Entity, &Parent), With<AttackHitBox>>,
     collider_query: Query<Entity, With<LivingEntity>>,
     rapier_context: ReadDefaultRapierContext,
+    mut processed_collisions: Local<HashSet<(Entity, Entity)>>
 ) {
+    processed_collisions.clear();
+
     for (attack_entity, parent) in &query {
         for collider_entity in collider_query.iter() {
+            if parent.get() == collider_entity {
+                continue; // Skip collision with the entity that owns the hit_box
+            }
             // Check if the attack hit_box intersects with a living entity
             if rapier_context.intersection_pair(attack_entity, collider_entity).is_some() {
-                if parent.get() == collider_entity {
-                    continue; // Skip collision with the entity that owns the hit_box
+                let collision_pair = (parent.get(), collider_entity);
+
+                if processed_collisions.insert(collision_pair) {
+                    event_writer.send(WorldEntityHitEntityEvent {
+                        sender: parent.get(),
+                        entity: collider_entity,
+                    });
                 }
-                // Send an event when a collision is detected
-                event_writer.send(WorldEntityHitEntityEvent {
-                    sender: parent.get(),
-                    entity: collider_entity,
-                });
             }
         }
     }

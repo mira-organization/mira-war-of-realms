@@ -4,7 +4,7 @@ use rand::Rng;
 use crate::entities::enemies::ai::{AiSetup, AiState};
 use crate::entities::enemies::WorldEnemy;
 use crate::entities::WorldPlayer;
-use crate::manager::GameState;
+use crate::manager::{GameState, InGameState};
 use crate::service::attack_service::spawn_attack_hit_box;
 
 pub struct BaseAI;
@@ -13,7 +13,7 @@ pub struct BaseAI;
 /// It adds the logic system that runs on each fixed update during the `InGame` state.
 impl Plugin for BaseAI {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, logic_system.run_if(in_state(GameState::InGame)));
+        app.add_systems(FixedUpdate, logic_system.run_if(in_state(GameState::InGame(InGameState::Main))));
     }
 }
 
