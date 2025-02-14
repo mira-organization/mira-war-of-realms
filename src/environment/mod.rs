@@ -1,4 +1,5 @@
 mod env_init;
+mod env_swap_system;
 
 use std::f32::consts::PI;
 use bevy::pbr::CascadeShadowConfigBuilder;
@@ -6,22 +7,26 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_rapier3d::geometry::ComputedColliderShape;
 use bevy_rapier3d::prelude::{AsyncSceneCollider, RigidBody, TriMeshFlags};
-use crate::environment::env_init::{setup_environment_system, EnvInitPlugin};
-use crate::manager::GameState;
-use crate::service::load_service::PipelinesReady;
+use fluent_bundle::types::AnyEq;
+use crate::environment::env_init::{EnvInitPlugin};
+use crate::environment::env_swap_system::EnvSwapSystemPlugin;
+use crate::manager::{GameState, InGameState};
 
 pub struct EnvironmentPlugin;
 
 impl Plugin for EnvironmentPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<EnvironmentListResource>();
-        app.add_plugins(EnvInitPlugin);
-        app.add_systems(OnEnter(GameState::InGame), (create_game_floor, create_light));
+        app.add_plugins((EnvInitPlugin, EnvSwapSystemPlugin));
+        app.add_systems(OnEnter(GameState::InGame(InGameState::Main)), (create_game_floor, create_light));
     }
 }
 
 #[derive(Resource, Debug)]
 pub struct EnvironmentListResource(pub HashMap<String, Environment>);
+
+#[derive(Resource, Debug)]
+pub struct CurrentEnvironment(pub Environment);
 
 impl Default for EnvironmentListResource {
     fn default() -> Self {
@@ -47,7 +52,7 @@ pub struct Area {
     pub battle_scenes: HashMap<String, BattleScene>
 }
 
-#[derive(Reflect, Debug, Clone)]
+#[derive(Reflect, Debug, Clone, PartialEq)]
 pub enum EnvironmentState {
     Exploring,
     Battle,
@@ -60,6 +65,9 @@ pub struct BattleScene {
     pub battle_music: HashMap<String, String>,
 }
 
+#[derive(Component, Debug, Clone)]
+pub struct EnvironmentScene;
+
 fn create_game_floor(mut commands: Commands, asset_server: Res<AssetServer>, environment: Res<EnvironmentListResource>) {
     let map = environment.0.clone();
     if map.is_empty() {
@@ -67,22 +75,31 @@ fn create_game_floor(mut commands: Commands, asset_server: Res<AssetServer>, env
         return;
     }
 
-    let player_in_area = 0;
     let mut need_load = "";
+    let player_safe_data_env = "tutorial";
+    let player_safe_data_env_area = 1;
+    let mut current_env: Option<Environment> = None;
 
-    if let Some(temp_env) = map.get("tutorial-env") {
-        for (_key, area) in temp_env.areas.iter() {
-            if area.index == player_in_area {
-                need_load = &*area.name;
+    for (key, value) in map.iter() {
+        if key.equals(&player_safe_data_env.to_string()) {
+            for (_a_key, area) in value.areas.iter() {
+                if area.index == player_safe_data_env_area {
+                    need_load = &*area.name;
+                }
             }
+            current_env = Some(value.clone());
         }
     }
 
-    let path = format!("environments/tutorial-env/{}", need_load);
+    let path = format!("environments/tutorial/{}", need_load);
+    if let Some(env) = current_env {
+        commands.insert_resource(CurrentEnvironment(env));
+    }
 
     // Spawn the game floor entity, loading the floor model from the asset server
     commands.spawn(SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(path.clone()))))
         .insert(Name::new("Floor"))
+        .insert(EnvironmentScene)
         .insert(RigidBody::Fixed)  // The floor is fixed and won't move // Mark this entity as part of the environment
         .insert(AsyncSceneCollider {
             shape: Some(ComputedColliderShape::TriMesh(TriMeshFlags::MERGE_DUPLICATE_VERTICES)),

@@ -8,7 +8,7 @@ use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarge
 use crate::entities::player::input::PlayerInputPlugin;
 use crate::entities::{AnimatedPlayer, Animations, LivingEntity, WorldPlayer};
 use crate::entities::player::animation::PlayerAnimationPlugin;
-use crate::manager::{ConfigService, GameState};
+use crate::manager::{ConfigService, GameState, InGameState};
 
 /// A plugin for managing the player's systems, including input, animations,
 /// and spawning the player entity and camera in the game world.
@@ -23,8 +23,8 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(LastStableGround(Vec3::ZERO));
         app.add_plugins((PlayerInputPlugin, PlayerAnimationPlugin));
-        app.add_systems(OnEnter(GameState::InGame), create_world_player);
-        app.add_systems(OnEnter(GameState::InGame), create_player_camera);
+        app.add_systems(OnEnter(GameState::InGame(InGameState::Main)), create_world_player);
+        app.add_systems(OnEnter(GameState::InGame(InGameState::Main)), create_player_camera);
     }
 }
 

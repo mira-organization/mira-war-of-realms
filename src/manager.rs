@@ -122,7 +122,14 @@ pub enum GameState {
     SplashScreen,
     TitleScreen,
     AccountScreen,
-    InGame
+    InGame(InGameState),
+}
+
+#[derive(States, Default, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum InGameState {
+    #[default]
+    Main,
+    Battle
 }
 
 /// A service that loads and stores game configuration settings.
@@ -161,6 +168,6 @@ fn transition(ready: Res<PipelinesReady>, mut next_state: ResMut<NextState<GameS
     info!("transitioning state {:?}", ready.get());
     if ready.get() >= 6 {
         info!("Finished Loading!");
-        next_state.set(GameState::InGame);
+        next_state.set(GameState::InGame(InGameState::Main));
     }
 }

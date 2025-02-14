@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_kira_audio::{DynamicAudioChannels};
 use crate::audio::{AudioManager, AudioType};
-use crate::manager::GameState;
+use crate::manager::{GameState, InGameState};
 
 pub struct AudioHandlerPlugin;
 
@@ -10,7 +10,7 @@ pub struct AudioHandlerPlugin;
 impl Plugin for AudioHandlerPlugin {
     fn build(&self, app: &mut App) {
         // Adds a system that runs when entering the "InGame" state
-        app.add_systems(OnEnter(GameState::InGame), setup);
+        app.add_systems(OnEnter(GameState::InGame(InGameState::Main)), setup);
     }
 }
 
