@@ -7,6 +7,8 @@ player_down = "S"
 player_left = "A"
 player_right = "D"
 player_sprint = "ShiftLeft"
+debug_change = "F3"
+world_inspector_ui = "F1"
 
 # Camera sensitivity settings
 # Higher values result in faster camera movement.
