@@ -4,7 +4,7 @@ use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_kira_audio::AudioPlugin;
-use bevy_rapier3d::prelude::{NoUserData, PhysicsSet, RapierDebugRenderPlugin, RapierPhysicsPlugin};
+use bevy_rapier3d::prelude::{DebugRenderContext, NoUserData, PhysicsSet, RapierDebugRenderPlugin, RapierPhysicsPlugin};
 use bevy_third_person_camera::{CameraSyncSet, ThirdPersonCameraPlugin};
 use serde::Deserialize;
 use crate::audio::AudioStorePlugin;
@@ -14,6 +14,7 @@ use crate::events::EventManagerPlugin;
 use crate::languages::LanguagesPlugin;
 use crate::service::load_service::PipelinesReady;
 use crate::service::ServicePlugin;
+use crate::utils::key_code::convert;
 
 pub const PLAYER_VOID_THRESHOLD: f32 = -5.0;
 
@@ -32,7 +33,7 @@ impl Plugin for ManagerPlugin {
         app.add_plugins(LanguagesPlugin);
         app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
         app.add_plugins(RapierDebugRenderPlugin::default());
-        app.add_plugins(WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::F3)));
+        app.add_plugins(WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::F1)));
         app.add_plugins(ThirdPersonCameraPlugin);
         app.add_plugins(AudioPlugin);
         app.add_plugins(AudioStorePlugin);
@@ -44,6 +45,7 @@ impl Plugin for ManagerPlugin {
                 .run_if(in_state(GameState::PreLoad))
                 .run_if(resource_changed::<PipelinesReady>),
         );
+        app.add_systems(Update, change_debug_change);
     }
 }
 
@@ -91,6 +93,7 @@ pub struct InputConfig {
     pub(crate) player_left: String,
     pub(crate) player_right: String,
     pub(crate) player_sprint: String,
+    pub(crate) debug_change: String,
     pub(crate) camera_vertical_sensitivity: f32,
     pub(crate) camera_horizontal_sensitivity: f32,
     pub(crate) camera_zoom_in: f32,
@@ -105,6 +108,7 @@ impl Default for InputConfig {
             player_left: String::from("A"),
             player_right: String::from("D"),
             player_sprint: String::from("ShiftLeft"),
+            debug_change: String::from("F3"),
             camera_horizontal_sensitivity: 1.0,
             camera_vertical_sensitivity: 1.0,
             camera_zoom_in: 3.5,
@@ -173,5 +177,15 @@ fn transition(ready: Res<PipelinesReady>, mut next_state: ResMut<NextState<GameS
     if ready.get() >= 6 {
         info!("Finished Loading!");
         next_state.set(GameState::InGame(InGameState::Main));
+    }
+}
+
+fn change_debug_change(mut debug_context: ResMut<DebugRenderContext>,
+                       keyboard: ResMut<ButtonInput<KeyCode>>,
+                       general_config: Res<ConfigService>,
+) {
+    let key = convert(general_config.input_config.debug_change.as_str()).expect("Fetch key for (debug change) was failed!");
+    if keyboard.just_pressed(key) {
+        debug_context.enabled = !debug_context.enabled
     }
 }
