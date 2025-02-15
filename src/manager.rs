@@ -45,7 +45,7 @@ impl Plugin for ManagerPlugin {
                 .run_if(in_state(GameState::PreLoad))
                 .run_if(resource_changed::<PipelinesReady>),
         );
-        app.add_systems(Update, change_debug_change);
+        app.add_systems(Update, toggle_debug_system);
     }
 }
 
@@ -168,10 +168,23 @@ impl ConfigService {
     }
 }
 
+/// Checks if the current game state is an instance of `GameState::InGame`.
+///
+/// # Arguments
+/// * `game_state` - A reference to the current state of the game.
+///
+/// # Returns
+/// * `true` if the game is in an `InGame` state, otherwise `false`.
 pub fn in_game_states(game_state: Res<State<GameState>>) -> bool {
     matches!(*game_state.get(), GameState::InGame(_))
 }
 
+/// Transitions the game state to `GameState::InGame(InGameState::Main)`
+/// once the loading process is completed.
+///
+/// # Arguments
+/// * `ready` - A resource indicating the number of completed loading pipelines.
+/// * `next_state` - A mutable reference to `NextState<GameState>` to modify the game state.
 fn transition(ready: Res<PipelinesReady>, mut next_state: ResMut<NextState<GameState>>) {
     info!("transitioning state {:?}", ready.get());
     if ready.get() >= 6 {
@@ -180,11 +193,19 @@ fn transition(ready: Res<PipelinesReady>, mut next_state: ResMut<NextState<GameS
     }
 }
 
-fn change_debug_change(mut debug_context: ResMut<DebugRenderContext>,
-                       keyboard: ResMut<ButtonInput<KeyCode>>,
-                       general_config: Res<ConfigService>,
+/// Toggles the debug rendering system on or off based on a configured key input.
+///
+/// # Arguments
+/// * `debug_context` - A mutable reference to the debug rendering context.
+/// * `keyboard` - A resource representing the current state of keyboard inputs.
+/// * `general_config` - A resource containing the game's configuration settings.
+fn toggle_debug_system(
+    mut debug_context: ResMut<DebugRenderContext>,
+    keyboard: ResMut<ButtonInput<KeyCode>>,
+    general_config: Res<ConfigService>,
 ) {
-    let key = convert(general_config.input_config.debug_change.as_str()).expect("Fetch key for (debug change) was failed!");
+    let key = convert(general_config.input_config.debug_change.as_str())
+        .expect("Fetch key for (debug change) was failed!");
     if keyboard.just_pressed(key) {
         debug_context.enabled = !debug_context.enabled
     }
