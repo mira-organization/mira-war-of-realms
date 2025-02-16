@@ -77,7 +77,7 @@ fn create_game_floor(mut commands: Commands, asset_server: Res<AssetServer>, env
 
     let mut need_load = "";
     let player_safe_data_env = "tutorial";
-    let player_safe_data_env_area = 1;
+    let player_safe_data_env_area = 2;
     let mut current_env: Option<Environment> = None;
 
     for (key, value) in map.iter() {
