@@ -160,6 +160,7 @@ pub enum InGameState {
 #[derive(States, Default, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
 pub enum UiState {
+    Loading,
     #[default]
     Main,
     Settings,
