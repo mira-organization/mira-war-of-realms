@@ -1,5 +1,7 @@
+use std::fs;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use regex::Regex;
 use crate::environment::{Area, Environment, EnvironmentListResource, EnvironmentState};
 
 pub struct EnvInitPlugin;
@@ -17,7 +19,7 @@ pub fn setup_environment_system(mut commands: Commands) {
 
 fn load_environments() -> HashMap<String, Environment> {
     let mut environments = HashMap::new();
-    if let Ok(entries) = std::fs::read_dir("assets/environments") {
+    if let Ok(entries) = fs::read_dir("assets/environments") {
         for entry in entries.flatten() {
             if let Ok(file_name) = entry.file_name().into_string() {
                 let areas = load_areas(file_name.as_str());
@@ -36,17 +38,32 @@ fn load_environments() -> HashMap<String, Environment> {
 
 fn load_areas(folder: &str) -> HashMap<String, Area> {
     let mut areas = HashMap::new();
-    if let Ok(contents) = std::fs::read_dir(format!("assets/environments/{}", folder)) {
-        for (index, entry) in contents.flatten().enumerate() {
-            if let Ok(file_name) = entry.file_name().into_string() {
-                let area = Area {
-                    name: file_name.clone(),
-                    index,
-                    player_in_bound: false,
-                    battle_scenes: HashMap::new(),
-                };
-                areas.insert(file_name, area);
-            }
+    let regex = Regex::new(r"^area_(\d+)\.glb$").unwrap();
+
+    if let Ok(contents) = fs::read_dir(format!("assets/environments/{}", folder)) {
+        let mut entries: Vec<(usize, String)> = contents
+            .flatten()
+            .filter_map(|entry| {
+                let file_name = entry.file_name().into_string().ok()?;
+                if let Some(caps) = regex.captures(&file_name) {
+                    let number: usize = caps[1].parse().ok()?;
+                    Some((number, file_name))
+                } else {
+                    Some((usize::MAX, file_name))
+                }
+            })
+            .collect();
+
+        entries.sort_by_key(|&(num, _)| num);
+
+        for (index, file_name) in entries {
+            let area = Area {
+                name: file_name.clone(),
+                index,
+                player_in_bound: false,
+                battle_scenes: HashMap::new(),
+            };
+            areas.insert(file_name, area);
         }
     }
     areas

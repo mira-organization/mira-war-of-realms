@@ -33,9 +33,10 @@ fluent-bundle = {version = "^0.15"}
 bevy_rapier3d = {version = "0.28.0", features = ["simd-nightly", "debug-render-3d", "default"]}
 
 # Utils
-rand = "0.9.0"
+rand = { version = "0.9.0" }
 toml = {version = "^0.8.0", features = ["parse", "display"]}
 serde = { version = "1.0.217", features = ["derive"] }
+regex = { version = "^1.11" }
 
 [dependencies.bevy]
 version = "0.15.2"
