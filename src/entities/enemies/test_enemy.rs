@@ -37,13 +37,14 @@ fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
         ))
         .insert(Name::new("Enemy-Test"))
         .insert(AnimatedMob)
-        .insert(Transform::from_xyz(4.0, 0.0, 2.0))
+        .insert(Transform::from_xyz(-32.0, 0.249, 15.0))
         .insert(AiSetup {
             state: AiState::Idle,
             path: vec![
-                Vec3::new(16.0, 0.0, 2.0),
-                Vec3::new(8.0, 0.0, 8.0),
-                Vec3::new(1.5, 0.0, -9.0),
+                Vec3::new(-32.0, 0.249, 15.0),
+                Vec3::new(-32.0, 0.249, 40.0),
+                Vec3::new(-12.0, 0.249, 38.0),
+                Vec3::new(-12.0, 0.249, 20.0)
             ],
             current_path_index: 0,
             idle_timer: rand::rng().random_range(2.0..6.0),

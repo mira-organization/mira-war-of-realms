@@ -11,8 +11,9 @@ use crate::entities::EntitiesPlugin;
 use crate::environment::EnvironmentPlugin;
 use crate::events::EventManagerPlugin;
 use crate::languages::LanguagesPlugin;
-use crate::service::load_service::PipelinesReady;
 use crate::service::ServicePlugin;
+use crate::states::StatesPlugin;
+use crate::ui::UiPlugin;
 use crate::utils::key_code::convert;
 
 pub const PLAYER_VOID_THRESHOLD: f32 = -5.0;
@@ -40,14 +41,9 @@ impl Plugin for ManagerPlugin {
         app.add_plugins(ThirdPersonCameraPlugin);
         app.add_plugins(AudioPlugin);
         app.add_plugins(AudioStorePlugin);
-        app.add_plugins((EventManagerPlugin, EntitiesPlugin, EnvironmentPlugin, ServicePlugin));
+        app.add_plugins((StatesPlugin, EventManagerPlugin, EntitiesPlugin,
+                         EnvironmentPlugin, ServicePlugin, UiPlugin));
         app.configure_sets(PostUpdate, CameraSyncSet.after(PhysicsSet::StepSimulation));
-        app.add_systems(
-            Update,
-            transition
-                .run_if(in_state(GameState::PreLoad))
-                .run_if(resource_changed::<PipelinesReady>),
-        );
         app.add_systems(Update, (toggle_debug_system, toggle_world_inspector_interface_system));
     }
 }
@@ -148,13 +144,28 @@ pub enum GameState {
     TitleScreen,
     AccountScreen,
     InGame(InGameState),
+    InUi(UiState)
 }
 
 #[derive(States, Default, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[allow(dead_code)]
 pub enum InGameState {
     #[default]
     Main,
-    Battle
+    Battle,
+    BattleEnd,
+    Dialogue
+}
+
+#[derive(States, Default, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[allow(dead_code)]
+pub enum UiState {
+    Loading,
+    #[default]
+    Main,
+    Settings,
+    Shop,
+    Wish
 }
 
 /// A service that loads and stores game configuration settings.
@@ -198,20 +209,6 @@ impl ConfigService {
 /// * `true` if the game is in an `InGame` state, otherwise `false`.
 pub fn in_game_states(game_state: Res<State<GameState>>) -> bool {
     matches!(*game_state.get(), GameState::InGame(_))
-}
-
-/// Transitions the game state to `GameState::InGame(InGameState::Main)`
-/// once the loading process is completed.
-///
-/// # Arguments
-/// * `ready` - A resource indicating the number of completed loading pipelines.
-/// * `next_state` - A mutable reference to `NextState<GameState>` to modify the game state.
-fn transition(ready: Res<PipelinesReady>, mut next_state: ResMut<NextState<GameState>>) {
-    info!("transitioning state {:?}", ready.get());
-    if ready.get() >= 6 {
-        info!("Finished Loading!");
-        next_state.set(GameState::InGame(InGameState::Main));
-    }
 }
 
 /// Toggles the debug rendering system on or off based on a configured key input.
