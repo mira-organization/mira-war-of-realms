@@ -1,5 +1,6 @@
 mod env_init;
 mod env_swap_system;
+mod ready_up_handles;
 
 use std::f32::consts::PI;
 use bevy::pbr::CascadeShadowConfigBuilder;
@@ -10,23 +11,39 @@ use bevy_rapier3d::prelude::{AsyncSceneCollider, RigidBody, TriMeshFlags};
 use fluent_bundle::types::AnyEq;
 use crate::environment::env_init::{EnvInitPlugin};
 use crate::environment::env_swap_system::EnvSwapSystemPlugin;
+use crate::environment::ready_up_handles::ReadyUpHandles;
 use crate::manager::{GameState, InGameState};
 
 pub struct EnvironmentPlugin;
 
+/// The main plugin responsible for managing environments in the game.
+///
+/// This plugin initializes environment-related resources, adds sub-plugins,
+/// and registers necessary systems related to environment management.
+///
+/// # Systems Added
+/// - `create_light`: Handles the creation of lighting when an environment is loaded.
+///
+/// # Plugins Added
+/// - `EnvInitPlugin`: Handles environment initialization.
+/// - `ReadyUpHandles`: Manages loading environments and areas.
+/// - `EnvSwapSystemPlugin`: Manages environment swapping.
 impl Plugin for EnvironmentPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<EnvironmentListResource>();
-        app.add_plugins((EnvInitPlugin, EnvSwapSystemPlugin));
-        app.add_systems(OnEnter(GameState::InGame(InGameState::Main)), (create_game_floor, create_light));
+        app.add_plugins((EnvInitPlugin, ReadyUpHandles, EnvSwapSystemPlugin));
+        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_light);
     }
 }
 
+/// Stores a list of all available environments in the game.
+///
+/// The key is a `String` representing the environment name, and the value is
+/// an `Environment` struct containing details about the environment.
+///
+/// This resource is initialized as an empty `HashMap` by default.
 #[derive(Resource, Debug)]
 pub struct EnvironmentListResource(pub HashMap<String, Environment>);
-
-#[derive(Resource, Debug)]
-pub struct CurrentEnvironment(pub Environment);
 
 impl Default for EnvironmentListResource {
     fn default() -> Self {
@@ -36,6 +53,26 @@ impl Default for EnvironmentListResource {
     }
 }
 
+/// Stores information about the currently active environment and area.
+///
+/// This resource holds both the selected `Environment` and the specific `Area`
+/// within it that the player is currently in.
+#[derive(Resource, Debug)]
+pub struct CurrentEnvironment {
+    pub environment: Environment,
+    pub area: Area,
+}
+
+/// Represents an environment in the game.
+///
+/// An environment consists of multiple `Area`s and has a `state`
+/// that determines whether it's in an exploring, battle, or boss state.
+///
+/// # Fields
+/// - `name`: The name of the environment.
+/// - `loaded`: Whether the environment is currently loaded.
+/// - `areas`: A map of areas within this environment.
+/// - `state`: The current state of the environment.
 #[derive(Component, Reflect, Debug, Clone)]
 pub struct Environment {
     pub name: String,
@@ -44,6 +81,16 @@ pub struct Environment {
     pub state: EnvironmentState
 }
 
+/// Represents a specific area within an environment.
+///
+/// Each area has an index, a name, and may contain battle scenes.
+/// The `player_in_bound` field indicates if the player is currently in this area.
+///
+/// # Fields
+/// - `name`: The name of the area.
+/// - `index`: The index of the area within the environment.
+/// - `player_in_bound`: Whether the player is currently inside the area's boundaries.
+/// - `battle_scenes`: A collection of battle scenes associated with this area.
 #[derive(Reflect, Debug, Clone)]
 pub struct Area {
     pub name: String,
@@ -52,6 +99,12 @@ pub struct Area {
     pub battle_scenes: HashMap<String, BattleScene>
 }
 
+/// Defines the possible states of an environment.
+///
+/// # Variants
+/// - `Exploring`: The player is freely exploring the environment.
+/// - `Battle`: The player is currently in a battle.
+/// - `Boss`: The player is engaged in a boss fight.
 #[derive(Reflect, Debug, Clone, PartialEq)]
 pub enum EnvironmentState {
     Exploring,
@@ -59,53 +112,36 @@ pub enum EnvironmentState {
     Boss
 }
 
+/// Represents a battle scene in an area.
+///
+/// Each battle scene has a name and a set of associated battle music tracks.
+///
+/// # Fields
+/// - `name`: The name of the battle scene.
+/// - `battle_music`: A map of music tracks for the battle.
 #[derive(Component, Reflect, Debug, Clone)]
 pub struct BattleScene {
     pub name: String,
     pub battle_music: HashMap<String, String>,
 }
 
+/// A marker component for environment-related scenes.
+///
+/// This component is used to tag entities representing environment visuals in the game world.
 #[derive(Component, Debug, Clone)]
 pub struct EnvironmentScene;
 
-fn create_game_floor(mut commands: Commands, asset_server: Res<AssetServer>, environment: Res<EnvironmentListResource>) {
-    let map = environment.0.clone();
-    if map.is_empty() {
-        error!("No environment found!");
-        return;
-    }
-
-    let mut need_load = "";
-    let player_safe_data_env = "tutorial";
-    let player_safe_data_env_area = 2;
-    let mut current_env: Option<Environment> = None;
-
-    for (key, value) in map.iter() {
-        if key.equals(&player_safe_data_env.to_string()) {
-            for (_a_key, area) in value.areas.iter() {
-                if area.index == player_safe_data_env_area {
-                    need_load = &*area.name;
-                }
-            }
-            current_env = Some(value.clone());
-        }
-    }
-
-    let path = format!("environments/tutorial/{}", need_load);
-    if let Some(env) = current_env {
-        commands.insert_resource(CurrentEnvironment(env));
-    }
-
-    // Spawn the game floor entity, loading the floor model from the asset server
-    commands.spawn(SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(path.clone()))))
-        .insert(Name::new("Floor"))
-        .insert(EnvironmentScene)
-        .insert(RigidBody::Fixed)  // The floor is fixed and won't move // Mark this entity as part of the environment
-        .insert(AsyncSceneCollider {
-            shape: Some(ComputedColliderShape::TriMesh(TriMeshFlags::MERGE_DUPLICATE_VERTICES)),
-            ..default()
-        });
-}
+/// Stores the currently loaded area scenes as handles.
+///
+/// This resource maps scene layer names to their corresponding `Handle<Scene>` objects.
+/// The layers include collision, environment visuals, and objects.
+///
+/// # Layers
+/// - `"first_layer"`: Contains collision data.
+/// - `"second_layer"`: Contains the visual environment.
+/// - `"last_layer"`: Contains objects in the scene.
+#[derive(Resource, Debug, Clone)]
+pub struct CurrentAreaScenes(pub HashMap<String, Handle<Scene>>);
 
 fn create_light(mut commands: Commands) {
     // Spawn the directional light entity

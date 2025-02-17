@@ -19,7 +19,7 @@ fn enter_battle(current_environment: Res<CurrentEnvironment>,
                 query: Query<Entity, With<EnvironmentScene>>,
                 mut commands: Commands,
 ) {
-    if current_environment.0.state == EnvironmentState::Battle {
+    if current_environment.environment.state == EnvironmentState::Battle {
         info!("Battle is already running");
         next_state.set(GameState::InGame(InGameState::Battle));
         let path = "environments/tutorial/area_0002.glb";

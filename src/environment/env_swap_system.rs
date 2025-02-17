@@ -17,10 +17,10 @@ fn swap_to_battle(mut current_env: ResMut<CurrentEnvironment>,
                   mut event_reader: EventReader<WorldEntityHitEntityEvent>
 ) {
     if event_reader.read().next().is_some() {
-        if current_env.0.state == EnvironmentState::Battle {
+        if current_env.environment.state == EnvironmentState::Battle {
             return;
         }
         info!("Trigger EnvSwapSystemPlugin");
-        current_env.0.state = EnvironmentState::Battle;
+        current_env.environment.state = EnvironmentState::Battle;
     }
 }
