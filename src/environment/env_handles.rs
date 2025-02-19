@@ -3,7 +3,7 @@ use bevy::render::view::NoFrustumCulling;
 use bevy_rapier3d::dynamics::RigidBody;
 use bevy_rapier3d::geometry::{AsyncSceneCollider, ComputedColliderShape, TriMeshFlags};
 use crate::entities::{InBattle, WorldPlayer};
-use crate::environment::{CurrentAreaScenes, EnvironmentScene};
+use crate::environment::{BattleEnvironment, CurrentAreaScenes, EnvironmentScene};
 use crate::events::world_events::WorldEntityHitEntityEvent;
 use crate::manager::{GameState, InGameState};
 
@@ -51,6 +51,7 @@ fn load_battle_scene(area: Res<CurrentAreaScenes>,
             .insert(EnvironmentScene)
             .insert(NoFrustumCulling)
             .insert(RigidBody::Fixed)
+            .insert(BattleEnvironment)
             .insert(AsyncSceneCollider {
                 shape: Some(ComputedColliderShape::TriMesh(TriMeshFlags::MERGE_DUPLICATE_VERTICES)),
                 ..default()
@@ -65,15 +66,19 @@ fn load_battle_scene(area: Res<CurrentAreaScenes>,
 
 fn temp_leave_battle(mut commands: Commands,
                      mut players: Query<(Entity, &mut Transform), With<InBattle>>,
+                     battle_query: Query<Entity, With<BattleEnvironment>>,
                      keyboard: Res<ButtonInput<KeyCode>>,
                      mut next_state: ResMut<NextState<GameState>>
 ) {
     if keyboard.just_pressed(KeyCode::KeyL) {
         for (entity, mut transform) in players.iter_mut() {
             commands.entity(entity).remove::<InBattle>();
-            transform.translation = Vec3::new(0.0, 1.0, 0.0);
+            transform.translation = Vec3::new(40.0, 1.0, 40.0);
         }
 
+        for entity in battle_query.iter() {
+            commands.entity(entity).despawn_recursive();
+        }
         next_state.set(GameState::InGame(InGameState::Main));
         info!("Leaving Battle Scenes");
     }

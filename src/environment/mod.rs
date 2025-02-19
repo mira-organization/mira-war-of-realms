@@ -128,6 +128,9 @@ pub struct BattleScene {
 #[derive(Component, Debug, Clone)]
 pub struct EnvironmentScene;
 
+#[derive(Component, Debug, Clone)]
+pub struct BattleEnvironment;
+
 /// Stores the currently loaded area scenes as handles.
 ///
 /// This resource maps scene layer names to their corresponding `Handle<Scene>` objects.
