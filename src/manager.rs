@@ -16,7 +16,7 @@ use crate::states::StatesPlugin;
 use crate::ui::UiPlugin;
 use crate::utils::key_code::convert;
 
-pub const PLAYER_VOID_THRESHOLD: f32 = -5.0;
+pub const PLAYER_VOID_THRESHOLD: f32 = -100.0;
 
 /// The main plugin responsible for initializing game states, resources, and sub-plugins.
 pub struct ManagerPlugin;
@@ -182,7 +182,7 @@ impl Default for DummySaveData {
     fn default() -> Self {
         Self {
             current_environment: String::from("tutorial"),
-            current_area: 3,
+            current_area: 2,
         }
     }
 }

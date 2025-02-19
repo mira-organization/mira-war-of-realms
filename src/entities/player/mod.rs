@@ -70,7 +70,7 @@ pub fn create_world_player(
     commands.spawn(SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/player/player_idle.glb"))))
         .insert(Name::new("WorldPlayer"))
         .insert(AnimatedPlayer)
-        .insert(Transform::from_xyz(0.0, 0.0, 0.0))
+        .insert(Transform::from_xyz(40.0, 0.249, 40.0))
         .insert(ThirdPersonCameraTarget)
         .insert(WorldPlayer::default())
         .insert(LivingEntity)

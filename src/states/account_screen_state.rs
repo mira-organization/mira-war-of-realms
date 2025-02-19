@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::manager::{GameState, InGameState};
+use crate::manager::GameState;
 
 pub struct AccountScreenState;
 

@@ -6,13 +6,10 @@ use std::f32::consts::PI;
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use bevy_rapier3d::geometry::ComputedColliderShape;
-use bevy_rapier3d::prelude::{AsyncSceneCollider, RigidBody, TriMeshFlags};
-use fluent_bundle::types::AnyEq;
 use crate::environment::env_init::{EnvInitPlugin};
 use crate::environment::env_swap_system::EnvSwapSystemPlugin;
 use crate::environment::ready_up_handles::ReadyUpHandles;
-use crate::manager::{GameState, InGameState};
+use crate::manager::GameState;
 
 pub struct EnvironmentPlugin;
 
