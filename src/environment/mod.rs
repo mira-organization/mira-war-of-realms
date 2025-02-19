@@ -1,5 +1,5 @@
 mod env_init;
-mod env_swap_system;
+mod env_handles;
 mod ready_up_handles;
 
 use std::f32::consts::PI;
@@ -7,7 +7,7 @@ use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use crate::environment::env_init::{EnvInitPlugin};
-use crate::environment::env_swap_system::EnvSwapSystemPlugin;
+use crate::environment::env_handles::EnvSwapSystemPlugin;
 use crate::environment::ready_up_handles::ReadyUpHandles;
 use crate::manager::GameState;
 
@@ -139,6 +139,9 @@ pub struct EnvironmentScene;
 /// - `"last_layer"`: Contains objects in the scene.
 #[derive(Resource, Debug, Clone)]
 pub struct CurrentAreaScenes(pub HashMap<String, Handle<Scene>>);
+
+#[derive(Resource, Debug, Clone)]
+pub struct WaitingForAreaAssets(pub Handle<Gltf>);
 
 fn create_light(mut commands: Commands) {
     // Spawn the directional light entity

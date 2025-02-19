@@ -182,7 +182,7 @@ impl Default for DummySaveData {
     fn default() -> Self {
         Self {
             current_environment: String::from("tutorial"),
-            current_area: 2,
+            current_area: 3,
         }
     }
 }
