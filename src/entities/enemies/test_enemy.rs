@@ -5,7 +5,7 @@ use rand::Rng;
 use crate::entities::{AnimatedMob, LivingEntity};
 use crate::entities::enemies::ai::{AiSetup, AiState};
 use crate::entities::enemies::WorldEnemy;
-use crate::manager::{GameState, InGameState};
+use crate::manager::GameState;
 
 /// A plugin for setting up a test enemy in the game world.
 ///
@@ -17,7 +17,7 @@ impl Plugin for TestEnemy {
     /// Configures the application to add a system for setting up a test enemy
     /// when entering the `GameState::InGame` state.
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::InGame(InGameState::Main)), setup_enemy);
+        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), setup_enemy);
     }
 }
 

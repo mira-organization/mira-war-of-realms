@@ -123,6 +123,7 @@ fn process_loaded_area(mut commands: Commands,
 ) {
     if let Some(waiting) = waiting {
         if let Some(gltf) = gltf_assets.get(&waiting.0) {
+            let mut map = HashMap::new();
             let found_scenes = gltf.scenes.len();
             info!("Found [{:?}] scenes", found_scenes);
 
@@ -132,9 +133,15 @@ fn process_loaded_area(mut commands: Commands,
 
             if found_scenes > 3 {
                 info!("Battle Scenes was found!");
+                let mut count = 1;
+                for (index, scene) in gltf.scenes.iter().enumerate() {
+                    if index > 2 {
+                        map.insert(format!("battle_{}", count), scene.clone());
+                        count += 1;
+                    }
+                }
             }
 
-            let mut map = HashMap::new();
             map.insert(String::from("layer_0"), layer_0.clone());
             if let Some(scene) = layer_1 {
                 map.insert(String::from("layer_1"), scene.clone());

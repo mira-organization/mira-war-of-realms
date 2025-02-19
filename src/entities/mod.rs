@@ -115,6 +115,10 @@ impl Default for WorldPlayer {
     }
 }
 
+#[derive(Component, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct InBattle;
+
 /// The `WorldPlayerState` enum represents the different possible states of a player in the world.
 ///
 /// This enum is used to track and manage the state of a player, such as whether the player is idle, walking, or sprinting.
