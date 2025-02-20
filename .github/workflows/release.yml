@@ -33,6 +33,9 @@ jobs:
         run: |
           sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
 
+      - name: Set Cargo Target Directory
+        run: echo "CARGO_TARGET_DIR=target/x86_64-unknown-linux-gnu" >> $GITHUB_ENV
+
       - name: Build
         run: |
           cargo build --release --target x86_64-unknown-linux-gnu
@@ -40,7 +43,7 @@ jobs:
       - name: Prepare package
         run: |
           mkdir linux
-          cp target/x86_64-unknown-linux-gnu/release/${{ env.binary }} linux/
+          cp $CARGO_TARGET_DIR/release/${{ env.binary }} linux/
           cp -r assets linux/ || true # Try to copy, but ignore if it can't copy if source directory does not exist
           cp -r conf linux/ || true # Try to copy, but ignore if it can't copy if source directory does not exist
           cp -r libs linux/ || true # Try to copy, but ignore if it can't copy if source directory does not exist

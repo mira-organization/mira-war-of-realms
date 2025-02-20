@@ -1,8 +1,13 @@
 use std::fs;
+use std::env;
 use std::path::PathBuf;
 
 fn main() {
-    let target_dir = PathBuf::from("target/release");
+    let target_dir = env::var("CARGO_TARGET_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("target"))
+        .join(env::var("PROFILE").unwrap_or_else(|_| "release".to_string()));
+
     let libs_dir = PathBuf::from("libs");
 
     fs::create_dir_all(&libs_dir).unwrap();
@@ -15,8 +20,8 @@ fn main() {
         vec!["so"]
     };
 
-    for entry in target_dir.read_dir().unwrap() {
-        if let Ok(entry) = entry {
+    if let Ok(entries) = target_dir.read_dir() {
+        for entry in entries.flatten() {
             let path = entry.path();
             if path.is_file() {
                 if let Some(ext) = path.extension() {
