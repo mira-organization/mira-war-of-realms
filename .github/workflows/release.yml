@@ -40,9 +40,6 @@ jobs:
         run: |
           cargo build --release --target x86_64-unknown-linux-gnu && chmod +x ./post_build.sh && ./post_build.sh "target/x86_64-unknown-linux-gnu/release"
 
-      - name: Debug Build Output
-        run: ls -R
-
       - name: Prepare package
         run: |
           mkdir linux
