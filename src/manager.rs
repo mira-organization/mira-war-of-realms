@@ -16,7 +16,7 @@ use crate::states::StatesPlugin;
 use crate::ui::UiPlugin;
 use crate::utils::key_code::convert;
 
-pub const PLAYER_VOID_THRESHOLD: f32 = -5.0;
+pub const PLAYER_VOID_THRESHOLD: f32 = -100.0;
 
 /// The main plugin responsible for initializing game states, resources, and sub-plugins.
 pub struct ManagerPlugin;
@@ -29,6 +29,7 @@ impl Plugin for ManagerPlugin {
         // Insert global configuration resource
         app.insert_resource(ConfigService::new());
         app.insert_resource(WorldInspectorState::default());
+        app.insert_resource(DummySaveData::default());
 
         // Add various game-related plugins
         app.add_plugins(LanguagesPlugin);
@@ -143,6 +144,9 @@ pub enum GameState {
     SplashScreen,
     TitleScreen,
     AccountScreen,
+    EnvironmentPreLoad,
+    EnvironmentLoad,
+    EnvironmentPostLoad,
     InGame(InGameState),
     InUi(UiState)
 }
@@ -166,6 +170,21 @@ pub enum UiState {
     Settings,
     Shop,
     Wish
+}
+
+#[derive(Resource, Debug, PartialEq)]
+pub struct DummySaveData {
+    pub current_environment: String,
+    pub current_area: usize,
+}
+
+impl Default for DummySaveData {
+    fn default() -> Self {
+        Self {
+            current_environment: String::from("tutorial"),
+            current_area: 3,
+        }
+    }
 }
 
 /// A service that loads and stores game configuration settings.

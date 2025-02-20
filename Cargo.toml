@@ -41,3 +41,7 @@ regex = { version = "^1.11" }
 [dependencies.bevy]
 version = "0.15.2"
 default-features = true
+features = [
+    "jpeg",
+    "png"
+]
