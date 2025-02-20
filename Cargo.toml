@@ -2,10 +2,16 @@
 name = "mira-war-of-realms"
 version = "0.1.0"
 edition = "2024"
+build = "build.rs"
 
 [[bin]]
 name = "mira-war-of-realms"
 path = "src/main.rs"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "unwind"
 
 [profile.dev]
 opt-level = 1
@@ -43,5 +49,6 @@ version = "0.15.2"
 default-features = true
 features = [
     "jpeg",
-    "png"
+    "png",
+    "dynamic_linking"
 ]
