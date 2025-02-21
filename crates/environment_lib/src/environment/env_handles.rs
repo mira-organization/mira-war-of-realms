@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy_rapier3d::dynamics::RigidBody;
 use bevy_rapier3d::geometry::{AsyncSceneCollider, ComputedColliderShape, TriMeshFlags};
-use crate::entities::{InBattle, WorldPlayer};
+use system::commons::{InBattle, WorldPlayer};
+use system::states::{GameState, InGameState};
+use system::events::world_events::WorldEntityHitEntityEvent;
 use crate::environment::{BattleEnvironment, CurrentAreaScenes, EnvironmentScene};
-use crate::events::world_events::WorldEntityHitEntityEvent;
-use crate::manager::{GameState, InGameState};
 
 pub struct EnvSwapSystemPlugin;
 

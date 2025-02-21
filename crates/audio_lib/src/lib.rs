@@ -1,10 +1,9 @@
-mod audio;
+pub mod audio;
 
 use std::time::Duration;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_kira_audio::*;
-use crate::audio::audio::AudioHandlerPlugin;
 
 pub struct AudioStorePlugin;
 
@@ -13,9 +12,8 @@ impl Plugin for AudioStorePlugin {
     fn build(&self, app: &mut App) {
         // Inserts the `AudioManager` resource into the app, which handles all audio functionality
         app.insert_resource(AudioManager::new());
-
-        // Adds the `AudioHandlerPlugin`, which manages the actual playback of audio tracks
-        app.add_plugins(AudioHandlerPlugin);
+        app.add_plugins(AudioPlugin);
+        info!("Crate audio was loaded successfully!");
     }
 }
 
@@ -157,5 +155,3 @@ pub struct EnvironmentAudio {
     pub base_track: String,  // The default ambient track for the environment
     pub battle_track: String,  // The track played during battle or combat situations
 }
-
-

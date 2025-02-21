@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use crate::manager::GameState;
-use crate::service::load_service::PipelinesReady;
+use system::service::load_service::PipelinesReady;
+use system::states::GameState;
 
 pub struct PreLoadState;
 

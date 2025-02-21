@@ -1,8 +1,8 @@
 use std::time::Duration;
 use bevy::prelude::*;
-use crate::entities::{Animations, WorldPlayer, WorldPlayerState};
-use crate::entities::player::create_world_player;
-use crate::manager::{in_game_states};
+use system::commons::{Animations, WorldPlayer, WorldPlayerState};
+use system::states::in_game_states;
+use crate::player::create_world_player;
 
 /// A plugin responsible for managing player animations.
 ///

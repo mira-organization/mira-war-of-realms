@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy_rapier3d::prelude::{ActiveCollisionTypes, Collider, ColliderDebugColor, ReadDefaultRapierContext, RigidBody, Sensor};
-use crate::entities::{AttackHitBox, LivingEntity};
+use crate::commons::{AttackHitBox, LivingEntity};
 use crate::events::world_events::WorldEntityHitEntityEvent;
-use crate::manager::{GameState, InGameState};
+use crate::states::{GameState, InGameState};
 
 pub struct AttackService;
 

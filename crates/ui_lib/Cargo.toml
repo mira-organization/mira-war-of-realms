@@ -1,0 +1,28 @@
+[package]
+name = "ui_lib"
+version = "0.0.1"
+edition = "2024"
+authors = ["Daniel Ramke <daniel.ramke@outlook.com>"]
+
+[lib]
+name = "ui_lib"
+path = "src/lib.rs"
+
+[dependencies]
+system = { path = "../system" }
+
+[dependencies.bevy]
+version = "0.15.2"
+default-features = false
+features = [
+    "bevy_asset",
+    "bevy_color",
+    "bevy_core_pipeline",
+    "bevy_render",
+    "bevy_text",
+    "bevy_ui",
+    "default_font",
+    "multi_threaded",
+    "png",
+    "jpeg"
+]

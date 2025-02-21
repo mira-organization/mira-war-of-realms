@@ -6,10 +6,10 @@ use std::f32::consts::PI;
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use crate::environment::env_init::{EnvInitPlugin};
+use system::states::GameState;
 use crate::environment::env_handles::EnvSwapSystemPlugin;
+use crate::environment::env_init::EnvInitPlugin;
 use crate::environment::ready_up_handles::ReadyUpHandles;
-use crate::manager::GameState;
 
 pub struct EnvironmentPlugin;
 

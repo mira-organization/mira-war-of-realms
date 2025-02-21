@@ -46,7 +46,6 @@ jobs:
           cp target/x86_64-unknown-linux-gnu/release/${{ env.binary }} linux/
           cp -r assets linux/ || true # Try to copy, but ignore if it can't copy if source directory does not exist
           cp -r conf linux/ || true # Try to copy, but ignore if it can't copy if source directory does not exist
-          cp -r libs linux/ || true # Try to copy, but ignore if it can't copy if source directory does not exist
 
       - name: Package as a zip
         working-directory: ./linux

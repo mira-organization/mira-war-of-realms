@@ -1,13 +1,6 @@
 mod game_client_window;
-mod environment;
 mod manager;
-mod entities;
-mod events;
 mod languages;
-mod audio;
-mod utils;
-mod service;
-mod ui;
 mod states;
 
 use bevy::prelude::*;

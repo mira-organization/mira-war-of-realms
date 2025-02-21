@@ -2,7 +2,7 @@ mod base_ai;
 
 use bevy::prelude::*;
 use rand::Rng;
-use crate::entities::enemies::ai::base_ai::BaseAI;
+use crate::enemies::ai::base_ai::BaseAI;
 
 pub struct AiPlugin;
 

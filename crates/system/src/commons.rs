@@ -1,36 +1,5 @@
-mod player;
-pub mod enemies;
-
+use bevy::asset::Handle;
 use bevy::prelude::*;
-use crate::entities::enemies::ai::AiPlugin;
-use crate::entities::enemies::EnemiesPlugin;
-use crate::entities::player::PlayerPlugin;
-
-/// The `EntitiesPlugin` plugin is responsible for registering and adding various components and plugins related to entities in the game.
-///
-/// This plugin registers several types for reflection and adds multiple plugins, such as the `PlayerPlugin`, `EnemiesPlugin`, and `AiPlugin`.
-/// It is responsible for setting up and managing entity-related systems, such as player and enemy entities.
-///
-/// # Example
-/// This plugin is used to handle entity creation and registration of player, enemy, and other related components in the game.
-pub struct EntitiesPlugin;
-
-impl Plugin for EntitiesPlugin {
-    /// Registers types for reflection and adds necessary plugins for managing entities.
-    ///
-    /// # Arguments
-    /// * `app` - The Bevy app to which the types and plugins are added.
-    fn build(&self, app: &mut App) {
-        // Registering types for reflection, which enables dynamic access to components
-        app.register_type::<AccountPlayer>();
-        app.register_type::<WorldPlayer>();
-        app.register_type::<Character>();
-        app.register_type::<Elements>();
-
-        // Adding additional plugins for player, enemies, and AI management
-        app.add_plugins((PlayerPlugin, EnemiesPlugin, AiPlugin));
-    }
-}
 
 /// The `AttackHitBox` component represents the hit_box for an attack, which is used to detect collisions during combat.
 ///
@@ -315,7 +284,7 @@ pub struct Animations {
     ///
     /// These nodes can correspond to specific animation clips or poses, which are
     /// dynamically accessed and updated during gameplay.
-    pub(crate) animations: Vec<AnimationNodeIndex>,
+    pub animations: Vec<AnimationNodeIndex>,
 
     /// A handle to the animation graph resource.
     ///
