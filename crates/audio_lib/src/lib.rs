@@ -42,7 +42,8 @@ pub struct AudioManager {
     pub character_voice_volume: f32,      // The volume for character voice lines
     pub environment_volume: f32,          // The volume for environmental sounds
     pub muted: bool,                      // A flag indicating whether audio is muted
-    pub audio: HashMap<String, AudioType>  // A map of active audio channels by name and type
+    pub audio: HashMap<String, AudioType>,  // A map of active audio channels by name and type
+    pub audio_handle: HashMap<String, Handle<AudioSource>>,
 }
 
 #[allow(dead_code)]
@@ -57,7 +58,8 @@ impl AudioManager {
             character_voice_volume: 0.1,
             environment_volume: 0.05,
             muted: false,
-            audio: HashMap::new()
+            audio: HashMap::new(),
+            audio_handle: HashMap::new()
         }
     }
 
@@ -80,13 +82,15 @@ impl AudioManager {
         // Check if the audio should be looped based on its type
         let looped = self.looped_time(audio_type.clone());
 
+        let handle = asset_server.load::<AudioSource>(track_path);
+
         // Create a new audio channel and play the track
         let mut binding = audio_kira_handle.create_channel(channel_name)
-            .play(asset_server.load(track_path));
+            .play(handle.clone());
 
         // Apply fade-in effect and set initial volume
         let build = binding
-            .fade_in(AudioTween::new(Duration::from_secs(2), AudioEasing::OutPowi(2)))
+            .fade_in(AudioTween::new(Duration::from_secs(2), AudioEasing::Linear))
             .with_volume(0.05);
 
         // If the audio should loop, apply the loop effect
@@ -94,7 +98,8 @@ impl AudioManager {
 
         // Insert the audio into the manager's map
         self.audio.insert(channel_name.to_string(), audio_type);
-        debug!("AudioManager added to {}", channel_name);
+        self.audio_handle.insert(channel_name.to_string(), handle.clone());
+        info!("AudioManager added to {}", channel_name);
     }
 
     /// Removes an audio track from the audio manager and stops it.
@@ -105,24 +110,34 @@ impl AudioManager {
             return;
         }
 
-        // Stop the audio and remove it from the channel list
-        self.stop_channel(channel_name, audio_kira_handle);
         audio_kira_handle.remove_channel(channel_name);
+        self.audio_handle.remove(channel_name);
         self.audio.remove(channel_name);
-        debug!("Audio removed: {}", channel_name);
+        info!("Audio removed: {}", channel_name);
     }
 
     /// Stops the audio track associated with the given channel name.
     /// A fade-out effect is applied before the track is stopped.
     pub fn stop_channel(&mut self, channel_name: &str, audio_kira_handle: &mut DynamicAudioChannels) {
-        if !self.audio.contains_key(channel_name) {
+        if !self.audio.contains_key(channel_name) || audio_kira_handle.get_channel(channel_name).is_none() {
             warn!("Audio not in use: {}", channel_name);
             return;
         }
 
         // Apply fade-out effect before stopping the audio
-        audio_kira_handle.channel(channel_name).stop().fade_out(AudioTween::new(Duration::from_secs(2), AudioEasing::InPowi(2)));
-        debug!("Stopped audio {}", channel_name);
+        audio_kira_handle.channel(channel_name).stop().fade_out(AudioTween::new(Duration::from_secs(2), AudioEasing::Linear));
+        info!("Stopped audio {}", channel_name);
+    }
+
+    pub fn pause_channel(&mut self, channel_name: &str, audio_kira_handle: &mut DynamicAudioChannels) {
+        if !self.audio.contains_key(channel_name) || audio_kira_handle.get_channel(channel_name).is_none() {
+            warn!("Audio not in use: {}", channel_name);
+            return;
+        }
+
+        // Apply fade-out effect before stopping the audio
+        audio_kira_handle.channel(channel_name).pause().fade_out(AudioTween::new(Duration::from_secs(2), AudioEasing::Linear));
+        info!("Paused audio {}", channel_name);
     }
 
     /// Resumes playback of an audio track associated with the given channel name.
@@ -133,9 +148,33 @@ impl AudioManager {
             return;
         }
 
+        if let Some(handle) = self.audio_handle.get(channel_name) {
+            let audio_type = self.audio.get(channel_name).unwrap();
+            let looped = self.looped_time(audio_type.clone());
+            let mut binding = audio_kira_handle.create_channel(channel_name)
+                .play(handle.clone());
+
+            // Apply fade-in effect and set initial volume
+            let build = binding
+                .fade_in(AudioTween::new(Duration::from_secs(2), AudioEasing::Linear))
+                .with_volume(0.05);
+
+            // If the audio should loop, apply the loop effect
+            if looped { build.looped(); }
+
+            info!("Play audio {}", channel_name);
+        }
+    }
+
+    pub fn resume_channel(&mut self, channel_name: &str, audio_kira_handle: &mut DynamicAudioChannels) {
+        if !self.audio.contains_key(channel_name) {
+            warn!("Audio not in use: {}", channel_name);
+            return;
+        }
+
         // Resume the audio with a fade-in effect
-        audio_kira_handle.channel(channel_name).resume().fade_in(AudioTween::new(Duration::from_secs(2), AudioEasing::InPowi(2)));
-        debug!("Resume audio {}", channel_name);
+        audio_kira_handle.channel(channel_name).resume().fade_in(AudioTween::new(Duration::from_secs(2), AudioEasing::Linear));
+        info!("Resume audio {}", channel_name);
     }
 
     /// Determines if the audio type should be looped based on its category (e.g., Environment, Battle).
@@ -144,6 +183,10 @@ impl AudioManager {
             AudioType::Environment | AudioType::Battle => true,  // Loop environmental and battle tracks
             _ => false,  // Other types of audio (e.g., SFX, UI) do not loop
         }
+    }
+
+    fn contains_channel(&self, channel_name: &str) -> bool {
+        self.audio.contains_key(channel_name)
     }
 }
 
