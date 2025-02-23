@@ -14,6 +14,7 @@ impl Plugin for EnvSwapSystemPlugin {
         app.add_systems(Update, pre_load_battle.run_if(in_state(GameState::InGame(InGameState::Main))));
         app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), load_battle_scene);
         app.add_systems(Update, temp_leave_battle.run_if(in_state(GameState::InGame(InGameState::Battle))));
+        app.add_systems(OnEnter(GameState::InGame(InGameState::BattleEnd)), temp_swap_to_main);
     }
 }
 
@@ -79,7 +80,11 @@ fn temp_leave_battle(mut commands: Commands,
         for entity in battle_query.iter() {
             commands.entity(entity).despawn_recursive();
         }
-        next_state.set(GameState::InGame(InGameState::Main));
+        next_state.set(GameState::InGame(InGameState::BattleEnd));
         info!("Leaving Battle Scenes");
     }
+}
+
+fn temp_swap_to_main(mut next_state: ResMut<NextState<GameState>>) {
+    next_state.set(GameState::InGame(InGameState::Main));
 }
