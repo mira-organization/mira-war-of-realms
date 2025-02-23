@@ -1,22 +1,18 @@
-use std::fs;
-use std::path::Path;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_kira_audio::AudioPlugin;
-use bevy_rapier3d::prelude::{DebugRenderContext, NoUserData, PhysicsSet, RapierDebugRenderPlugin, RapierPhysicsPlugin};
-use bevy_third_person_camera::{CameraSyncSet, ThirdPersonCameraPlugin};
-use serde::Deserialize;
-use crate::audio::AudioStorePlugin;
-use crate::entities::EntitiesPlugin;
-use crate::environment::EnvironmentPlugin;
-use crate::events::EventManagerPlugin;
+use bevy_rapier3d::prelude::{DebugRenderContext, NoUserData, RapierDebugRenderPlugin, RapierPhysicsPlugin};
+use audio_lib::audio::AudioHandlerPlugin;
+use audio_lib::AudioStorePlugin;
+use entities_lib::EntitiesPlugin;
+use system::config::{ConfigService, DummySaveData};
+use system::states::GameState;
+use environment_lib::environment::EnvironmentPlugin;
+use system::events::EventManagerPlugin;
+use system::service::ServicePlugin;
 use crate::languages::LanguagesPlugin;
-use crate::service::ServicePlugin;
 use crate::states::StatesPlugin;
-use crate::ui::UiPlugin;
-use crate::utils::key_code::convert;
-
-pub const PLAYER_VOID_THRESHOLD: f32 = -100.0;
+use system::utils::key_code::convert;
+use ui_lib::UiPlugin;
 
 /// The main plugin responsible for initializing game states, resources, and sub-plugins.
 pub struct ManagerPlugin;
@@ -39,12 +35,9 @@ impl Plugin for ManagerPlugin {
             ..default()
         });
         app.add_plugins(WorldInspectorPlugin::default().run_if(check_world_inspector_state));
-        app.add_plugins(ThirdPersonCameraPlugin);
-        app.add_plugins(AudioPlugin);
-        app.add_plugins(AudioStorePlugin);
+        app.add_plugins((AudioStorePlugin, AudioHandlerPlugin));
         app.add_plugins((StatesPlugin, EventManagerPlugin, EntitiesPlugin,
                          EnvironmentPlugin, ServicePlugin, UiPlugin));
-        app.configure_sets(PostUpdate, CameraSyncSet.after(PhysicsSet::StepSimulation));
         app.add_systems(Update, (toggle_debug_system, toggle_world_inspector_interface_system));
     }
 }
@@ -64,171 +57,6 @@ impl Plugin for ManagerPlugin {
 ///   - `false`: The World Inspector is hidden.
 #[derive(Resource, Default, Debug)]
 pub struct WorldInspectorState(pub bool);
-
-/// Configuration for general game settings.
-#[derive(Deserialize, Debug)]
-#[allow(dead_code)]
-pub struct GameConfig {
-    pub(crate) bevy_backend: String,
-    pub(crate) lang_text: String,
-    pub(crate) lang_voice: String,
-}
-
-impl Default for GameConfig {
-    fn default() -> Self {
-        Self {
-            bevy_backend: String::from("PRIMARY"),
-            lang_text: String::from("en-US"),
-            lang_voice: String::from("en-US"),
-        }
-    }
-}
-
-/// Configuration for graphics settings such as resolution and fullscreen mode.
-#[derive(Deserialize, Debug)]
-#[allow(dead_code)]
-pub struct GraphicsConfig {
-    pub(crate) resolution: String,
-    pub(crate) fullscreen: bool,
-}
-
-impl Default for GraphicsConfig {
-    fn default() -> Self {
-        Self {
-            resolution: String::from("1270x720"),
-            fullscreen: false,
-        }
-    }
-}
-
-/// Configuration for input mappings and camera sensitivity.
-#[derive(Deserialize, Debug)]
-pub struct InputConfig {
-    pub(crate) player_up: String,
-    pub(crate) player_down: String,
-    pub(crate) player_left: String,
-    pub(crate) player_right: String,
-    pub(crate) player_sprint: String,
-    pub(crate) debug_change: String,
-    pub(crate) world_inspector_ui: String,
-    pub(crate) camera_vertical_sensitivity: f32,
-    pub(crate) camera_horizontal_sensitivity: f32,
-    pub(crate) camera_zoom_in: f32,
-    pub(crate) camera_zoom_out: f32,
-}
-
-impl Default for InputConfig {
-    fn default() -> Self {
-        Self {
-            player_up: String::from("W"),
-            player_down: String::from("S"),
-            player_left: String::from("A"),
-            player_right: String::from("D"),
-            player_sprint: String::from("ShiftLeft"),
-            debug_change: String::from("F3"),
-            world_inspector_ui: String::from("F1"),
-            camera_horizontal_sensitivity: 1.0,
-            camera_vertical_sensitivity: 1.0,
-            camera_zoom_in: 3.5,
-            camera_zoom_out: 10.0
-        }
-    }
-}
-
-/// Enum representing different game states.
-#[derive(Component, States, Default, Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[allow(dead_code)]
-pub enum GameState {
-    #[default]
-    PreLoad,
-    SplashScreen,
-    TitleScreen,
-    AccountScreen,
-    EnvironmentPreLoad,
-    EnvironmentLoad,
-    EnvironmentPostLoad,
-    InGame(InGameState),
-    InUi(UiState)
-}
-
-#[derive(States, Default, Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[allow(dead_code)]
-pub enum InGameState {
-    #[default]
-    Main,
-    Battle,
-    BattleEnd,
-    Dialogue
-}
-
-#[derive(States, Default, Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[allow(dead_code)]
-pub enum UiState {
-    Loading,
-    #[default]
-    Main,
-    Settings,
-    Shop,
-    Wish
-}
-
-#[derive(Resource, Debug, PartialEq)]
-pub struct DummySaveData {
-    pub current_environment: String,
-    pub current_area: usize,
-}
-
-impl Default for DummySaveData {
-    fn default() -> Self {
-        Self {
-            current_environment: String::from("tutorial"),
-            current_area: 3,
-        }
-    }
-}
-
-/// A service that loads and stores game configuration settings.
-#[derive(Resource, Debug, Deserialize)]
-#[allow(dead_code)]
-pub struct ConfigService {
-    pub game_config: GameConfig,
-    pub graphics_config: GraphicsConfig,
-    pub input_config: InputConfig,
-}
-
-impl ConfigService {
-    /// Loads a configuration file and deserializes it into the specified type.
-    ///
-    /// # Arguments
-    /// * `path` - A string slice representing the file path.
-    ///
-    /// # Panics
-    /// This function will panic if the file cannot be read or parsed.
-    fn load<T: for<'de> Deserialize<'de>>(path: &str) -> T {
-        let content = fs::read_to_string(Path::new(path)).expect("Failed to read config file");
-        toml::from_str(&content).expect("Failed to parse toml file")
-    }
-
-    /// Creates a new `ConfigService` instance and loads all configuration files.
-    fn new() -> Self {
-        Self {
-            game_config: Self::load("conf/gameConfig.toml"),
-            graphics_config: Self::load("conf/graphicsConfig.toml"),
-            input_config: Self::load("conf/gameInput.toml"),
-        }
-    }
-}
-
-/// Checks if the current game state is an instance of `GameState::InGame`.
-///
-/// # Arguments
-/// * `game_state` - A reference to the current state of the game.
-///
-/// # Returns
-/// * `true` if the game is in an `InGame` state, otherwise `false`.
-pub fn in_game_states(game_state: Res<State<GameState>>) -> bool {
-    matches!(*game_state.get(), GameState::InGame(_))
-}
 
 /// Toggles the debug rendering system on or off based on a configured key input.
 ///

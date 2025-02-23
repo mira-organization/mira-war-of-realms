@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use bevy_rapier3d::dynamics::{Damping, LockedAxes, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
 use rand::Rng;
-use crate::entities::{AnimatedMob, LivingEntity};
-use crate::entities::enemies::ai::{AiSetup, AiState};
-use crate::entities::enemies::WorldEnemy;
-use crate::manager::GameState;
+use system::commons::{AnimatedMob, LivingEntity};
+use system::states::GameState;
+use crate::enemies::ai::{AiSetup, AiState};
+use crate::enemies::WorldEnemy;
 
 /// A plugin for setting up a test enemy in the game world.
 ///

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use bevy_kira_audio::{DynamicAudioChannels};
-use crate::audio::{AudioManager, AudioType};
-use crate::manager::GameState;
+use bevy_kira_audio::DynamicAudioChannels;
+use system::states::GameState;
+use crate::{AudioManager, AudioType};
 
 pub struct AudioHandlerPlugin;
 

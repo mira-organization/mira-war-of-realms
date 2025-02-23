@@ -1,12 +1,14 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_third_person_camera::ThirdPersonCamera;
-use crate::entities::player::{LastStableGround, PlayerWorldCamera};
-use crate::entities::{WorldPlayer, WorldPlayerState};
-use crate::events::player_events::PlayerActionEvent;
-use crate::manager::{in_game_states, ConfigService, PLAYER_VOID_THRESHOLD};
-use crate::service::attack_service::spawn_attack_hit_box;
-use crate::utils::key_code::convert;
+use system::commons::{WorldPlayer, WorldPlayerState};
+use system::config::ConfigService;
+use system::events::player_events::PlayerActionEvent;
+use system::PLAYER_VOID_THRESHOLD;
+use system::service::attack_service::spawn_attack_hit_box;
+use system::states::in_game_states;
+use system::utils::key_code::convert;
+use crate::player::{LastStableGround, PlayerWorldCamera};
 
 /// A plugin that handles player input and movement behavior.
 ///

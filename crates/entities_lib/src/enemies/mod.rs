@@ -2,8 +2,8 @@ mod test_enemy;
 pub mod ai;
 
 use bevy::prelude::*;
-use crate::entities::{AttackHitBox, Elements};
-use crate::entities::enemies::test_enemy::TestEnemy;
+use system::commons::{AttackHitBox, Elements};
+use crate::enemies::test_enemy::TestEnemy;
 
 /// A plugin for managing enemy entities in the game.
 ///

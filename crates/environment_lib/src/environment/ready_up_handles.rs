@@ -2,9 +2,9 @@ use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy::utils::HashMap;
 use bevy_rapier3d::prelude::{AsyncSceneCollider, ComputedColliderShape, RigidBody, TriMeshFlags};
-use fluent_bundle::types::AnyEq;
+use system::config::DummySaveData;
+use system::states::{GameState, InGameState};
 use crate::environment::{Area, CurrentAreaScenes, CurrentEnvironment, Environment, EnvironmentListResource, EnvironmentScene, WaitingForAreaAssets};
-use crate::manager::{DummySaveData, GameState, InGameState};
 
 pub struct ReadyUpHandles;
 
@@ -44,7 +44,7 @@ fn pre_load_environments(mut commands: Commands,
     let mut to_load: Option<Area> = None;
     let mut founded_env: Option<Environment> = None;
     for (key, value) in env_map.iter() {
-        if key.equals(&dummy_save_data.current_environment) {
+        if key.eq(&dummy_save_data.current_environment) {
             for (_a_key, area) in value.areas.iter() {
                 if area.index == dummy_save_data.current_area {
                     to_load = Some(area.clone());

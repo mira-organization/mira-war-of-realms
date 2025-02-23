@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{Collider, Velocity};
 use rand::Rng;
-use crate::entities::enemies::ai::{AiSetup, AiState};
-use crate::entities::enemies::WorldEnemy;
-use crate::entities::WorldPlayer;
-use crate::manager::{GameState, InGameState};
-use crate::service::attack_service::spawn_attack_hit_box;
+use system::commons::WorldPlayer;
+use system::service::attack_service::spawn_attack_hit_box;
+use system::states::{GameState, InGameState};
+use crate::enemies::ai::{AiSetup, AiState};
+use crate::enemies::WorldEnemy;
 
 pub struct BaseAI;
 

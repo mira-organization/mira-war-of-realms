@@ -5,10 +5,11 @@ use bevy::core_pipeline::bloom::Bloom;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarget, Zoom};
-use crate::entities::player::input::PlayerInputPlugin;
-use crate::entities::{AnimatedPlayer, Animations, LivingEntity, WorldPlayer};
-use crate::entities::player::animation::PlayerAnimationPlugin;
-use crate::manager::{ConfigService, GameState};
+use system::commons::{AnimatedPlayer, Animations, LivingEntity, WorldPlayer};
+use system::config::ConfigService;
+use system::states::GameState;
+use crate::player::animation::PlayerAnimationPlugin;
+use crate::player::input::PlayerInputPlugin;
 
 /// A plugin for managing the player's systems, including input, animations,
 /// and spawning the player entity and camera in the game world.

@@ -1,0 +1,29 @@
+[package]
+name = "system"
+version = "0.0.1"
+edition = "2024"
+authors = ["Daniel Ramke <daniel.ramke@outlook.com>"]
+
+[lib]
+name = "system"
+path = "src/lib.rs"
+
+[dependencies]
+bevy_rapier3d = {version = "0.28.0", features = ["simd-nightly", "debug-render-3d", "default"]}
+
+
+serde = { version = "1.0.217", features = ["derive"] }
+toml = {version = "^0.8.0", features = ["parse", "display"]}
+
+[dependencies.bevy]
+version = "0.15.2"
+default-features = false
+features = [
+    "animation",
+    "bevy_animation",
+    "bevy_state",
+    "multi_threaded",
+    "bevy_core_pipeline",
+    "bevy_asset",
+    "bevy_pbr",
+]

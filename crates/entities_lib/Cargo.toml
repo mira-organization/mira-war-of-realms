@@ -1,0 +1,39 @@
+[package]
+name = "entities_lib"
+version = "0.0.1"
+edition = "2024"
+authors = ["Daniel Ramke <daniel.ramke@outlook.com>"]
+
+[lib]
+name = "entities_lib"
+path = "src/lib.rs"
+
+[dependencies]
+system = { path = "../system" }
+
+# Camera
+bevy_third_person_camera = {version = "0.2.0"}
+
+# Phisyc
+bevy_rapier3d = {version = "0.28.0", features = ["simd-nightly", "debug-render-3d", "default"]}
+
+rand = { version = "0.9.0" }
+
+[dependencies.bevy]
+version = "0.15.2"
+default-features = false
+features = [
+    "animation",
+    "bevy_animation",
+    "bevy_asset",
+    "bevy_color",
+    "bevy_core_pipeline",
+    "bevy_gilrs",
+    "bevy_gltf",
+    "bevy_pbr",
+    "bevy_render",
+    "multi_threaded",
+    "png",
+    "jpeg",
+    "tonemapping_luts"
+]
