@@ -91,7 +91,7 @@ impl AudioManager {
         // Apply fade-in effect and set initial volume
         let build = binding
             .fade_in(AudioTween::new(Duration::from_secs(2), AudioEasing::Linear))
-            .with_volume(0.05);
+            .with_volume(0.2);
 
         // If the audio should loop, apply the loop effect
         if looped { build.looped(); }
