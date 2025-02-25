@@ -16,7 +16,7 @@ serde = { version = "1.0.217", features = ["derive"] }
 toml = {version = "^0.8.0", features = ["parse", "display"]}
 
 [dependencies.bevy]
-version = "0.15.2"
+version = "0.15.3"
 default-features = false
 features = [
     "animation",

@@ -2,7 +2,9 @@ mod input;
 mod animation;
 
 use bevy::core_pipeline::bloom::Bloom;
+use bevy::gltf::GltfSceneExtras;
 use bevy::prelude::*;
+use bevy::render::view::NoFrustumCulling;
 use bevy_rapier3d::prelude::*;
 use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarget, Zoom};
 use system::commons::{AnimatedPlayer, Animations, LivingEntity, WorldPlayer};
@@ -70,6 +72,7 @@ pub fn create_world_player(
 
     commands.spawn(SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/player/player_idle.glb"))))
         .insert(Name::new("WorldPlayer"))
+        .insert(NoFrustumCulling)
         .insert(AnimatedPlayer)
         .insert(Transform::from_xyz(40.0, 0.249, 40.0))
         .insert(ThirdPersonCameraTarget)

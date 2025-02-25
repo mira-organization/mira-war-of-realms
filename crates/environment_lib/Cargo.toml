@@ -16,7 +16,7 @@ bevy_rapier3d = {version = "0.28.0", features = ["simd-nightly", "debug-render-3
 system = { path = "../system" }
 
 [dependencies.bevy]
-version = "0.15.2"
+version = "0.15.3"
 default-features = false
 features = [
     "animation",
