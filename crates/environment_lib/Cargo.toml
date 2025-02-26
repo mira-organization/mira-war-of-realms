@@ -14,6 +14,8 @@ regex = { version = "^1.11" }
 bevy_rapier3d = {version = "0.28.0", features = ["simd-nightly", "debug-render-3d", "default"]}
 
 system = { path = "../system" }
+serde = { version = "1.0.218", features = ["derive"] }
+serde_json = "1.0.139"
 
 [dependencies.bevy]
 version = "0.15.3"

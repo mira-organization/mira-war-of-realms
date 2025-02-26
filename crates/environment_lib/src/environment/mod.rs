@@ -6,6 +6,7 @@ use std::f32::consts::PI;
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use serde::Deserialize;
 use system::states::GameState;
 use crate::environment::env_handles::EnvSwapSystemPlugin;
 use crate::environment::env_init::EnvInitPlugin;
@@ -29,7 +30,7 @@ impl Plugin for EnvironmentPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<EnvironmentListResource>();
         app.add_plugins((EnvInitPlugin, ReadyUpHandles, EnvSwapSystemPlugin));
-        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_light);
+/*        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_light);*/
     }
 }
 
@@ -146,7 +147,25 @@ pub struct CurrentAreaScenes(pub HashMap<String, Handle<Scene>>);
 #[derive(Resource, Debug, Clone)]
 pub struct WaitingForAreaAssets(pub Handle<Gltf>);
 
-fn create_light(mut commands: Commands) {
+#[derive(Resource, Debug, Clone)]
+pub struct EffectSceneAssets(pub Handle<Gltf>);
+
+#[derive(Deserialize, Debug)]
+pub struct LightData {
+    pub name: String,
+    pub intensity: Option<f32>,
+    pub range: Option<f32>,
+    pub color: [f32; 3],
+    pub inner_cone: Option<f32>,
+    pub outer_cone: Option<f32>
+}
+
+pub enum LightType {
+    Point(PointLight),
+    Spot(SpotLight),
+}
+
+/*fn create_light(mut commands: Commands) {
     // Spawn the directional light entity
     commands.spawn((
         DirectionalLight {
@@ -168,4 +187,4 @@ fn create_light(mut commands: Commands) {
         }
             .build(),
     ));
-}
+}*/
