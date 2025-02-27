@@ -73,6 +73,27 @@ impl Default for InputConfig {
     }
 }
 
+#[derive(Deserialize, Debug)]
+pub struct AudioConfig {
+    pub master_volume: f64,
+    pub environment_volume: f64,
+    pub character_voice_volume: f64,
+    pub sfx_volume: f64,
+    pub ui_volume: f64
+}
+
+impl Default for AudioConfig {
+    fn default() -> Self {
+        Self {
+            master_volume: 1.0,
+            environment_volume: 1.0,
+            character_voice_volume: 1.0,
+            sfx_volume: 1.0,
+            ui_volume: 1.0
+        }
+    }
+}
+
 /// A service that loads and stores game configuration settings.
 #[derive(Resource, Debug, Deserialize)]
 #[allow(dead_code)]
@@ -80,6 +101,7 @@ pub struct ConfigService {
     pub game_config: GameConfig,
     pub graphics_config: GraphicsConfig,
     pub input_config: InputConfig,
+    pub audio_config: AudioConfig
 }
 
 impl ConfigService {
@@ -101,6 +123,7 @@ impl ConfigService {
             game_config: Self::load("conf/gameConfig.toml"),
             graphics_config: Self::load("conf/graphicsConfig.toml"),
             input_config: Self::load("conf/gameInput.toml"),
+            audio_config: Self::load("conf/gameAudio.toml"),
         }
     }
 }

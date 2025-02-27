@@ -1,0 +1,5 @@
+master_volume = 1.0
+environment_volume = 0.5
+character_voice_volume = 1.0
+sfx_volume = 1.0
+ui_volume = 1.0

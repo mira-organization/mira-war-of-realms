@@ -1,0 +1,52 @@
+use std::time::Duration;
+use bevy::prelude::*;
+use bevy::utils::HashMap;
+use bevy_kira_audio::*;
+use system::config::ConfigService;
+
+#[derive(Resource)]
+pub struct AudioOption {
+    pub master_volume: f64,
+    pub volumes: HashMap<String, f64>
+}
+
+impl AudioOption {
+    pub fn new() -> Self {
+        Self {
+            master_volume: 1.0,
+            volumes: HashMap::new(),
+        }
+    }
+
+    pub fn initialize(&mut self, config: &ConfigService) {
+        self.master_volume = config.audio_config.master_volume.clamp(0.0, 1.0);
+
+        self.volumes.insert("environment".to_string(), config.audio_config.environment_volume.clamp(0.0, 1.0));
+        self.volumes.insert("character_voice".to_string(), config.audio_config.character_voice_volume.clamp(0.0, 1.0));
+        self.volumes.insert("sfx".to_string(), config.audio_config.sfx_volume.clamp(0.0, 1.0));
+        self.volumes.insert("ui".to_string(), config.audio_config.ui_volume.clamp(0.0, 1.0));
+    }
+
+    pub fn set_master_volume(&mut self, volume: f64, audio_kira_handle: &mut DynamicAudioChannels) {
+        self.master_volume = volume.clamp(0.0, 1.0);
+        self.apply_volumes(audio_kira_handle);
+    }
+
+    pub fn set_channel_volume(&mut self, channel: &str, volume: f64, audio_kira_handle: &mut DynamicAudioChannels) {
+        if let Some(ch) = self.volumes.get_mut(channel) {
+            *ch = volume.clamp(0.0, 1.0);
+            self.apply_volumes(audio_kira_handle);
+        }
+    }
+
+    fn apply_volumes(&self, audio_kira_handle: &mut DynamicAudioChannels) {
+        for (channel, volume) in &self.volumes {
+            if audio_kira_handle.get_channel(channel).is_some() {
+                audio_kira_handle
+                    .channel(channel)
+                    .set_volume(volume * self.master_volume).fade_in(AudioTween::new(Duration::from_secs(1), AudioEasing::Linear));
+            }
+        }
+    }
+}
+
