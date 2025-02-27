@@ -24,16 +24,27 @@ impl Plugin for AudioStorePlugin {
 
 /// The `AudioType` enum defines the different categories of audio in the game.
 /// It is used to differentiate between various types of audio resources such as environment, battle, and UI sounds.
-#[derive(Debug, Default, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Hash)]
 #[allow(dead_code)]
 pub enum AudioType {
     Environment,  // For background environmental sounds
-    Battle,       // For sounds related to battle sequences
     Sfx,          // For sound effects (e.g., explosions, footsteps)
     Ui,           // For UI sounds (e.g., button clicks, notifications)
     Character,    // For character-specific voice lines or sounds
     #[default]
     Unknown,      // Default audio type when the type is unknown
+}
+
+impl AudioType {
+    pub fn from_string(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "environment" => AudioType::Environment,
+            "sfx" => AudioType::Sfx,
+            "ui" => AudioType::Ui,
+            "character" => AudioType::Character,
+            _ => AudioType::Unknown,
+        }
+    }
 }
 
 /// The `AudioManager` resource holds all audio-related settings and tracks that are currently playing.
@@ -137,7 +148,10 @@ impl AudioManager {
 
     /// Resumes playback of an audio track associated with the given channel name.
     /// A fade-in effect is applied as the track resumes.
-    pub fn play_channel(&mut self, channel_name: &str, audio_kira_handle: &mut DynamicAudioChannels, option: &AudioOption) {
+    pub fn play_channel(&mut self, channel_name: &str,
+                        audio_kira_handle: &mut DynamicAudioChannels,
+                        option: &AudioOption
+    ) {
         if !self.audio.contains_key(channel_name) {
             warn!("Audio not in use: {}", channel_name);
             return;
@@ -177,17 +191,29 @@ impl AudioManager {
     /// Determines if the audio type should be looped based on its category (e.g., Environment, Battle).
     fn looped_time(&self, audio_type: AudioType) -> bool {
         match audio_type {
-            AudioType::Environment | AudioType::Battle => true,  // Loop environmental and battle tracks
+            AudioType::Environment => true,  // Loop environmental and battle tracks
             _ => false,  // Other types of audio (e.g., SFX, UI) do not loop
         }
     }
 
     fn load_correct_volume(&self, audio_type: AudioType, audio_option: &AudioOption) -> f64 {
         match audio_type {
-            AudioType::Environment | AudioType::Battle => *audio_option.volumes.get("environment").unwrap_or(&1.0),
-            AudioType::Sfx => *audio_option.volumes.get("sfx").unwrap_or(&1.0),
-            AudioType::Ui => *audio_option.volumes.get("ui").unwrap_or(&1.0),
-            AudioType::Character => *audio_option.volumes.get("character").unwrap_or(&1.0),
+            AudioType::Environment => {
+                (*audio_option.volumes.get("environment")
+                    .unwrap_or(&1.0) * audio_option.master_volume).clamp(0.0, 1.0)
+            },
+            AudioType::Sfx => {
+                (*audio_option.volumes.get("sfx").unwrap_or(&1.0)
+                    * audio_option.master_volume).clamp(0.0, 1.0)
+            },
+            AudioType::Ui => {
+                (*audio_option.volumes.get("ui").unwrap_or(&1.0)
+                    * audio_option.master_volume).clamp(0.0, 1.0)
+            },
+            AudioType::Character => {
+                (*audio_option.volumes.get("character_voice").unwrap_or(&1.0)
+                    * audio_option.master_volume).clamp(0.0, 1.0)
+            },
             AudioType::Unknown => 0.1,
         }
     }
