@@ -226,56 +226,82 @@ fn load_active_area(mut commands: Commands,
 
 }
 
-fn load_active_area_lights(mut commands: Commands,
-                           mut next_state: ResMut<NextState<GameState>>,
-                           gltf_assets: Res<Assets<Gltf>>,
-                           gltf_nodes: Res<Assets<GltfNode>>,
-                           extra_scene_assets: Option<Res<EffectSceneAssets>>,
+/// Loads active area lights from GLTF extra scene assets and spawns them into the world.
+///
+/// # Parameters
+/// - `commands`: Commands for spawning entities.
+/// - `next_state`: The next game state to transition to after loading lights.
+/// - `gltf_assets`: GLTF asset resources.
+/// - `gltf_nodes`: GLTF node resources containing extra metadata.
+/// - `extra_scene_assets`: Optional extra scene assets that may contain light data.
+fn load_active_area_lights(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
+    gltf_assets: Res<Assets<Gltf>>,
+    gltf_nodes: Res<Assets<GltfNode>>,
+    extra_scene_assets: Option<Res<EffectSceneAssets>>,
 ) {
     if let Some(layer_lights) = extra_scene_assets {
-        if let Some(gltf) = gltf_assets.get(&layer_lights.0.clone()) {
-            for nodes in gltf.nodes.clone() {
-                if let Some(node) = gltf_nodes.get(&nodes) {
-                    if let Some(extras) = &node.extras {
-                        if let Ok(parsed) = serde_json::from_str::<Value>(&extras.value) {
-                            if let Some(bevy_value) = parsed.get("bevy_value") {
-                                if let Some(bevy_json) = bevy_value.as_str() {
+        if let Some(gltf) = gltf_assets.get(&layer_lights.0) {
+            process_gltf_lights(&mut commands, &gltf, &gltf_nodes);
+        }
+        next_state.set(GameState::InGame(InGameState::Main));
+    }
+}
 
-                                    if let Ok(light_data) = serde_json::from_str::<LightData>(bevy_json) {
-                                        let light = match light_data.name.as_str() {
-                                            "point" => LightType::Point(PointLight {
-                                                intensity: light_data.intensity.unwrap_or(1000.0),
-                                                range: light_data.range.unwrap_or(10.0),
-                                                color: Color::srgb(light_data.color[0], light_data.color[1], light_data.color[2]),
-                                                ..Default::default()
-                                            }),
-                                            "spot" => LightType::Spot(SpotLight {
-                                                intensity: light_data.intensity.unwrap_or(1000.0),
-                                                color: Color::srgb(light_data.color[0], light_data.color[1], light_data.color[2]),
-                                                inner_angle: light_data.inner_cone.unwrap_or(0.1),
-                                                outer_angle: light_data.outer_cone.unwrap_or(0.5),
-                                                ..Default::default()
-                                            }),
-                                            _ => continue,
-                                        };
-
-                                        match light {
-                                            LightType::Point(point_light) => {
-                                                commands.spawn((point_light.clone(), Transform::from_translation(node.transform.translation)));
-                                            }
-                                            LightType::Spot(spot_light) => {
-                                                commands.spawn((spot_light.clone(), Transform::from_translation(node.transform.translation)));
-                                            }
-                                        }
-                                    }
-
-                                }
-                            }
+/// Processes GLTF nodes to extract light information and spawn them into the world.
+///
+/// # Parameters
+/// - `commands`: Mutable reference to commands for spawning entities.
+/// - `gltf`: Reference to the loaded GLTF asset.
+/// - `gltf_nodes`: Reference to the GLTF node assets.
+fn process_gltf_lights(
+    commands: &mut Commands,
+    gltf: &Gltf,
+    gltf_nodes: &Assets<GltfNode>,
+) {
+    for node_handle in &gltf.nodes {
+        if let Some(node) = gltf_nodes.get(node_handle) {
+            if let Some(extras) = &node.extras {
+                if let Ok(parsed) = serde_json::from_str::<Value>(&extras.value) {
+                    if let Some(bevy_json) = parsed.get("bevy_value").and_then(|v| v.as_str()) {
+                        if let Ok(light_data) = serde_json::from_str::<LightData>(bevy_json) {
+                            spawn_light(commands, node, light_data);
                         }
                     }
                 }
             }
         }
-        next_state.set(GameState::InGame(InGameState::Main));
     }
+}
+
+/// Spawns a light entity based on the extracted light data.
+///
+/// # Parameters
+/// - `commands`: Mutable reference to commands for spawning entities.
+/// - `node`: Reference to the GLTF node containing transformation data.
+/// - `light_data`: The extracted light data to configure the light entity.
+fn spawn_light(commands: &mut Commands, node: &GltfNode, light_data: LightData) {
+    let light = match light_data.name.as_str() {
+        "point" => LightType::Point(PointLight {
+            intensity: light_data.intensity.unwrap_or(1000.0),
+            range: light_data.range.unwrap_or(10.0),
+            color: Color::srgb(light_data.color[0], light_data.color[1], light_data.color[2]),
+            ..Default::default()
+        }),
+        "spot" => LightType::Spot(SpotLight {
+            intensity: light_data.intensity.unwrap_or(1000.0),
+            color: Color::srgb(light_data.color[0], light_data.color[1], light_data.color[2]),
+            inner_angle: light_data.inner_cone.unwrap_or(0.1),
+            outer_angle: light_data.outer_cone.unwrap_or(0.5),
+            ..Default::default()
+        }),
+        _ => return,
+    };
+
+    let transform = Transform::from_translation(node.transform.translation);
+    match light {
+        LightType::Point(point_light) => commands.spawn((point_light, transform)),
+        LightType::Spot(spot_light) => commands.spawn((spot_light, transform)),
+    };
 }

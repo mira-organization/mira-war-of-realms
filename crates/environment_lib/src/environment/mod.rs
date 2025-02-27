@@ -30,7 +30,7 @@ impl Plugin for EnvironmentPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<EnvironmentListResource>();
         app.add_plugins((EnvInitPlugin, ReadyUpHandles, EnvSwapSystemPlugin));
-/*        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_light);*/
+        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_light);
     }
 }
 
@@ -144,28 +144,44 @@ pub struct BattleEnvironment;
 #[derive(Resource, Debug, Clone)]
 pub struct CurrentAreaScenes(pub HashMap<String, Handle<Scene>>);
 
+/// Stores a handle to a GLTF asset that is being loaded for an area.
+/// Used to track the loading state of area assets.
 #[derive(Resource, Debug, Clone)]
 pub struct WaitingForAreaAssets(pub Handle<Gltf>);
 
+/// Stores a handle to a GLTF asset that contains effect scene data.
+/// Used for loading additional scene effects like lights or particle effects.
 #[derive(Resource, Debug, Clone)]
 pub struct EffectSceneAssets(pub Handle<Gltf>);
 
+/// Represents light data extracted from GLTF extras.
+/// The data is deserialized from JSON and contains parameters to configure different types of lights.
 #[derive(Deserialize, Debug)]
 pub struct LightData {
+    /// Name of the light type (e.g., "point", "spot").
     pub name: String,
+    /// Optional intensity of the light, defaults if not provided.
     pub intensity: Option<f32>,
+    /// Optional range of the light, defining how far it affects its surroundings.
     pub range: Option<f32>,
+    /// RGB color values of the light, represented as an array of three floating-point numbers.
     pub color: [f32; 3],
+    /// Optional inner cone angle for spotlights, defining the sharply lit area.
     pub inner_cone: Option<f32>,
+    /// Optional outer cone angle for spotlights, defining the full spread of light.
     pub outer_cone: Option<f32>
 }
 
+/// Enum representing different types of lights that can be spawned in the game.
+/// - `Point` for omnidirectional point lights.
+/// - `Spot` for directional spotlights with a cone shape.
 pub enum LightType {
     Point(PointLight),
     Spot(SpotLight),
 }
 
-/*fn create_light(mut commands: Commands) {
+
+fn create_light(mut commands: Commands) {
     // Spawn the directional light entity
     commands.spawn((
         DirectionalLight {
@@ -187,4 +203,4 @@ pub enum LightType {
         }
             .build(),
     ));
-}*/
+}
