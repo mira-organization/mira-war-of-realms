@@ -196,6 +196,16 @@ impl AudioManager {
         }
     }
 
+    /// Loads the correct volume level for the given audio type based on the provided audio options.
+    /// It multiplies the volume for the specific audio type (e.g., Environment, Sfx, etc.) by the master volume.
+    /// If a specific volume is not found in the audio options, it defaults to 1.0. The result is then clamped between 0.0 and 1.0.
+    ///
+    /// # Parameters:
+    /// - `audio_type`: The type of audio for which the volume should be calculated (e.g., Environment, Sfx, etc.).
+    /// - `audio_option`: The audio options containing volume settings for various audio types and the master volume.
+    ///
+    /// # Returns:
+    /// The adjusted volume for the specific audio type, clamped between 0.0 and 1.0.
     fn load_correct_volume(&self, audio_type: AudioType, audio_option: &AudioOption) -> f64 {
         match audio_type {
             AudioType::Environment => {
@@ -218,6 +228,13 @@ impl AudioManager {
         }
     }
 
+    /// Checks whether the audio system contains a specific audio channel.
+    ///
+    /// # Parameters:
+    /// - `channel_name`: The name of the channel to check for existence within the audio system.
+    ///
+    /// # Returns:
+    /// `true` if the audio system contains the specified channel, `false` otherwise.
     fn contains_channel(&self, channel_name: &str) -> bool {
         self.audio.contains_key(channel_name)
     }
