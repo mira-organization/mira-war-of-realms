@@ -1,9 +1,12 @@
 pub mod audio;
+mod audio_control;
 
 use std::time::Duration;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_kira_audio::*;
+use system::config::ConfigService;
+use crate::audio_control::AudioOption;
 
 pub struct AudioStorePlugin;
 
@@ -11,19 +14,20 @@ pub struct AudioStorePlugin;
 impl Plugin for AudioStorePlugin {
     fn build(&self, app: &mut App) {
         // Inserts the `AudioManager` resource into the app, which handles all audio functionality
+        app.insert_resource(AudioOption::new());
         app.insert_resource(AudioManager::new());
         app.add_plugins(AudioPlugin);
+        app.add_systems(Startup, load_up_audio_config);
         info!("Crate audio was loaded successfully!");
     }
 }
 
 /// The `AudioType` enum defines the different categories of audio in the game.
 /// It is used to differentiate between various types of audio resources such as environment, battle, and UI sounds.
-#[derive(Debug, Default, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Hash)]
 #[allow(dead_code)]
 pub enum AudioType {
     Environment,  // For background environmental sounds
-    Battle,       // For sounds related to battle sequences
     Sfx,          // For sound effects (e.g., explosions, footsteps)
     Ui,           // For UI sounds (e.g., button clicks, notifications)
     Character,    // For character-specific voice lines or sounds
@@ -31,16 +35,23 @@ pub enum AudioType {
     Unknown,      // Default audio type when the type is unknown
 }
 
+impl AudioType {
+    pub fn from_string(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "environment" => AudioType::Environment,
+            "sfx" => AudioType::Sfx,
+            "ui" => AudioType::Ui,
+            "character" => AudioType::Character,
+            _ => AudioType::Unknown,
+        }
+    }
+}
+
 /// The `AudioManager` resource holds all audio-related settings and tracks that are currently playing.
 /// It includes volume controls for various audio categories and manages the active audio channels.
 #[derive(Resource)]
 #[allow(dead_code)]
 pub struct AudioManager {
-    pub master_volume: f32,               // The overall master volume for the game
-    pub ui_volume: f32,                   // The volume for UI-related sounds
-    pub sfx_volume: f32,                  // The volume for sound effects
-    pub character_voice_volume: f32,      // The volume for character voice lines
-    pub environment_volume: f32,          // The volume for environmental sounds
     pub muted: bool,                      // A flag indicating whether audio is muted
     pub audio: HashMap<String, AudioType>,  // A map of active audio channels by name and type
     pub audio_handle: HashMap<String, Handle<AudioSource>>,
@@ -48,15 +59,8 @@ pub struct AudioManager {
 
 #[allow(dead_code)]
 impl AudioManager {
-    /// Creates a new instance of `AudioManager` with default values.
-    /// The volumes for different audio categories are set to predefined levels, and no audio is initially playing.
     pub fn new() -> Self {
         Self {
-            master_volume: 1.0,
-            ui_volume: 0.2,
-            sfx_volume: 0.1,
-            character_voice_volume: 0.1,
-            environment_volume: 0.05,
             muted: false,
             audio: HashMap::new(),
             audio_handle: HashMap::new()
@@ -71,7 +75,8 @@ impl AudioManager {
                      audio_type: AudioType,
                      track_path: &str,
                      audio_kira_handle: &mut DynamicAudioChannels,
-                     asset_server: &AssetServer
+                     asset_server: &AssetServer,
+                     option: &AudioOption
     ) {
         // Check if the audio is already in use
         if self.audio.contains_key(channel_name) {
@@ -81,6 +86,7 @@ impl AudioManager {
 
         // Check if the audio should be looped based on its type
         let looped = self.looped_time(audio_type.clone());
+        let volume = self.load_correct_volume(audio_type.clone(), option);
 
         let handle = asset_server.load::<AudioSource>(track_path);
 
@@ -91,7 +97,7 @@ impl AudioManager {
         // Apply fade-in effect and set initial volume
         let build = binding
             .fade_in(AudioTween::new(Duration::from_secs(2), AudioEasing::Linear))
-            .with_volume(0.2);
+            .with_volume(volume);
 
         // If the audio should loop, apply the loop effect
         if looped { build.looped(); }
@@ -142,7 +148,10 @@ impl AudioManager {
 
     /// Resumes playback of an audio track associated with the given channel name.
     /// A fade-in effect is applied as the track resumes.
-    pub fn play_channel(&mut self, channel_name: &str, audio_kira_handle: &mut DynamicAudioChannels) {
+    pub fn play_channel(&mut self, channel_name: &str,
+                        audio_kira_handle: &mut DynamicAudioChannels,
+                        option: &AudioOption
+    ) {
         if !self.audio.contains_key(channel_name) {
             warn!("Audio not in use: {}", channel_name);
             return;
@@ -151,13 +160,15 @@ impl AudioManager {
         if let Some(handle) = self.audio_handle.get(channel_name) {
             let audio_type = self.audio.get(channel_name).unwrap();
             let looped = self.looped_time(audio_type.clone());
+            let volume = self.load_correct_volume(audio_type.clone(), option);
+
             let mut binding = audio_kira_handle.create_channel(channel_name)
                 .play(handle.clone());
 
             // Apply fade-in effect and set initial volume
             let build = binding
                 .fade_in(AudioTween::new(Duration::from_secs(2), AudioEasing::Linear))
-                .with_volume(0.05);
+                .with_volume(volume);
 
             // If the audio should loop, apply the loop effect
             if looped { build.looped(); }
@@ -180,21 +191,55 @@ impl AudioManager {
     /// Determines if the audio type should be looped based on its category (e.g., Environment, Battle).
     fn looped_time(&self, audio_type: AudioType) -> bool {
         match audio_type {
-            AudioType::Environment | AudioType::Battle => true,  // Loop environmental and battle tracks
+            AudioType::Environment => true,  // Loop environmental and battle tracks
             _ => false,  // Other types of audio (e.g., SFX, UI) do not loop
         }
     }
 
+    /// Loads the correct volume level for the given audio type based on the provided audio options.
+    /// It multiplies the volume for the specific audio type (e.g., Environment, Sfx, etc.) by the master volume.
+    /// If a specific volume is not found in the audio options, it defaults to 1.0. The result is then clamped between 0.0 and 1.0.
+    ///
+    /// # Parameters:
+    /// - `audio_type`: The type of audio for which the volume should be calculated (e.g., Environment, Sfx, etc.).
+    /// - `audio_option`: The audio options containing volume settings for various audio types and the master volume.
+    ///
+    /// # Returns:
+    /// The adjusted volume for the specific audio type, clamped between 0.0 and 1.0.
+    fn load_correct_volume(&self, audio_type: AudioType, audio_option: &AudioOption) -> f64 {
+        match audio_type {
+            AudioType::Environment => {
+                (*audio_option.volumes.get("environment")
+                    .unwrap_or(&1.0) * audio_option.master_volume).clamp(0.0, 1.0)
+            },
+            AudioType::Sfx => {
+                (*audio_option.volumes.get("sfx").unwrap_or(&1.0)
+                    * audio_option.master_volume).clamp(0.0, 1.0)
+            },
+            AudioType::Ui => {
+                (*audio_option.volumes.get("ui").unwrap_or(&1.0)
+                    * audio_option.master_volume).clamp(0.0, 1.0)
+            },
+            AudioType::Character => {
+                (*audio_option.volumes.get("character_voice").unwrap_or(&1.0)
+                    * audio_option.master_volume).clamp(0.0, 1.0)
+            },
+            AudioType::Unknown => 0.1,
+        }
+    }
+
+    /// Checks whether the audio system contains a specific audio channel.
+    ///
+    /// # Parameters:
+    /// - `channel_name`: The name of the channel to check for existence within the audio system.
+    ///
+    /// # Returns:
+    /// `true` if the audio system contains the specified channel, `false` otherwise.
     fn contains_channel(&self, channel_name: &str) -> bool {
         self.audio.contains_key(channel_name)
     }
 }
 
-/// The `EnvironmentAudio` component stores information about the environment audio tracks.
-/// It includes the base track and the battle track for the environment, which are used for different gameplay situations.
-#[derive(Component, Resource, Debug)]
-#[allow(dead_code)]
-pub struct EnvironmentAudio {
-    pub base_track: String,  // The default ambient track for the environment
-    pub battle_track: String,  // The track played during battle or combat situations
+fn load_up_audio_config(config: Res<ConfigService>, mut audio_option: ResMut<AudioOption>) {
+    audio_option.initialize(&config);
 }
