@@ -2,6 +2,7 @@ pub mod player;
 pub mod enemies;
 
 use bevy::prelude::*;
+use bevy_atmosphere::prelude::AtmospherePlugin;
 use bevy_rapier3d::plugin::PhysicsSet;
 use bevy_third_person_camera::{CameraSyncSet, ThirdPersonCameraPlugin};
 use system::commons::{AccountPlayer, Character, Elements, WorldPlayer};
@@ -29,7 +30,7 @@ impl Plugin for EntitiesPlugin {
         app.register_type::<WorldPlayer>();
         app.register_type::<Character>();
         app.register_type::<Elements>();
-        app.add_plugins(ThirdPersonCameraPlugin);
+        app.add_plugins((ThirdPersonCameraPlugin, AtmospherePlugin));
 
         // Adding additional plugins for player, enemies, and AI management
         app.add_plugins((PlayerPlugin, EnemiesPlugin, AiPlugin));

@@ -58,7 +58,7 @@ fn load_battle_scene(area: Res<CurrentAreaScenes>,
                 ..default()
             });
         for mut transform in players.iter_mut() {
-            transform.translation = Vec3::new(-7.5, 20.0, 9.5);
+            transform.translation = Vec3::new(0.0, 51.0, 0.0);
         }
     }
 
@@ -74,7 +74,7 @@ fn temp_leave_battle(mut commands: Commands,
     if keyboard.just_pressed(KeyCode::KeyL) {
         for (entity, mut transform) in players.iter_mut() {
             commands.entity(entity).remove::<InBattle>();
-            transform.translation = Vec3::new(40.0, 1.0, 40.0);
+            transform.translation = Vec3::new(40.0, 12.0, 40.0);
         }
 
         for entity in battle_query.iter() {

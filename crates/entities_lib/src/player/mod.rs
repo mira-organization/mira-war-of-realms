@@ -2,9 +2,9 @@ mod input;
 mod animation;
 
 use bevy::core_pipeline::bloom::Bloom;
-use bevy::gltf::GltfSceneExtras;
 use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
+use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_rapier3d::prelude::*;
 use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarget, Zoom};
 use system::commons::{AnimatedPlayer, Animations, LivingEntity, WorldPlayer};
@@ -59,9 +59,6 @@ pub fn create_world_player(
         .add_clips(
             [
                 GltfAssetLabel::Animation(0).from_asset("entities/player/player_idle.glb"),
-                GltfAssetLabel::Animation(1).from_asset("entities/player/player_idle_2.glb"),
-                GltfAssetLabel::Animation(0).from_asset("entities/player/player_slow_run.glb"),
-                GltfAssetLabel::Animation(1).from_asset("entities/player/player_fast_run.glb")
             ].into_iter().map(|path| asset_server.load(path)),
         1.0, graph.root).collect();
     let graph = graphs.add(graph);
@@ -74,7 +71,7 @@ pub fn create_world_player(
         .insert(Name::new("WorldPlayer"))
         .insert(NoFrustumCulling)
         .insert(AnimatedPlayer)
-        .insert(Transform::from_xyz(40.0, 0.249, 40.0))
+        .insert(Transform::from_xyz(40.0, 12.0, 40.0))
         .insert(ThirdPersonCameraTarget)
         .insert(WorldPlayer::default())
         .insert(LivingEntity)
@@ -124,6 +121,7 @@ fn create_player_camera(mut commands: Commands, general_config: Res<ConfigServic
             offset_toggle_enabled: false,
             ..default()
         },
+        AtmosphereCamera::default(),
         Bloom::default(),
         DistanceFog {
             color: Color::srgb(0.3, 0.3, 0.32),

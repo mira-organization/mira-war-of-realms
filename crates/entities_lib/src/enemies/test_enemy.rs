@@ -41,10 +41,10 @@ fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(AiSetup {
             state: AiState::Idle,
             path: vec![
-                Vec3::new(-32.0, 2.901, 15.0),
-                Vec3::new(-32.0, 2.901, 40.0),
-                Vec3::new(-12.0, 2.901, 38.0),
-                Vec3::new(-12.0, 2.901, 20.0)
+                Vec3::new(-32.0, 14.9, 15.0),
+                Vec3::new(-32.0, 14.9, 40.0),
+                Vec3::new(-12.0, 14.9, 38.0),
+                Vec3::new(-12.0, 14.9, 20.0)
             ],
             current_path_index: 0,
             idle_timer: rand::rng().random_range(2.0..6.0),

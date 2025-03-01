@@ -1,18 +1,21 @@
+use bevy::gltf::GltfNode;
 use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy::utils::HashMap;
 use bevy_rapier3d::prelude::{AsyncSceneCollider, ComputedColliderShape, RigidBody, TriMeshFlags};
+use serde_json::Value;
 use system::config::DummySaveData;
 use system::states::{GameState, InGameState};
-use crate::environment::{Area, CurrentAreaScenes, CurrentEnvironment, Environment, EnvironmentListResource, EnvironmentScene, WaitingForAreaAssets};
+use crate::environment::*;
 
 pub struct ReadyUpHandles;
 
 impl Plugin for ReadyUpHandles {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::EnvironmentPreLoad), pre_load_environments);
-        app.add_systems(OnEnter(GameState::EnvironmentLoad), pre_load_area);
+        app.add_systems(OnEnter(GameState::EnvironmentLoad), (pre_load_area, pre_load_gltf_assets));
         app.add_systems(Update, process_loaded_area.run_if(in_state(GameState::EnvironmentLoad)));
+        app.add_systems(Update, load_active_area_lights.run_if(in_state(GameState::EnvironmentPostLoad)));
         app.add_systems(OnEnter(GameState::EnvironmentPostLoad), load_active_area);
     }
 }
@@ -93,6 +96,14 @@ fn pre_load_area(mut commands: Commands,
     info!("Pre Loading glb [{:?}]", path);
 }
 
+fn pre_load_gltf_assets(mut commands: Commands, asset_server: Res<AssetServer>, environment: Res<CurrentEnvironment>) {
+    let path = format!("environments/{}/{}", environment.environment.name, environment.area.name);
+    let gltf_handle = asset_server.load::<Gltf>(path.as_str());
+
+    commands.insert_resource(EffectSceneAssets(gltf_handle.clone()));
+    info!("Pre Loading gltf for extras [{:?}]", path);
+}
+
 /// Processes a previously preloaded `.glb` area once it is fully loaded by Bevy's asset system.
 /// This function extracts scenes from the `.glb` file and stores them in a resource for rendering.
 ///
@@ -131,11 +142,11 @@ fn process_loaded_area(mut commands: Commands,
             let layer_1 = gltf.scenes.get(1).cloned();
             let layer_2 = gltf.scenes.get(2).cloned();
 
-            if found_scenes > 3 {
+            if found_scenes > 4 {
                 info!("Battle Scenes was found!");
                 let mut count = 1;
                 for (index, scene) in gltf.scenes.iter().enumerate() {
-                    if index > 2 {
+                    if index > 3 {
                         map.insert(format!("battle_{}", count), scene.clone());
                         count += 1;
                     }
@@ -176,8 +187,7 @@ fn process_loaded_area(mut commands: Commands,
 /// * `current_area_scenes` - Holds the loaded area scenes.
 /// * `next_state` - Used to transition to the next game state.
 fn load_active_area(mut commands: Commands,
-                    current_area_scenes: Res<CurrentAreaScenes>,
-                    mut next_state: ResMut<NextState<GameState>>
+                    current_area_scenes: Res<CurrentAreaScenes>
 ) {
     let first_layer = current_area_scenes.0.get(&String::from("layer_0")).cloned();
     let second_layer = current_area_scenes.0.get(&String::from("layer_1")).cloned();
@@ -214,5 +224,84 @@ fn load_active_area(mut commands: Commands,
             });
     }
 
-    next_state.set(GameState::InGame(InGameState::Main));
+}
+
+/// Loads active area lights from GLTF extra scene assets and spawns them into the world.
+///
+/// # Parameters
+/// - `commands`: Commands for spawning entities.
+/// - `next_state`: The next game state to transition to after loading lights.
+/// - `gltf_assets`: GLTF asset resources.
+/// - `gltf_nodes`: GLTF node resources containing extra metadata.
+/// - `extra_scene_assets`: Optional extra scene assets that may contain light data.
+fn load_active_area_lights(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
+    gltf_assets: Res<Assets<Gltf>>,
+    gltf_nodes: Res<Assets<GltfNode>>,
+    extra_scene_assets: Option<Res<EffectSceneAssets>>,
+) {
+    if let Some(layer_lights) = extra_scene_assets {
+        if let Some(gltf) = gltf_assets.get(&layer_lights.0) {
+            process_gltf_lights(&mut commands, &gltf, &gltf_nodes);
+        }
+        next_state.set(GameState::InGame(InGameState::Main));
+    }
+}
+
+/// Processes GLTF nodes to extract light information and spawn them into the world.
+///
+/// # Parameters
+/// - `commands`: Mutable reference to commands for spawning entities.
+/// - `gltf`: Reference to the loaded GLTF asset.
+/// - `gltf_nodes`: Reference to the GLTF node assets.
+fn process_gltf_lights(
+    commands: &mut Commands,
+    gltf: &Gltf,
+    gltf_nodes: &Assets<GltfNode>,
+) {
+    for node_handle in &gltf.nodes {
+        if let Some(node) = gltf_nodes.get(node_handle) {
+            if let Some(extras) = &node.extras {
+                if let Ok(parsed) = serde_json::from_str::<Value>(&extras.value) {
+                    if let Some(bevy_json) = parsed.get("bevy_value").and_then(|v| v.as_str()) {
+                        if let Ok(light_data) = serde_json::from_str::<LightData>(bevy_json) {
+                            spawn_light(commands, node, light_data);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Spawns a light entity based on the extracted light data.
+///
+/// # Parameters
+/// - `commands`: Mutable reference to commands for spawning entities.
+/// - `node`: Reference to the GLTF node containing transformation data.
+/// - `light_data`: The extracted light data to configure the light entity.
+fn spawn_light(commands: &mut Commands, node: &GltfNode, light_data: LightData) {
+    let light = match light_data.name.as_str() {
+        "point" => LightType::Point(PointLight {
+            intensity: light_data.intensity.unwrap_or(1000.0),
+            range: light_data.range.unwrap_or(10.0),
+            color: Color::srgb(light_data.color[0], light_data.color[1], light_data.color[2]),
+            ..Default::default()
+        }),
+        "spot" => LightType::Spot(SpotLight {
+            intensity: light_data.intensity.unwrap_or(1000.0),
+            color: Color::srgb(light_data.color[0], light_data.color[1], light_data.color[2]),
+            inner_angle: light_data.inner_cone.unwrap_or(0.1),
+            outer_angle: light_data.outer_cone.unwrap_or(0.5),
+            ..Default::default()
+        }),
+        _ => return,
+    };
+
+    let transform = Transform::from_translation(node.transform.translation);
+    match light {
+        LightType::Point(point_light) => commands.spawn((point_light, transform)),
+        LightType::Spot(spot_light) => commands.spawn((spot_light, transform)),
+    };
 }
