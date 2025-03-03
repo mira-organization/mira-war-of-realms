@@ -15,7 +15,7 @@ system = { path = "../system" }
 bevy_third_person_camera = {version = "0.2.0"}
 
 # Phisyc
-bevy_rapier3d = {version = "0.28.0", features = ["simd-nightly", "debug-render-3d", "default"]}
+bevy_rapier3d = {version = "0.29.0", features = ["simd-nightly", "debug-render-3d", "default"]}
 bevy_atmosphere = {version = "0.12.2", features = ["default"]}
 
 rand = { version = "0.9.0" }
