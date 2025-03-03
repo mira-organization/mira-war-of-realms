@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::utils::HashSet;
-use bevy_rapier3d::prelude::{ActiveCollisionTypes, Collider, ColliderDebugColor, ReadDefaultRapierContext, RigidBody, Sensor};
+use bevy_rapier3d::prelude::{ActiveCollisionTypes, Collider, ColliderDebugColor, DefaultRapierContext, RapierContextColliders, RapierContextSimulation, RigidBody, Sensor};
 use crate::commons::{AttackHitBox, LivingEntity};
 use crate::events::world_events::WorldEntityHitEntityEvent;
 use crate::states::{GameState, InGameState};
@@ -99,7 +99,7 @@ fn attack_collision_system(
     mut event_writer: EventWriter<WorldEntityHitEntityEvent>,
     query: Query<(Entity, &Parent), With<AttackHitBox>>,
     collider_query: Query<Entity, With<LivingEntity>>,
-    rapier_context: ReadDefaultRapierContext,
+    rapier_context: Query<(&RapierContextSimulation, &RapierContextColliders), With<DefaultRapierContext>>,
     mut processed_collisions: Local<HashSet<(Entity, Entity)>>
 ) {
     processed_collisions.clear();
@@ -109,15 +109,18 @@ fn attack_collision_system(
             if parent.get() == collider_entity {
                 continue; // Skip collision with the entity that owns the hit_box
             }
-            // Check if the attack hit_box intersects with a living entity
-            if rapier_context.intersection_pair(attack_entity, collider_entity).is_some() {
-                let collision_pair = (parent.get(), collider_entity);
 
-                if processed_collisions.insert(collision_pair) {
-                    event_writer.send(WorldEntityHitEntityEvent {
-                        sender: parent.get(),
-                        entity: collider_entity,
-                    });
+            for (context_func, context_colliders) in rapier_context.iter() {
+                // Check if the attack hit_box intersects with a living entity
+                if context_func.intersection_pair(context_colliders, attack_entity, collider_entity).is_some() {
+                    let collision_pair = (parent.get(), collider_entity);
+
+                    if processed_collisions.insert(collision_pair) {
+                        event_writer.send(WorldEntityHitEntityEvent {
+                            sender: parent.get(),
+                            entity: collider_entity,
+                        });
+                    }
                 }
             }
         }
