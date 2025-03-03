@@ -34,7 +34,7 @@ bevy_rapier3d = {version = "0.28.0", features = ["simd-nightly", "debug-render-3
 
 # Utils
 rand = "0.8.5"
-toml = {version = "^0.8.0", features = ["parse", "display"]}
+toml = {version = "^0.8.20", features = ["parse", "display"]}
 serde = { version = "1.0.217", features = ["derive"] }
 
 [dependencies.bevy]
