@@ -1,5 +1,6 @@
 pub mod player;
 pub mod enemies;
+mod camera;
 
 use bevy::prelude::*;
 use bevy_atmosphere::prelude::AtmospherePlugin;

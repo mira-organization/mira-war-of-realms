@@ -1,0 +1,71 @@
+mod mouse;
+mod logic;
+
+use bevy::prelude::*;
+use crate::camera::logic::CameraLogicPlugin;
+use crate::camera::mouse::MouseCameraPlugin;
+
+pub struct GameCameraPlugin;
+
+impl Plugin for GameCameraPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins((MouseCameraPlugin, CameraLogicPlugin));
+    }
+}
+
+#[derive(Component, Debug, Copy, Clone)]
+pub struct CameraController {
+    pub sensitivity: Vec2,
+    pub lock_active: bool,
+    pub zoom: Zoom,
+    pub offset: Offset,
+}
+
+impl Default for CameraController {
+    fn default() -> Self {
+        Self {
+            sensitivity: Vec2::new(1.8, 1.8),
+            lock_active: true,
+            zoom: Zoom::new(3.0, 8.0),
+            offset: Offset::new(0.0, 1.2),
+        }
+    }
+}
+
+/// A marker component for the player's world camera.
+///
+/// This component is used to identify the camera entity associated with the player.
+#[derive(Component, Reflect, Debug, Clone)]
+pub struct PlayerWorldCamera;
+
+#[derive(Clone, Copy, Debug)]
+pub struct Zoom {
+    pub min: f32,
+    pub max: f32,
+    pub zoom_sensitivity: f32,
+    radius: f32,
+}
+
+impl Zoom {
+    pub fn new(min: f32, max: f32) -> Self {
+        Self {
+            min,
+            max,
+            zoom_sensitivity: 1.0,
+            radius: (min + max) / 2.0,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct Offset {
+    pub offset: (f32, f32),
+}
+
+impl Offset {
+    pub fn new(x: f32, y: f32) -> Self {
+        Self {
+            offset: (x, y),
+        }
+    }
+}

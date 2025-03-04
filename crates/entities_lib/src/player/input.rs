@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use bevy_third_person_camera::ThirdPersonCamera;
 use system::commons::{WorldPlayer, WorldPlayerState};
 use system::config::ConfigService;
 use system::events::player_events::PlayerActionEvent;
@@ -23,7 +22,6 @@ impl Plugin for PlayerInputPlugin {
         app.add_systems(Update, (fetch_keyboard_input,
                                  update_movement,
                                  input_attack,
-                                 limit_camera_pitch,
                                  track_stable_ground,
                                  check_void_fall
         ).run_if(in_game_states));
@@ -168,27 +166,6 @@ fn input_attack(
                 0.001
             );
         }
-    }
-}
-
-/// Limits the pitch (vertical angle) of the camera rotation to prevent it from rotating too far up or down.
-///
-/// This system ensures the camera's pitch angle stays within a specified range to avoid unrealistic or uncomfortable camera angles
-/// during gameplay. It calculates the camera's current rotation, clamps the pitch, and then applies the corrected rotation.
-///
-/// # Arguments
-/// - `query`: A query to retrieve the camera's transform for rotation manipulation.
-fn limit_camera_pitch(mut query: Query<&mut Transform, With<ThirdPersonCamera>>) {
-    for mut transform in query.iter_mut() {
-        let (yaw, mut pitch, roll) = transform.rotation.to_euler(EulerRot::YXZ);
-
-        // Define the pitch limits (vertical rotation boundaries)
-        let min_pitch: f32 = -std::f32::consts::FRAC_PI_2;
-        let max_pitch: f32 = 123.123;
-
-        // Clamp the pitch within the specified boundaries
-        pitch = pitch.clamp(min_pitch, max_pitch);
-        transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
     }
 }
 
