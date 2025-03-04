@@ -13,8 +13,8 @@ cursor_lock_button = "Escape"
 
 # Camera sensitivity settings
 # Higher values result in faster camera movement.
-camera_vertical_sensitivity = 2.0
-camera_horizontal_sensitivity = 2.0
+camera_vertical_sensitivity = 0.5
+camera_horizontal_sensitivity = 0.5
 
 # Camera zoom settings
 # Higher values will set the camera far from the character.

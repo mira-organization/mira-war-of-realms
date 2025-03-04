@@ -24,7 +24,7 @@ pub struct CameraController {
 impl Default for CameraController {
     fn default() -> Self {
         Self {
-            sensitivity: Vec2::new(1.8, 1.8),
+            sensitivity: Vec2::new(0.55, 0.55),
             lock_active: true,
             zoom: Zoom::new(3.0, 8.0),
             offset: Offset::new(0.0, 1.2),
@@ -43,19 +43,23 @@ pub struct Zoom {
     pub min: f32,
     pub max: f32,
     pub zoom_sensitivity: f32,
-    radius: f32,
+    pub radius: f32,
+    pub target_radius: f32,
 }
 
 impl Zoom {
     pub fn new(min: f32, max: f32) -> Self {
+        let initial_radius = (min + max) / 2.0;
         Self {
             min,
             max,
-            zoom_sensitivity: 1.0,
-            radius: (min + max) / 2.0,
+            zoom_sensitivity: 2.0,
+            radius: initial_radius,
+            target_radius: initial_radius,
         }
     }
 }
+
 
 #[derive(Clone, Copy, Debug)]
 pub struct Offset {

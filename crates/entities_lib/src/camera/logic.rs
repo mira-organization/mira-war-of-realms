@@ -26,10 +26,8 @@ fn sync_entity_with_camera(mut camera_query: Query<(&mut CameraController, &mut 
     let offset =
         rotation_matrix.mul_vec3(Vec3::new(camera_controller.offset.offset.0, camera_controller.offset.offset.1, 0.0));
 
-    let smooth_factor = time.delta_secs() * 8.0;
     let desired_translation = rotation_matrix.mul_vec3(Vec3::new(0.0, 0.0, camera_controller.zoom.radius)) + offset;
     camera_transform.translation = desired_translation + player_transform.translation;
-    camera_transform.translation = camera_transform.translation.lerp(camera_transform.translation, smooth_factor);
 }
 
 fn toggle_cursor(mut camera_query: Query<&mut CameraController>,
