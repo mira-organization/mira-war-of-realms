@@ -91,7 +91,6 @@ pub fn create_world_player(
 fn create_player_camera(mut commands: Commands) {
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(40.0, 12.0, 35.0),
         CameraController::default(),
         PlayerWorldCamera,
         AtmosphereCamera::default()
