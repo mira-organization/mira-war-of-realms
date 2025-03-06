@@ -1,15 +1,13 @@
 mod input;
 mod animation;
 
-use bevy::core_pipeline::bloom::Bloom;
 use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_rapier3d::prelude::*;
-use bevy_third_person_camera::{Offset, ThirdPersonCamera, ThirdPersonCameraTarget, Zoom};
 use system::commons::{AnimatedPlayer, Animations, LivingEntity, WorldPlayer};
-use system::config::ConfigService;
 use system::states::GameState;
+use crate::camera::{CameraController, GameCameraPlugin, PlayerWorldCamera};
 use crate::player::animation::PlayerAnimationPlugin;
 use crate::player::input::PlayerInputPlugin;
 
@@ -25,17 +23,11 @@ impl Plugin for PlayerPlugin {
     ///   when entering the `GameState::InGame` state.
     fn build(&self, app: &mut App) {
         app.insert_resource(LastStableGround(Vec3::ZERO));
-        app.add_plugins((PlayerInputPlugin, PlayerAnimationPlugin));
+        app.add_plugins((GameCameraPlugin, PlayerInputPlugin, PlayerAnimationPlugin));
         app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_world_player);
-        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_player_camera);
+        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_player_camera.after(create_world_player));
     }
 }
-
-/// A marker component for the player's world camera.
-///
-/// This component is used to identify the camera entity associated with the player.
-#[derive(Component, Reflect, Debug, Clone)]
-pub struct PlayerWorldCamera;
 
 #[derive(Resource, Debug, Default)]
 pub struct LastStableGround(pub Vec3);
@@ -72,7 +64,6 @@ pub fn create_world_player(
         .insert(NoFrustumCulling)
         .insert(AnimatedPlayer)
         .insert(Transform::from_xyz(40.0, 12.0, 40.0))
-        .insert(ThirdPersonCameraTarget)
         .insert(WorldPlayer::default())
         .insert(LivingEntity)
         .insert(RigidBody::Dynamic)
@@ -97,45 +88,18 @@ pub fn create_world_player(
         });
 }
 
-/// Spawns the camera entity associated with the player.
+/// Spawns a new player camera entity with the necessary components.
 ///
-/// The camera is positioned behind the player with a third-person perspective
-/// and includes various visual effects such as bloom and distance fog.
+/// This function spawns a 3D camera that follows the player, along with a camera controller
+/// and additional components for world and atmosphere-related camera behavior.
 ///
 /// # Parameters
-/// - `commands`: Provides access to entity creation and command buffers.
-fn create_player_camera(mut commands: Commands, general_config: Res<ConfigService>) {
+/// - `commands`: The `Commands` struct used to spawn the camera entity.
+fn create_player_camera(mut commands: Commands) {
     commands.spawn((
-        Name::new("PlayerCamera"),
         Camera3d::default(),
-        Transform::from_xyz(0.0, 5.0, 10.0),
-        GlobalTransform::default(),
+        CameraController::default(),
         PlayerWorldCamera,
-        ThirdPersonCamera {
-            sensitivity: Vec2::new(general_config.input_config.camera_horizontal_sensitivity,
-                                   general_config.input_config.camera_vertical_sensitivity),
-            zoom: Zoom::new(general_config.input_config.camera_zoom_in, general_config.input_config.camera_zoom_out),
-            cursor_lock_key: KeyCode::Escape,
-            offset: Offset::new(0.0, 0.8),
-            offset_enabled: true,
-            offset_toggle_enabled: false,
-            ..default()
-        },
-        AtmosphereCamera::default(),
-        Bloom::default(),
-        DistanceFog {
-            color: Color::srgb(0.3, 0.3, 0.32),
-            falloff: FogFalloff::Linear {
-                start: 500.0,
-                end: 600.0
-            },
-            ..default()
-        },
-        Projection::Perspective(PerspectiveProjection {
-            near: 0.1,
-            far: 1000.0,
-            fov: std::f32::consts::FRAC_PI_4,
-            ..default()
-        })
+        AtmosphereCamera::default()
     ));
 }

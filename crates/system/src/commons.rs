@@ -97,7 +97,7 @@ pub struct InBattle;
 /// - `Idle`: The player is not moving and is in a resting state.
 /// - `Walking`: The player is walking at a normal speed.
 /// - `Sprinting`: The player is moving at an increased speed (sprinting).
-#[derive(Component, Resource, Reflect, Default, Debug, Clone)]
+#[derive(Component, Resource, Reflect, Default, Debug, Clone, PartialEq, Eq)]
 #[reflect(Component)]
 pub enum WorldPlayerState {
     /// The default state, representing when the player is idle and not moving.

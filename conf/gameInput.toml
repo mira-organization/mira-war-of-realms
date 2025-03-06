@@ -9,6 +9,7 @@ player_right = "D"
 player_sprint = "ShiftLeft"
 debug_change = "F3"
 world_inspector_ui = "F1"
+cursor_lock_button = "Escape"
 
 # Camera sensitivity settings
 # Higher values result in faster camera movement.
