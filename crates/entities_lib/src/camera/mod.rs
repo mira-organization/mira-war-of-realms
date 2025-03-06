@@ -1,15 +1,13 @@
-mod mouse;
 mod logic;
 
 use bevy::prelude::*;
 use crate::camera::logic::CameraLogicPlugin;
-use crate::camera::mouse::MouseCameraPlugin;
 
 pub struct GameCameraPlugin;
 
 impl Plugin for GameCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((MouseCameraPlugin, CameraLogicPlugin));
+        app.add_plugins(CameraLogicPlugin);
     }
 }
 
