@@ -88,6 +88,13 @@ pub fn create_world_player(
         });
 }
 
+/// Spawns a new player camera entity with the necessary components.
+///
+/// This function spawns a 3D camera that follows the player, along with a camera controller
+/// and additional components for world and atmosphere-related camera behavior.
+///
+/// # Parameters
+/// - `commands`: The `Commands` struct used to spawn the camera entity.
 fn create_player_camera(mut commands: Commands) {
     commands.spawn((
         Camera3d::default(),
