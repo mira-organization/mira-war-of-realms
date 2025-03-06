@@ -26,7 +26,7 @@ impl Default for CameraController {
         Self {
             sensitivity: Vec2::new(1.55, 1.55),
             lock_active: true,
-            zoom: Zoom::new(1.4, 8.0),
+            zoom: Zoom::new(1.0, 8.0),
             offset: Offset::new(0.0, 0.6),
         }
     }
@@ -42,6 +42,7 @@ pub struct PlayerWorldCamera;
 pub struct Zoom {
     pub min: f32,
     pub max: f32,
+    pub offset_swap: f32,
     pub zoom_sensitivity: f32,
     pub radius: f32,
     pub target_radius: f32,
@@ -53,6 +54,7 @@ impl Zoom {
         Self {
             min,
             max,
+            offset_swap: min + 1.25,
             zoom_sensitivity: 2.0,
             radius: initial_radius,
             target_radius: initial_radius,

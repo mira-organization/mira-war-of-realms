@@ -75,7 +75,7 @@ fn rotation_mouse(
         QueryFilter::default().exclude_collider(player_entity),
     ) {
         let hit_distance = hit.time_of_impact as f32;
-        if hit_distance > min_distance {
+        if hit_distance > 0.1 {
             target_distance = hit_distance - 0.2;
         }
     }
@@ -160,6 +160,12 @@ fn zoom_mouse(
         }
 
         camera.zoom.radius += (camera.zoom.target_radius - camera.zoom.radius) * 0.15;
+
+        if camera.zoom.radius <= camera.zoom.offset_swap {
+            camera.offset.offset.1 = 0.9;
+        } else {
+            camera.offset.offset.1 = 0.6;
+        }
     }
 }
 
