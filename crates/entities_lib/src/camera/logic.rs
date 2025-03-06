@@ -26,6 +26,7 @@ fn rotation_mouse(
     player_query: Query<(Entity, &Transform), (With<WorldPlayer>, Without<CameraController>)>,
     rapier_query: Query<(&RapierQueryPipeline, &RapierContextColliders, &RapierRigidBodySet), With<DefaultRapierContext>>,
     mut mouse_events: EventReader<MouseMotion>,
+    time: Res<Time>
 ) {
     let mut rotation = Vec2::ZERO;
     for event in mouse_events.read() {
@@ -102,7 +103,7 @@ fn rotation_mouse(
         final_translation.y = final_translation.y.max(floor_hit.point.y + 0.5);
     }
 
-    if target_distance <= min_distance + 0.2 {
+    if target_distance <= min_distance + 0.2 && final_translation.y < player_position.y {
         let test_rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch + 0.02, 0.0);
         let test_translation = player_position + test_rotation.mul_vec3(Vec3::new(0.0, 0.0, -target_distance));
 
@@ -122,6 +123,11 @@ fn rotation_mouse(
         if can_rotate {
             camera_transform.rotation = test_rotation;
         }
+    }
+
+    let distance_to_player = (final_translation - player_position).length();
+    if distance_to_player < camera.zoom.offset_swap && final_translation.y > player_position.y  {
+        final_translation.y += 0.6;
     }
 
     let wall_check_direction = (final_translation - player_position).normalize();
