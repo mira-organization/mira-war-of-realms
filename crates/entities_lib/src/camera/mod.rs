@@ -22,10 +22,10 @@ pub struct CameraController {
 impl Default for CameraController {
     fn default() -> Self {
         Self {
-            sensitivity: Vec2::new(1.55, 1.55),
+            sensitivity: Vec2::new(0.55, 0.55),
             lock_active: true,
-            zoom: Zoom::new(1.0, 8.0),
-            offset: Offset::new(0.0, 0.6),
+            zoom: Zoom::new(1.0, 6.0),
+            offset: Offset::new(0.0, 0.8),
         }
     }
 }
