@@ -1,7 +1,9 @@
 mod logic;
+mod target_system;
 
 use bevy::prelude::*;
 use crate::camera::logic::CameraLogicPlugin;
+use crate::camera::target_system::TargetSystemPlugin;
 
 /// The plugin responsible for managing the game camera logic.
 pub struct GameCameraPlugin;
@@ -9,7 +11,7 @@ pub struct GameCameraPlugin;
 impl Plugin for GameCameraPlugin {
     fn build(&self, app: &mut App) {
         // Add the camera logic plugin to the app.
-        app.add_plugins(CameraLogicPlugin);
+        app.add_plugins((CameraLogicPlugin, TargetSystemPlugin));
     }
 }
 
