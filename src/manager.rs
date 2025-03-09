@@ -4,6 +4,7 @@ use bevy_rapier3d::prelude::{DebugRenderContext, NoUserData, RapierDebugRenderPl
 use audio_lib::audio::AudioHandlerPlugin;
 use audio_lib::AudioStorePlugin;
 use entities_lib::EntitiesPlugin;
+use environment_lib::battle::BattleEnvironmentPlugin;
 use system::config::{ConfigService, DummySaveData};
 use system::states::GameState;
 use environment_lib::environment::EnvironmentPlugin;
@@ -37,7 +38,7 @@ impl Plugin for ManagerPlugin {
         app.add_plugins(WorldInspectorPlugin::default().run_if(check_world_inspector_state));
         app.add_plugins((AudioStorePlugin, AudioHandlerPlugin));
         app.add_plugins((StatesPlugin, EventManagerPlugin, EntitiesPlugin,
-                         EnvironmentPlugin, ServicePlugin, UiPlugin));
+                         EnvironmentPlugin, BattleEnvironmentPlugin, ServicePlugin, UiPlugin));
         app.add_systems(Update, (toggle_debug_system, toggle_world_inspector_interface_system));
     }
 }

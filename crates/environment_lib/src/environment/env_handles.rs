@@ -67,8 +67,7 @@ fn pre_load_battle(
 /// The function spawns the battle scene, sets up collision, and positions the players.
 fn load_battle_scene(
     area: Res<CurrentAreaScenes>,
-    mut commands: Commands,
-    mut players: Query<&mut Transform, With<InBattle>>,
+    mut commands: Commands
 ) {
     let battle_scene = area.0.get("battle_1");
 
@@ -83,10 +82,6 @@ fn load_battle_scene(
                 shape: Some(ComputedColliderShape::TriMesh(TriMeshFlags::MERGE_DUPLICATE_VERTICES)),
                 ..default()
             });
-
-        for mut transform in players.iter_mut() {
-            transform.translation = Vec3::new(0.0, 51.0, 0.0);
-        }
     }
 
     info!("Loading Battle Scenes");

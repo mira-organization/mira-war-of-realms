@@ -116,6 +116,8 @@ pub enum WorldPlayerState {
 #[derive(Component, Resource, Reflect, Debug, Clone)]
 #[reflect(Component)]
 pub struct Character {
+    /// The character's name
+    pub name: String,
     /// The character's base attributes.
     pub base_attributes: CharacterBaseAttributes,
     /// The character's extra attributes.
@@ -128,6 +130,7 @@ impl Default for Character {
     /// Provides default values for a `Character`.
     fn default() -> Self {
         Self {
+            name: String::from("Debug"),
             base_attributes: CharacterBaseAttributes::default(),
             extra_attributes: CharacterExtraAttributes::default(),
             damage_attributes: CharacterDamageAttributes::default(),
