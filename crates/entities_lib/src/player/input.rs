@@ -107,8 +107,8 @@ fn update_movement(
                 PlayerActionEvent::Move(direction) => {
                     if direction.length_squared() > 0.0 {
                         let flat_direction = Vec3::new(direction.x, 0.0, direction.z).normalize();
-                        let target_rotation = Quat::from_rotation_arc(-Vec3::Z, flat_direction);
-                        transform.rotation = transform.rotation.slerp(target_rotation, 0.1);
+                        let target_rotation = Quat::from_rotation_arc(Vec3::Z, flat_direction);
+                        transform.rotation = transform.rotation.slerp(target_rotation, 0.25);
                         controller.translation = Some((direction * world_player.walk_speed) * time.delta_secs());
                         world_player.state = WorldPlayerState::Walking;
                     }
@@ -117,8 +117,8 @@ fn update_movement(
                 PlayerActionEvent::Sprinting(direction) => {
                     if direction.length_squared() > 0.0 {
                         let flat_direction = Vec3::new(direction.x, 0.0, direction.z).normalize();
-                        let target_rotation = Quat::from_rotation_arc(-Vec3::Z, flat_direction);
-                        transform.rotation = transform.rotation.slerp(target_rotation, 0.1);
+                        let target_rotation = Quat::from_rotation_arc(Vec3::Z, flat_direction);
+                        transform.rotation = transform.rotation.slerp(target_rotation, 0.25);
                         controller.translation = Some((direction * world_player.sprinting_speed) * time.delta_secs());
                         world_player.state = WorldPlayerState::Sprinting;
                     }
@@ -156,7 +156,7 @@ fn input_attack(
 
         // Spawn the attack hit_box if the player exists in the query
         if let Ok(player) = query.get_single() {
-            let hit_box_position = Vec3::new(0.0, 0.8, -3.0);
+            let hit_box_position = Vec3::new(0.0, 0.8, 3.0);
             spawn_attack_hit_box(
                 &mut commands,
                 player,

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
-use bevy_mod_outline::{AsyncSceneInheritOutline, AutoGenerateOutlineNormalsPlugin, OutlineMode, OutlinePlugin, OutlineStencil, OutlineVolume};
+use bevy_mod_outline::{AsyncSceneInheritOutline, OutlineMode, OutlineStencil, OutlineVolume};
 use system::commons::WorldPlayer;
+use system::events::world_events::WorldEntityHitEntityEvent;
 use system::states::{GameState, InGameState};
 use crate::camera::CameraController;
 use crate::enemies::WorldEnemy;
@@ -15,8 +16,9 @@ impl Plugin for TargetSystemPlugin {
     /// - Adds the `OutlinePlugin` and `AutoGenerateOutlineNormalsPlugin` for visual outlines.
     /// - Registers the `find_nearest_target_in_view` system to run during the `InGame::Main` state.
     fn build(&self, app: &mut App) {
-        app.add_plugins((OutlinePlugin, AutoGenerateOutlineNormalsPlugin::default()));
-        app.add_systems(Update, find_nearest_target_in_view.run_if(in_state(GameState::InGame(InGameState::Main))));
+        app.add_systems(Update, find_nearest_target_in_view
+            .run_if(in_state(GameState::InGame(InGameState::Main))).run_if(is_game_ready));
+        app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), remove_safely_outline_for_battle);
     }
 }
 
@@ -29,17 +31,24 @@ impl Plugin for TargetSystemPlugin {
 ///
 /// The function performs the following steps:
 /// 1. Iterates through all enemies and calculates their distance from the player.
-/// 2. Ignores enemies beyond a set range (`6.0` units).
+/// 2. Ignores enemies beyond a set range (`option.target_range` units).
 /// 3. Checks if the enemy is within the camera's view using normalized device coordinates (NDC).
 /// 4. Highlights the closest enemy while removing the highlight from others.
 fn find_nearest_target_in_view(
     player_query: Query<&Transform, With<WorldPlayer>>,
     mut enemies: Query<(Entity, &Transform, Option<&mut OutlineVolume>), With<WorldEnemy>>,
-    camera_query: Query<(&GlobalTransform, &Camera), With<CameraController>>,
+    camera_query: Query<(&GlobalTransform, &Camera, &CameraController), With<CameraController>>,
     mut commands: Commands,
 ) {
-    let player_transform = player_query.single();
-    let (camera_transform, camera) = camera_query.single();
+    let player_transform = match player_query.get_single() {
+        Ok(transform) => transform,
+        Err(_) => return
+    };
+
+    let (camera_transform, camera, camera_option) = match camera_query.get_single() {
+        Ok(data) => data,
+        Err(_) => return
+    };
 
     let mut closest_enemy: Option<(Entity, f32)> = None;
 
@@ -47,7 +56,7 @@ fn find_nearest_target_in_view(
         let enemy_pos = enemy_transform.translation;
         let distance = player_transform.translation.distance(enemy_pos);
 
-        if distance > 6.0 {
+        if distance > camera_option.target_range {
             continue;
         }
 
@@ -60,27 +69,68 @@ fn find_nearest_target_in_view(
         }
     }
 
+    let mut enemies_to_update = Vec::new();
+
     for (enemy_entity, _, outline) in enemies.iter_mut() {
         if let Some((target, _)) = closest_enemy {
             if target == enemy_entity {
                 if outline.is_none() {
-                    commands.entity(enemy_entity)
-                        .insert(OutlineVolume {
-                            visible: true,
-                            width: 3.0,
-                            colour: Color::srgb(1.0, 0.0, 0.0),
-                        })
-                        .insert(OutlineStencil {
-                            enabled: true,
-                            offset: 1.0,
-                        })
-                        .insert(OutlineMode::FloodFlat)
-                        .insert(AsyncSceneInheritOutline::default());
+                    enemies_to_update.push((enemy_entity, true));
                 }
                 continue;
             }
         }
-        commands.entity(enemy_entity)
+        enemies_to_update.push((enemy_entity, false));
+    }
+
+    for (enemy_entity, highlight) in enemies_to_update {
+        let mut entity = commands.entity(enemy_entity);
+        if highlight {
+            entity.insert(OutlineVolume {
+                visible: true,
+                width: 3.0,
+                colour: Color::srgb(1.0, 0.0, 0.0),
+            })
+                .insert(OutlineStencil {
+                    enabled: true,
+                    offset: 1.0,
+                })
+                .insert(OutlineMode::FloodFlat)
+                .insert(AsyncSceneInheritOutline::default());
+        } else {
+            entity
+                .remove::<OutlineVolume>()
+                .remove::<OutlineStencil>()
+                .remove::<OutlineMode>();
+        }
+    }
+}
+
+/// Checks if the player and the camera loaded successfully.
+/// This is needed for the ['find_nearest_target_in_view'] function.
+///
+/// # Parameters
+/// - `player_query`: filter for player handles
+/// - `camera_query`: filter for camera handles
+fn is_game_ready(
+    player_query: Query<(), With<WorldPlayer>>,
+    camera_query: Query<(), With<CameraController>>,
+) -> bool {
+    !player_query.is_empty() && !camera_query.is_empty()
+}
+
+/// Removes the outline stuff from the last enemy. This is important for
+/// hidde the outlines at the battle stage.
+///
+/// # Parameters
+/// - `commands`: entities command data struct
+/// - `hit_event`: the called event which detect the correct enemy
+fn remove_safely_outline_for_battle(mut commands: Commands,
+                                    mut hit_event: EventReader<WorldEntityHitEntityEvent>
+) {
+    for event in hit_event.read() {
+        let mut entity = commands.entity(event.entity);
+        entity
             .remove::<OutlineVolume>()
             .remove::<OutlineStencil>()
             .remove::<OutlineMode>();

@@ -75,8 +75,8 @@ impl Default for WorldPlayer {
     fn default() -> Self {
         Self {
             actions_points: 3,
-            walk_speed: 4.65,
-            sprinting_speed: 6.5,
+            walk_speed: 4.85,
+            sprinting_speed: 7.5,
             max_step_height: 1.0,
             state: WorldPlayerState::default(),
             attack_hit_box: AttackHitBox::default()

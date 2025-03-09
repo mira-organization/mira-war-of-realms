@@ -50,7 +50,10 @@ pub fn create_world_player(
     let animations = graph
         .add_clips(
             [
-                GltfAssetLabel::Animation(0).from_asset("entities/player/player_idle.glb"),
+                GltfAssetLabel::Animation(0).from_asset("entities/characters/ignara.glb"),
+                GltfAssetLabel::Animation(1).from_asset("entities/characters/ignara.glb"),
+                GltfAssetLabel::Animation(2).from_asset("entities/characters/ignara.glb"),
+                GltfAssetLabel::Animation(3).from_asset("entities/characters/ignara.glb"),
             ].into_iter().map(|path| asset_server.load(path)),
         1.0, graph.root).collect();
     let graph = graphs.add(graph);
@@ -59,7 +62,7 @@ pub fn create_world_player(
         graph: graph.clone()
     });
 
-    commands.spawn(SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/player/player_idle.glb"))))
+    commands.spawn(SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/characters/ignara.glb"))))
         .insert(Name::new("WorldPlayer"))
         .insert(NoFrustumCulling)
         .insert(AnimatedPlayer)
