@@ -22,6 +22,7 @@ pub struct CameraController {
     pub lock_active: bool,    // Indicates whether the camera is locked to the player's viewpoint.
     pub zoom: Zoom,           // Holds zoom-related parameters (min, max zoom, etc.).
     pub offset: Offset,       // Offset that modifies the camera's position relative to the player.
+    pub target_range: f32,    // Detection range for enemies (higher means far detection).
 }
 
 impl Default for CameraController {
@@ -31,6 +32,7 @@ impl Default for CameraController {
             lock_active: true, // Camera is locked to the player by default.
             zoom: Zoom::new(1.0, 6.0), // Set the default zoom range (min: 1.0, max: 6.0).
             offset: Offset::new(0.0, 0.8), // Set default offset values for camera positioning.
+            target_range: 7.5,
         }
     }
 }
