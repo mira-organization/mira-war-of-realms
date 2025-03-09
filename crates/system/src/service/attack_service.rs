@@ -48,19 +48,17 @@ pub fn spawn_attack_hit_box(commands: &mut Commands,
     }
 
     // Spawn the attack hit_box entity with its properties
-    let collider_entity = commands
-        .spawn(
-            AttackHitBox {
-                timer: Timer::from_seconds(duration, TimerMode::Once)
-            }
-        ).insert(RigidBody::KinematicPositionBased)
-        .insert(shape)
-        .insert(ActiveCollisionTypes::default())
-        .insert(Sensor)
-        .insert(Transform::from(transform))
-        .insert(ColliderDebugColor(Hsla::from(debug_color)))
-        .set_parent(parent)
-        .id();
+    let collider_entity = commands.spawn((
+        AttackHitBox {
+            timer: Timer::from_seconds(duration, TimerMode::Once)
+        },
+        RigidBody::KinematicPositionBased,
+        shape,
+        ActiveCollisionTypes::default(),
+        Sensor,
+        Transform::from(transform),
+        ColliderDebugColor(Hsla::from(debug_color))
+    )).set_parent(parent).id();
 
     // Attach the hit_box entity as a child of the parent entity
     commands.entity(parent).add_child(collider_entity);

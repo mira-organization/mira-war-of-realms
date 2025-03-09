@@ -31,14 +31,14 @@ impl Plugin for TestEnemy {
 /// - `commands`: Provides access to entity creation and command buffers.
 /// - `asset_server`: Used to load assets such as the enemy's 3D model.
 fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-        .spawn(SceneRoot(
+    commands.spawn((
+        SceneRoot(
             asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/enemies/test_enemy/placeholder.glb"))
-        ))
-        .insert(Name::new("Enemy-Test"))
-        .insert(AnimatedMob)
-        .insert(Transform::from_xyz(-32.0, 50.0, 15.0))
-        .insert(AiSetup {
+        ),
+        Name::new("Enemy-Test"),
+        AnimatedMob,
+        Transform::from_xyz(-32.0, 50.0, 15.0),
+        AiSetup {
             state: AiState::Idle,
             path: vec![
                 Vec3::new(-32.0, 14.9, 15.0),
@@ -49,19 +49,20 @@ fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
             current_path_index: 0,
             idle_timer: rand::rng().random_range(2.0..6.0),
             ..default()
-        })
-        .insert(WorldEnemy::default())
-        .insert(LivingEntity)
-        .insert(RigidBody::Dynamic)
-        .insert(Velocity::default())
-        .insert(Damping {
+        },
+        WorldEnemy::default(),
+        LivingEntity,
+        RigidBody::Dynamic,
+        Velocity::default(),
+        Damping {
             angular_damping: 1.0,
             linear_damping: 1.0,
-        })
-        .insert(LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z)
-        .insert(Collider::capsule(
+        },
+        LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,
+        Collider::capsule(
             Vec3::new(0.0, 0.2, 0.0),
             Vec3::new(0.0, 1.6, 0.0),
             0.2,
-        ));
+        )
+    ));
 }

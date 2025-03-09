@@ -62,23 +62,24 @@ pub fn create_world_player(
         graph: graph.clone()
     });
 
-    commands.spawn(SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/characters/ignara.glb"))))
-        .insert(Name::new("WorldPlayer"))
-        .insert(NoFrustumCulling)
-        .insert(AnimatedPlayer)
-        .insert(Transform::from_xyz(40.0, 12.0, 40.0))
-        .insert(WorldPlayer::default())
-        .insert(LivingEntity)
-        .insert(RigidBody::Dynamic)
-        .insert(Velocity::default())
-        .insert(GravityScale(2.5))
-        .insert(Damping {
+    commands.spawn((
+        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/characters/ignara.glb"))),
+        Name::new("WorldPlayer"),
+        NoFrustumCulling,
+        AnimatedPlayer,
+        Transform::from_xyz(40.0, 12.0, 40.0),
+        WorldPlayer::default(),
+        LivingEntity,
+        RigidBody::Dynamic,
+        Velocity::default(),
+        GravityScale(2.5),
+        Damping {
             angular_damping: 2.0,
             linear_damping: 2.0
-        })
-        .insert(LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z)
-        .insert(Collider::capsule(Vec3::new(0.0, 0.2, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2))
-        .insert(KinematicCharacterController {
+        },
+        LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,
+        Collider::capsule(Vec3::new(0.0, 0.2, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2),
+        KinematicCharacterController {
             max_slope_climb_angle: 45_f32.to_radians(),
             min_slope_slide_angle: 35_f32.to_radians(),
             autostep: Some(CharacterAutostep {
@@ -88,7 +89,8 @@ pub fn create_world_player(
             }),
             snap_to_ground: Some(CharacterLength::Absolute(0.075)),
             ..default()
-        });
+        }
+    ));
 }
 
 /// Spawns a new player camera entity with the necessary components.
