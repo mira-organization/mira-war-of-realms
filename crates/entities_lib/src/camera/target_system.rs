@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_mod_outline::{AsyncSceneInheritOutline, AutoGenerateOutlineNormalsPlugin, OutlineMode, OutlinePlugin, OutlineStencil, OutlineVolume};
+use bevy_mod_outline::{AsyncSceneInheritOutline, OutlineMode, OutlineStencil, OutlineVolume};
 use system::commons::WorldPlayer;
 use system::states::{GameState, InGameState};
 use crate::camera::CameraController;
@@ -15,8 +15,7 @@ impl Plugin for TargetSystemPlugin {
     /// - Adds the `OutlinePlugin` and `AutoGenerateOutlineNormalsPlugin` for visual outlines.
     /// - Registers the `find_nearest_target_in_view` system to run during the `InGame::Main` state.
     fn build(&self, app: &mut App) {
-        app.add_plugins((OutlinePlugin, AutoGenerateOutlineNormalsPlugin::default()));
-        app.add_systems(Update, find_nearest_target_in_view.run_if(in_state(GameState::InGame(InGameState::Main))));
+        app.add_systems(Update, find_nearest_target_in_view.run_if(in_state(GameState::InGame(InGameState::Main))).run_if(is_game_ready));
     }
 }
 
@@ -38,8 +37,15 @@ fn find_nearest_target_in_view(
     camera_query: Query<(&GlobalTransform, &Camera), With<CameraController>>,
     mut commands: Commands,
 ) {
-    let player_transform = player_query.single();
-    let (camera_transform, camera) = camera_query.single();
+    let player_transform = match player_query.get_single() {
+        Ok(transform) => transform,
+        Err(_) => return
+    };
+
+    let (camera_transform, camera) = match camera_query.get_single() {
+        Ok(data) => data,
+        Err(_) => return
+    };
 
     let mut closest_enemy: Option<(Entity, f32)> = None;
 
@@ -60,31 +66,49 @@ fn find_nearest_target_in_view(
         }
     }
 
+    let mut enemies_to_update = Vec::new();
+
     for (enemy_entity, _, outline) in enemies.iter_mut() {
         if let Some((target, _)) = closest_enemy {
             if target == enemy_entity {
                 if outline.is_none() {
-                    commands.entity(enemy_entity)
-                        .insert(OutlineVolume {
-                            visible: true,
-                            width: 3.0,
-                            colour: Color::srgb(1.0, 0.0, 0.0),
-                        })
-                        .insert(OutlineStencil {
-                            enabled: true,
-                            offset: 1.0,
-                        })
-                        .insert(OutlineMode::FloodFlat)
-                        .insert(AsyncSceneInheritOutline::default());
+                    enemies_to_update.push((enemy_entity, true));
                 }
                 continue;
             }
         }
-        commands.entity(enemy_entity)
-            .remove::<OutlineVolume>()
-            .remove::<OutlineStencil>()
-            .remove::<OutlineMode>();
+        enemies_to_update.push((enemy_entity, false));
     }
+
+    for (enemy_entity, highlight) in enemies_to_update {
+        let mut entity = commands.entity(enemy_entity);
+        if highlight {
+            entity.insert(OutlineVolume {
+                visible: true,
+                width: 3.0,
+                colour: Color::srgb(1.0, 0.0, 0.0),
+            })
+                .insert(OutlineStencil {
+                    enabled: true,
+                    offset: 1.0,
+                })
+                .insert(OutlineMode::FloodFlat)
+                .insert(AsyncSceneInheritOutline::default());
+        } else {
+            entity
+                .remove::<OutlineVolume>()
+                .remove::<OutlineStencil>()
+                .remove::<OutlineMode>();
+        }
+    }
+}
+
+
+fn is_game_ready(
+    player_query: Query<(), With<WorldPlayer>>,
+    camera_query: Query<(), With<CameraController>>,
+) -> bool {
+    !player_query.is_empty() && !camera_query.is_empty()
 }
 
 

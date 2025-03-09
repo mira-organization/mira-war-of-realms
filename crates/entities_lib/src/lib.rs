@@ -4,6 +4,7 @@ mod camera;
 
 use bevy::prelude::*;
 use bevy_atmosphere::prelude::AtmospherePlugin;
+use bevy_mod_outline::{AutoGenerateOutlineNormalsPlugin, OutlinePlugin};
 use bevy_rapier3d::plugin::PhysicsSet;
 use bevy_third_person_camera::{CameraSyncSet, ThirdPersonCameraPlugin};
 use system::commons::{AccountPlayer, Character, Elements, WorldPlayer};
@@ -31,7 +32,7 @@ impl Plugin for EntitiesPlugin {
         app.register_type::<WorldPlayer>();
         app.register_type::<Character>();
         app.register_type::<Elements>();
-        app.add_plugins((ThirdPersonCameraPlugin, AtmospherePlugin));
+        app.add_plugins((ThirdPersonCameraPlugin, AtmospherePlugin, OutlinePlugin, AutoGenerateOutlineNormalsPlugin::default()));
 
         // Adding additional plugins for player, enemies, and AI management
         app.add_plugins((PlayerPlugin, EnemiesPlugin, AiPlugin));
