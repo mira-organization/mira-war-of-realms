@@ -64,7 +64,9 @@ pub struct WorldPlayer {
     /// The in world state for handle animations.
     pub state: WorldPlayerState,
     /// The attack box for hit detection.
-    pub attack_hit_box: AttackHitBox
+    pub attack_hit_box: AttackHitBox,
+
+    pub displayed_character: Character,
 }
 
 impl Default for WorldPlayer {
@@ -79,7 +81,8 @@ impl Default for WorldPlayer {
             sprinting_speed: 7.5,
             max_step_height: 1.0,
             state: WorldPlayerState::default(),
-            attack_hit_box: AttackHitBox::default()
+            attack_hit_box: AttackHitBox::default(),
+            displayed_character: Character::default()
         }
     }
 }
@@ -130,7 +133,7 @@ impl Default for Character {
     /// Provides default values for a `Character`.
     fn default() -> Self {
         Self {
-            name: String::from("Debug"),
+            name: String::from("ignara"),
             base_attributes: CharacterBaseAttributes::default(),
             extra_attributes: CharacterExtraAttributes::default(),
             damage_attributes: CharacterDamageAttributes::default(),

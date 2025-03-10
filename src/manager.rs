@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::{DebugRenderContext, NoUserData, RapierDebugRenderPlugin, RapierPhysicsPlugin};
 use audio_lib::audio::AudioHandlerPlugin;
@@ -8,6 +9,8 @@ use environment_lib::battle::BattleEnvironmentPlugin;
 use system::config::{ConfigService, DummySaveData};
 use system::states::GameState;
 use environment_lib::environment::EnvironmentPlugin;
+use system::characters::CharacterParty;
+use system::commons::Character;
 use system::events::EventManagerPlugin;
 use system::service::ServicePlugin;
 use crate::languages::LanguagesPlugin;
@@ -27,6 +30,10 @@ impl Plugin for ManagerPlugin {
         app.insert_resource(ConfigService::new());
         app.insert_resource(WorldInspectorState::default());
         app.insert_resource(DummySaveData::default());
+        app.insert_resource(CharacterParty {
+            team_leader: Character::default(),
+            members: HashMap::new()
+        });
 
         // Add various game-related plugins
         app.add_plugins(LanguagesPlugin);
