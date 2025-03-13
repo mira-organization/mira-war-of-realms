@@ -4,7 +4,7 @@ use bevy_rapier3d::dynamics::{Damping, LockedAxes};
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::prelude::{RigidBody, Velocity};
 use system::characters::{CharacterBundle, CharacterParty};
-use system::commons::{Character, InBattle, WorldPlayer};
+use system::commons::{Character, InBattle, LivingEntity, WorldPlayer};
 use system::states::{GameState, InGameState};
 
 pub struct BattleEnvironmentPlugin;
@@ -36,6 +36,14 @@ fn spawn_player_characters(mut commands: Commands,
         }
         location.x += 2.5;
     }
+
+    let count :u32 = 4;
+    let mut location = Transform::from_xyz(-10.0, 51.0, 15.0).translation;
+
+    for index in 0..count {
+        generate_enemies(&mut commands, &asset_server, location, index);
+        location.x += 2.5;
+    }
 }
 
 fn generate_character(commands: &mut Commands,
@@ -62,4 +70,35 @@ fn generate_character(commands: &mut Commands,
         locked_axes: LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,
         collider: Collider::capsule(Vec3::new(0.0, 0.2, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2),
     });
+}
+
+fn generate_enemies(commands: &mut Commands,
+                    asset_server: &AssetServer,
+                    location: Vec3,
+                    index: u32,
+) {
+    commands.spawn((
+        SceneRoot(
+            asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/enemies/test_enemy/placeholder.glb"))
+        ),
+        Name::new(format!("Enemy0{}", index)),
+        Transform {
+            translation: location,
+            rotation: Quat::from_rotation_y(std::f32::consts::PI),
+            ..default()
+        },
+        LivingEntity,
+        RigidBody::Dynamic,
+        Velocity::default(),
+        Damping {
+            angular_damping: 1.0,
+            linear_damping: 1.0,
+        },
+        LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,
+        Collider::capsule(
+            Vec3::new(0.0, 0.2, 0.0),
+            Vec3::new(0.0, 1.6, 0.0),
+            0.2,
+        )
+    ));
 }
