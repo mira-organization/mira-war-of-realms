@@ -14,7 +14,7 @@ bevy_rapier3d = {version = "0.29.0", features = ["simd-nightly", "debug-render-3
 
 system = { path = "../system" }
 regex = { version = "^1.11" }
-serde = { version = "1.0.218", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 
 [dependencies.bevy]
