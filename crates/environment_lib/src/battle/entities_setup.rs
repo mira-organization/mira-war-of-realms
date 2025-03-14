@@ -42,6 +42,7 @@ fn spawn_entities(
         Err(_) => return,
     };
 
+
     let mut location = Transform::from_xyz(-10.0, 51.0, 25.0).translation;
     let party_members = character_party.clone().members;
 
