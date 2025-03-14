@@ -1,126 +1,53 @@
-use bevy::prelude::*;
-use bevy::render::view::NoFrustumCulling;
-use bevy_rapier3d::dynamics::{Damping, LockedAxes};
-use bevy_rapier3d::geometry::Collider;
-use bevy_rapier3d::prelude::{RigidBody, Velocity};
-use system::characters::{CharacterBundle, CharacterParty};
-use system::commons::{Character, InBattle, LivingEntity, WorldPlayer};
-use system::states::{GameState, InGameState};
+mod entities_setup;
 
+use bevy::prelude::*;
+use crate::battle::entities_setup::BattleEntitiesPlugin;
+
+/// A plugin that manages the battle environment.
+///
+/// This plugin adds essential sub-plugins for battle interactions.
 pub struct BattleEnvironmentPlugin;
 
 impl Plugin for BattleEnvironmentPlugin {
+    /// Registers the required plugins for the battle environment.
+    ///
+    /// # Parameters
+    /// - `app`: The Bevy app where the plugin is registered.
     fn build(&self, app: &mut App) {
+        // Enables mesh-based interaction handling
         app.add_plugins(MeshPickingPlugin);
-        app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), spawn_entities);
+
+        // Adds battle-related entities
+        app.add_plugins(BattleEntitiesPlugin);
     }
 }
 
-fn spawn_entities(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut players: Query<(&mut Transform, &WorldPlayer), (With<InBattle>, With<WorldPlayer>)>,
-    character_party: Res<CharacterParty>,
-    mut meshes: ResMut<Assets<Mesh>>,
-) {
-
-    let (mut transform, world_player) = match players.get_single_mut() {
-        Ok(data) => data,
-        Err(_) => return
-    };
-
-    let mut location = Transform::from_xyz(-10.0, 51.0, 25.0).translation;
-    let party_members = character_party.clone().members;
-    for (_slot, member) in party_members {
-        if member.name == world_player.displayed_character.name {
-            transform.translation = location;
-            transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);
-        } else {
-            generate_character(&mut commands, &asset_server, location, &member);
-        }
-        location.x += 2.5;
-    }
-
-    let count :u32 = 4;
-    let mut location = Transform::from_xyz(-10.0, 51.0, 15.0).translation;
-
-    for index in 0..count {
-        generate_enemies(&mut commands, &asset_server, &mut meshes, location, index);
-        location.x += 2.5;
-    }
-}
-
-fn generate_character(commands: &mut Commands,
-                      asset_server: &AssetServer,
-                      location: Vec3,
-                      character: &Character) {
-    commands.spawn(CharacterBundle {
-        scene: SceneRoot(asset_server.load(GltfAssetLabel::Scene(0)
-            .from_asset(format!("entities/characters/{}.glb", character.name)))),
-        name: Name::new(character.name.to_string()),
-        culling: NoFrustumCulling,
-        transform: Transform {
-            translation: location,
-            rotation: Quat::from_rotation_y(0.0),
-            ..default()
-        },
-        character: character.clone(),
-        rigid_body: RigidBody::Dynamic,
-        velocity: Velocity::default(),
-        damping: Damping {
-            angular_damping: 2.0,
-            linear_damping: 2.0,
-        },
-        locked_axes: LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,
-        collider: Collider::capsule(Vec3::new(0.0, 0.2, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2),
-    });
-}
-
-fn generate_enemies(commands: &mut Commands,
-                    asset_server: &AssetServer,
-                    meshes: &mut ResMut<Assets<Mesh>>,
-                    location: Vec3,
-                    index: u32,
-) {
-    commands.spawn((
-        SceneRoot(
-            asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/enemies/test_enemy/placeholder.glb"))
-        ),
-        Name::new(format!("Enemy0{}", index)),
-        Transform {
-            translation: location,
-            rotation: Quat::from_rotation_y(std::f32::consts::PI),
-            ..default()
-        },
-        LivingEntity,
-        RigidBody::Dynamic,
-        Velocity::default(),
-        Damping {
-            angular_damping: 1.0,
-            linear_damping: 1.0,
-        },
-        LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,
-        Collider::capsule(
-            Vec3::new(0.0, 0.2, 0.0),
-            Vec3::new(0.0, 1.6, 0.0),
-            0.2,
-        )
-    )).with_children(|children| {
-        children.spawn((
-            Transform::from_xyz(0.0, 0.8, 0.0),
-            Mesh3d(meshes.add(Capsule3d::new(0.2, 1.4)))
-        )).observe(on_mouse_click).observe(on_mouse_enter).observe(on_mouse_leave);
-    });
-}
-
+/// Handles mouse click events on interactive objects.
+///
+/// Logs the entity that was clicked.
+///
+/// # Parameters
+/// - `event`: The event containing information about the clicked entity.
 fn on_mouse_click(event: Trigger<Pointer<Click>>) {
     info!("Clicked on pointer {:?}", event.entity());
 }
 
+/// Handles mouse hover enter events on interactive objects.
+///
+/// Logs when the cursor enters an entity's interactive area.
+///
+/// # Parameters
+/// - `event`: The event containing information about the entity being hovered over.
 fn on_mouse_enter(event: Trigger<Pointer<Over>>) {
     info!("Entered pointer {:?}", event.entity());
 }
 
+/// Handles mouse hover leave events on interactive objects.
+///
+/// Logs when the cursor leaves an entity's interactive area.
+///
+/// # Parameters
+/// - `event`: The event containing information about the entity being left.
 fn on_mouse_leave(event: Trigger<Pointer<Out>>) {
     info!("Leaving pointer {:?}", event.entity());
 }
