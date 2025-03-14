@@ -37,7 +37,12 @@ fn rotation_mouse(
     player_query: Query<(Entity, &Transform), (With<WorldPlayer>, Without<CameraController>)>,
     rapier_query: Query<(&RapierQueryPipeline, &RapierContextColliders, &RapierRigidBodySet), With<DefaultRapierContext>>,
     mut mouse_events: EventReader<MouseMotion>,
+    current_state: Res<State<GameState>>,
 ) {
+    if current_state.eq(&GameState::InGame(InGameState::Battle)) {
+        return;
+    }
+
     // Calculate rotation based on mouse movement.
     let mut rotation = Vec2::ZERO;
     for event in mouse_events.read() {
