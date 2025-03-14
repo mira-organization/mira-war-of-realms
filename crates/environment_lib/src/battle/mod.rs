@@ -1,6 +1,7 @@
 mod entities_setup;
 
 use bevy::prelude::*;
+use system::battle_commons::BattleEntityStatus;
 use crate::battle::entities_setup::BattleEntitiesPlugin;
 
 /// A plugin that manages the battle environment.
@@ -28,8 +29,27 @@ impl Plugin for BattleEnvironmentPlugin {
 ///
 /// # Parameters
 /// - `event`: The event containing information about the clicked entity.
-fn on_mouse_click(event: Trigger<Pointer<Click>>) {
-    info!("Clicked on pointer {:?}", event.entity());
+fn on_mouse_click(event: Trigger<Pointer<Click>>,
+                  mut query: Query<&mut BattleEntityStatus, With<BattleEntityStatus>>,
+                  parent_query: Query<&Parent>
+) {
+
+    let parent_entity = parent_query.get(event.entity()).map(|p| p.get()).ok();
+
+    if let Some(entity) = parent_entity {
+        let mut status = match query.get_mut(entity) {
+            Ok(status) => status,
+            Err(_) => return,
+        };
+
+        status.selected = !status.selected;
+        info!(
+        "Clicked on entity {:?} (Parent: {:?}), selected {}",
+        event.entity(), parent_entity, status.selected
+        );
+    } else {
+        warn!("Clicked on entity {:?} is not found", event.entity());
+    }
 }
 
 /// Handles mouse hover enter events on interactive objects.

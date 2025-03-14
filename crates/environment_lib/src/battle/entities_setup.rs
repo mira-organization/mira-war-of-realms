@@ -2,8 +2,9 @@ use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy_rapier3d::dynamics::{Damping, LockedAxes, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
+use system::battle_commons::{BattleEntityStatus, InBattle};
 use system::characters::{CharacterBundle, CharacterParty};
-use system::commons::{Character, InBattle, LivingEntity, WorldPlayer};
+use system::commons::{Character, LivingEntity, WorldPlayer};
 use system::states::{GameState, InGameState};
 use crate::battle::{on_mouse_click, on_mouse_enter, on_mouse_leave};
 
@@ -130,6 +131,7 @@ fn generate_enemies(
             ..default()
         },
         LivingEntity,
+        BattleEntityStatus::default(),
         RigidBody::Dynamic,
         Velocity::default(),
         Damping {
