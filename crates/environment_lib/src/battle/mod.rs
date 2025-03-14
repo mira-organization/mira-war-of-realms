@@ -11,14 +11,18 @@ pub struct BattleEnvironmentPlugin;
 
 impl Plugin for BattleEnvironmentPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), spawn_player_characters);
+        app.add_plugins(MeshPickingPlugin);
+        app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), spawn_entities);
     }
 }
 
-fn spawn_player_characters(mut commands: Commands,
-                           asset_server: Res<AssetServer>,
-                           mut players: Query<(&mut Transform, &WorldPlayer), (With<InBattle>, With<WorldPlayer>)>,
-                           character_party: Res<CharacterParty>) {
+fn spawn_entities(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut players: Query<(&mut Transform, &WorldPlayer), (With<InBattle>, With<WorldPlayer>)>,
+    character_party: Res<CharacterParty>,
+    mut meshes: ResMut<Assets<Mesh>>,
+) {
 
     let (mut transform, world_player) = match players.get_single_mut() {
         Ok(data) => data,
@@ -41,7 +45,7 @@ fn spawn_player_characters(mut commands: Commands,
     let mut location = Transform::from_xyz(-10.0, 51.0, 15.0).translation;
 
     for index in 0..count {
-        generate_enemies(&mut commands, &asset_server, location, index);
+        generate_enemies(&mut commands, &asset_server, &mut meshes, location, index);
         location.x += 2.5;
     }
 }
@@ -74,6 +78,7 @@ fn generate_character(commands: &mut Commands,
 
 fn generate_enemies(commands: &mut Commands,
                     asset_server: &AssetServer,
+                    meshes: &mut ResMut<Assets<Mesh>>,
                     location: Vec3,
                     index: u32,
 ) {
@@ -100,5 +105,22 @@ fn generate_enemies(commands: &mut Commands,
             Vec3::new(0.0, 1.6, 0.0),
             0.2,
         )
-    ));
+    )).with_children(|children| {
+        children.spawn((
+            Transform::from_xyz(0.0, 0.8, 0.0),
+            Mesh3d(meshes.add(Capsule3d::new(0.2, 1.4)))
+        )).observe(on_mouse_click).observe(on_mouse_enter).observe(on_mouse_leave);
+    });
+}
+
+fn on_mouse_click(event: Trigger<Pointer<Click>>) {
+    info!("Clicked on pointer {:?}", event.entity());
+}
+
+fn on_mouse_enter(event: Trigger<Pointer<Over>>) {
+    info!("Entered pointer {:?}", event.entity());
+}
+
+fn on_mouse_leave(event: Trigger<Pointer<Out>>) {
+    info!("Leaving pointer {:?}", event.entity());
 }

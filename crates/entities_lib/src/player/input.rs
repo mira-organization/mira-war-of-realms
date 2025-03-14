@@ -153,7 +153,11 @@ fn input_attack(
     mut commands: Commands,
     query: Query<Entity, With<WorldPlayer>>,
     mut input_event_writer: EventWriter<PlayerActionEvent>,
+    current_state: Res<State<GameState>>,
 ) {
+    if current_state.eq(&GameState::InGame(InGameState::Battle)) {
+        return;
+    }
     if mouse_input.just_pressed(MouseButton::Left) {
         // Trigger the player's attack event
         input_event_writer.send(PlayerActionEvent::Attacking);
