@@ -5,7 +5,8 @@ use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_rapier3d::prelude::*;
-use system::commons::{AnimatedPlayer, Animations, LivingEntity, WorldPlayer};
+use system::characters::CharacterParty;
+use system::commons::{AnimatedPlayer, Animations, Character, LivingEntity, WorldPlayer};
 use system::states::GameState;
 use crate::camera::{CameraController, GameCameraPlugin, PlayerWorldCamera};
 use crate::player::animation::PlayerAnimationPlugin;
@@ -45,15 +46,17 @@ pub fn create_world_player(
     mut commands: Commands,
     mut graphs: ResMut<Assets<AnimationGraph>>,
     asset_server: Res<AssetServer>,
+    mut character_party: ResMut<CharacterParty>
 ) {
+    let character = WorldPlayer::default();
     let mut graph = AnimationGraph::new();
     let animations = graph
         .add_clips(
             [
-                GltfAssetLabel::Animation(0).from_asset("entities/characters/ignara.glb"),
-                GltfAssetLabel::Animation(1).from_asset("entities/characters/ignara.glb"),
-                GltfAssetLabel::Animation(2).from_asset("entities/characters/ignara.glb"),
-                GltfAssetLabel::Animation(3).from_asset("entities/characters/ignara.glb"),
+                GltfAssetLabel::Animation(0).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
+                GltfAssetLabel::Animation(1).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
+                GltfAssetLabel::Animation(2).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
+                GltfAssetLabel::Animation(3).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
             ].into_iter().map(|path| asset_server.load(path)),
         1.0, graph.root).collect();
     let graph = graphs.add(graph);
@@ -62,13 +65,19 @@ pub fn create_world_player(
         graph: graph.clone()
     });
 
+    character_party.members.insert(1, character.displayed_character.clone());
+    character_party.members.insert(2, Character {
+        name: String::from("placeholder"),
+        ..default()
+    });
+
     commands.spawn((
-        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/characters/ignara.glb"))),
+        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)))),
         Name::new("WorldPlayer"),
         NoFrustumCulling,
         AnimatedPlayer,
         Transform::from_xyz(40.0, 12.0, 40.0),
-        WorldPlayer::default(),
+        character,
         LivingEntity,
         RigidBody::Dynamic,
         Velocity::default(),

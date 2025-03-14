@@ -5,7 +5,7 @@ use system::config::ConfigService;
 use system::events::player_events::PlayerActionEvent;
 use system::PLAYER_VOID_THRESHOLD;
 use system::service::attack_service::spawn_attack_hit_box;
-use system::states::in_game_states;
+use system::states::{in_game_states, GameState, InGameState};
 use system::utils::key_code::convert;
 use crate::player::{LastStableGround, PlayerWorldCamera};
 
@@ -100,37 +100,41 @@ fn update_movement(
     time: Res<Time>,
     mut controllers: Query<(&mut KinematicCharacterController, &mut Transform, &mut WorldPlayer), With<WorldPlayer>>,
     mut input_event_reader: EventReader<PlayerActionEvent>,
+    current_state: Res<State<GameState>>,
 ) {
-    for event in input_event_reader.read() {
-        for (mut controller, mut transform, mut world_player) in controllers.iter_mut() {
-            match event {
-                PlayerActionEvent::Move(direction) => {
-                    if direction.length_squared() > 0.0 {
-                        let flat_direction = Vec3::new(direction.x, 0.0, direction.z).normalize();
-                        let target_rotation = Quat::from_rotation_arc(Vec3::Z, flat_direction);
-                        transform.rotation = transform.rotation.slerp(target_rotation, 0.25);
-                        controller.translation = Some((direction * world_player.walk_speed) * time.delta_secs());
-                        world_player.state = WorldPlayerState::Walking;
+    if current_state.eq(&GameState::InGame(InGameState::Battle)) {
+        return;
+    }
+        for event in input_event_reader.read() {
+            for (mut controller, mut transform, mut world_player) in controllers.iter_mut() {
+                match event {
+                    PlayerActionEvent::Move(direction) => {
+                        if direction.length_squared() > 0.0 {
+                            let flat_direction = Vec3::new(direction.x, 0.0, direction.z).normalize();
+                            let target_rotation = Quat::from_rotation_arc(Vec3::Z, flat_direction);
+                            transform.rotation = transform.rotation.slerp(target_rotation, 0.25);
+                            controller.translation = Some((direction * world_player.walk_speed) * time.delta_secs());
+                            world_player.state = WorldPlayerState::Walking;
+                        }
                     }
-                }
 
-                PlayerActionEvent::Sprinting(direction) => {
-                    if direction.length_squared() > 0.0 {
-                        let flat_direction = Vec3::new(direction.x, 0.0, direction.z).normalize();
-                        let target_rotation = Quat::from_rotation_arc(Vec3::Z, flat_direction);
-                        transform.rotation = transform.rotation.slerp(target_rotation, 0.25);
-                        controller.translation = Some((direction * world_player.sprinting_speed) * time.delta_secs());
-                        world_player.state = WorldPlayerState::Sprinting;
+                    PlayerActionEvent::Sprinting(direction) => {
+                        if direction.length_squared() > 0.0 {
+                            let flat_direction = Vec3::new(direction.x, 0.0, direction.z).normalize();
+                            let target_rotation = Quat::from_rotation_arc(Vec3::Z, flat_direction);
+                            transform.rotation = transform.rotation.slerp(target_rotation, 0.25);
+                            controller.translation = Some((direction * world_player.sprinting_speed) * time.delta_secs());
+                            world_player.state = WorldPlayerState::Sprinting;
+                        }
                     }
-                }
 
-                PlayerActionEvent::Idle | PlayerActionEvent::Attacking => {
-                    controller.translation = None;
-                    world_player.state = WorldPlayerState::Idle;
+                    PlayerActionEvent::Idle | PlayerActionEvent::Attacking => {
+                        controller.translation = None;
+                        world_player.state = WorldPlayerState::Idle;
+                    }
                 }
             }
         }
-    }
 }
 
 /// Handles the player input for attacking, including detecting when the left mouse button is pressed.
@@ -149,7 +153,11 @@ fn input_attack(
     mut commands: Commands,
     query: Query<Entity, With<WorldPlayer>>,
     mut input_event_writer: EventWriter<PlayerActionEvent>,
+    current_state: Res<State<GameState>>,
 ) {
+    if current_state.eq(&GameState::InGame(InGameState::Battle)) {
+        return;
+    }
     if mouse_input.just_pressed(MouseButton::Left) {
         // Trigger the player's attack event
         input_event_writer.send(PlayerActionEvent::Attacking);

@@ -4,7 +4,7 @@ use system::commons::WorldPlayer;
 use system::events::world_events::WorldEntityHitEntityEvent;
 use system::states::{GameState, InGameState};
 use crate::camera::CameraController;
-use crate::enemies::WorldEnemy;
+use system::commons::WorldEnemy;
 
 /// A plugin responsible for managing the targeting system in the game.
 /// It enables enemy highlighting when they are within view and range.

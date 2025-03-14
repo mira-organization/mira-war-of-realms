@@ -4,5 +4,6 @@ pub mod config;
 pub mod events;
 pub mod service;
 pub mod commons;
+pub mod characters;
 
 pub const PLAYER_VOID_THRESHOLD: f32 = -100.0;

@@ -7,6 +7,7 @@ use bevy_rapier3d::plugin::DefaultRapierContext;
 use bevy_rapier3d::prelude::{RapierContextColliders, RapierQueryPipeline, RapierRigidBodySet};
 use system::commons::WorldPlayer;
 use system::config::ConfigService;
+use system::states::{GameState, InGameState};
 use system::utils::key_code::convert;
 use crate::camera::CameraController;
 
@@ -36,7 +37,12 @@ fn rotation_mouse(
     player_query: Query<(Entity, &Transform), (With<WorldPlayer>, Without<CameraController>)>,
     rapier_query: Query<(&RapierQueryPipeline, &RapierContextColliders, &RapierRigidBodySet), With<DefaultRapierContext>>,
     mut mouse_events: EventReader<MouseMotion>,
+    current_state: Res<State<GameState>>,
 ) {
+    if current_state.eq(&GameState::InGame(InGameState::Battle)) {
+        return;
+    }
+
     // Calculate rotation based on mouse movement.
     let mut rotation = Vec2::ZERO;
     for event in mouse_events.read() {
@@ -186,7 +192,8 @@ fn toggle_cursor(
     mut camera_query: Query<&mut CameraController>,
     keys: Res<ButtonInput<KeyCode>>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
-    general_config: Res<ConfigService>
+    general_config: Res<ConfigService>,
+    current_state: Res<State<GameState>>,
 ) {
     // Fetch the camera controller and the key to toggle cursor lock.
     let Ok(mut camera) = camera_query.get_single_mut() else { return; };
@@ -199,6 +206,11 @@ fn toggle_cursor(
 
     // Update window settings based on cursor lock state.
     if let Ok(mut window) = window_query.get_single_mut() {
+        if current_state.eq(&GameState::InGame(InGameState::Battle)) {
+            window.cursor_options.visible = true;
+            return;
+        }
+
         if camera.lock_active {
             window.cursor_options.grab_mode = CursorGrabMode::Locked;
             window.cursor_options.visible = false;
