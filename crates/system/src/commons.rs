@@ -1,5 +1,6 @@
 use bevy::asset::Handle;
 use bevy::prelude::*;
+use crate::battle_commons::BattleEnemy;
 
 /// The `AttackHitBox` component represents the hit_box for an attack, which is used to detect collisions during combat.
 ///
@@ -31,10 +32,6 @@ impl Default for AttackHitBox {
 /// It is used to identify entities that are alive in the game world.
 #[derive(Component, Debug, Clone)]
 pub struct LivingEntity;
-
-#[derive(Component)]
-pub struct PendingClickObserver(pub Handle<Scene>);
-
 
 /// Represents an account-level player with information such as account level,
 /// name, email, and a unique identifier.
@@ -89,10 +86,6 @@ impl Default for WorldPlayer {
         }
     }
 }
-
-#[derive(Component, Reflect, Debug, Clone)]
-#[reflect(Component)]
-pub struct InBattle;
 
 /// The `WorldPlayerState` enum represents the different possible states of a player in the world.
 ///
@@ -320,16 +313,6 @@ impl Default for WorldEnemy {
             attack_hit_box: AttackHitBox::default(),
         }
     }
-}
-
-/// Represents an enemy entity specifically in a battle scenario.
-///
-/// This struct is designed to store data relevant to an enemy's behavior and attributes during a battle.
-#[derive(Component, Resource, Reflect, Debug, Clone)]
-#[reflect(Component)]
-pub struct BattleEnemy {
-    // Fields for battle-specific attributes and logic can be added here.
-    // For example, health, attack power, or battle-specific abilities.
 }
 
 /// Represents the state or behavior of an enemy.

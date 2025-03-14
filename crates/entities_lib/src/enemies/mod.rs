@@ -17,7 +17,6 @@ impl Plugin for EnemiesPlugin {
     /// - Adds the `TestEnemy` plugin for enemy testing or behavior simulation.
     fn build(&self, app: &mut App) {
         app.register_type::<WorldEnemy>();
-        app.register_type::<BattleEnemy>();
         app.register_type::<EnemyState>();
         app.add_plugins(TestEnemy);
     }
