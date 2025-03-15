@@ -1,5 +1,6 @@
 use bevy::asset::Handle;
 use bevy::prelude::*;
+use bevy_mod_outline::{AsyncSceneInheritOutline, OutlineMode, OutlineVolume};
 use crate::battle_commons::BattleEnemy;
 
 /// The `AttackHitBox` component represents the hit_box for an attack, which is used to detect collisions during combat.
@@ -403,4 +404,44 @@ pub enum Elements {
     Ice,
     Dark,
     Light,
+}
+
+/// A bundle of components that apply an outline effect to an entity.
+///
+/// The `OutlineTargetBundle` includes components to manage the visual appearance and behavior of an outline
+/// around an entity. This can be used for target highlighting and other visual effects that require outlines.
+///
+/// # Fields
+/// - `volume`: Defines the visibility, width, and color of the outline.
+/// - `mode`: Determines the style of the outline (e.g., flat or smooth).
+/// - `async_outline`: Manages the asynchronous inheritance of outline effects for the entity.
+///
+/// # Default Behavior
+/// - **volume**: Visible outline with a width of `3.0` and a red color (`Color::srgb(1.0, 0.0, 0.0)`).
+/// - **mode**: `FloodFlat` outline mode.
+#[derive(Bundle)]
+pub struct OutlineTargetBundle {
+    pub volume: OutlineVolume,
+    pub mode: OutlineMode,
+    pub async_outline: AsyncSceneInheritOutline,
+}
+
+impl Default for OutlineTargetBundle {
+    /// Creates a default `OutlineTargetBundle` with predefined settings.
+    ///
+    /// # Default Values:
+    /// - **volume**: A red outline with width `3.0`, visible.
+    /// - **mode**: `FloodFlat`.
+    /// - **async_outline**: Default value of `AsyncSceneInheritOutline`.
+    fn default() -> Self {
+        Self {
+            volume: OutlineVolume {
+                visible: true,
+                width: 3.0,
+                colour: Color::srgb(1.0, 0.0, 0.0),
+            },
+            mode: OutlineMode::FloodFlat,
+            async_outline: AsyncSceneInheritOutline::default(),
+        }
+    }
 }

@@ -13,6 +13,7 @@ path = "src/main.rs"
 members = [
     "crates/ui_lib",
     "crates/audio_lib",
+    "crates/battle_lib",
     "crates/environment_lib",
     "crates/entities_lib",
     "crates/system"
@@ -51,6 +52,7 @@ ui_lib = { path = "crates/ui_lib" }
 audio_lib = { path = "crates/audio_lib" }
 environment_lib = { path = "crates/environment_lib" }
 entities_lib = { path = "crates/entities_lib" }
+battle_lib = { path = "crates/battle_lib" }
 
 [dependencies.bevy]
 version = "0.15.3"
