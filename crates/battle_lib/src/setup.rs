@@ -1,25 +1,73 @@
 use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
-use bevy_rapier3d::dynamics::{Damping, LockedAxes, RigidBody, Velocity};
-use bevy_rapier3d::geometry::Collider;
-use system::battle_commons::{BattleEntityStatus, InBattle};
+use bevy_rapier3d::prelude::*;
+use system::battle_commons::{BattleCurrentEntities, BattleMember, CharacterOperation, InBattle, ObserveAble};
 use system::characters::{CharacterBundle, CharacterParty};
 use system::commons::{Character, LivingEntity, WorldPlayer};
 use system::states::{GameState, InGameState};
-use crate::battle::{on_mouse_click, on_mouse_enter, on_mouse_leave};
 
-/// A plugin responsible for spawning battle entities, such as player characters and enemies.
-pub struct BattleEntitiesPlugin;
+/// A plugin responsible for setting up the battle state in the game.
+///
+/// This plugin adds systems that are triggered when the game enters the `Battle` state.
+/// It ensures that battle entities are spawned and set up correctly when the game transitions into combat.
+pub struct BattleSetupPlugin;
 
-impl Plugin for BattleEntitiesPlugin {
-    /// Registers the `spawn_entities` system, which runs when entering the `Battle` state.
+impl Plugin for BattleSetupPlugin {
+    /// Builds the plugin and adds systems to the app.
     ///
-    /// # Parameters
-    /// - `app`: The Bevy app where the plugin is registered.
+    /// This method registers two systems to run when the game enters the `Battle` state:
+    /// 1. `spawn_entities`: A system that spawns the necessary entities for the battle.
+    /// 2. `setup_battle_entities`: A system that further configures the battle entities by organizing them into characters and enemies.
+    ///
+    /// Both systems are added to run when the `GameState::InGame(InGameState::Battle)` state is entered.
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), spawn_entities);
+        app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), setup_battle_entities.after(spawn_entities));
     }
 }
+
+/// A system that sets up the battle entities by categorizing them into characters and enemies.
+///
+/// This system runs when the game enters the battle state and organizes the entities involved in the battle.
+/// It separates the entities into characters and enemies and stores them in a resource for later use in the battle.
+///
+/// # Parameters
+/// - `commands`: The `Commands` object for modifying the world and adding resources.
+/// - `query`: A query that retrieves entities with the `BattleMember` component (which includes both characters and enemies).
+/// - `character_query`: A query to check if an entity is a character, based on the `Character` component.
+///
+/// # Resource
+/// This system creates and inserts a `BattleCurrentEntities` resource, which contains separate mappings for characters and enemies.
+pub fn setup_battle_entities(
+    mut commands: Commands,
+    query: Query<Entity, With<BattleMember>>,
+    character_query: Query<&Character>,
+) {
+    let mut resource = BattleCurrentEntities::default();
+    let mut c_index = 0;
+    let mut e_index = 0;
+
+    // Iterate over all entities involved in the battle
+    for entity in query.iter() {
+        if let Ok(_) = character_query.get(entity) {
+            // If the entity is a character, increment the character index and add it to the resource
+            c_index += 1;
+            resource.characters.insert(c_index, entity);
+        } else {
+            // If the entity is not a character, increment the enemy index and add it to the resource
+            e_index += 1;
+            resource.enemies.insert(e_index, entity);
+        }
+    }
+
+    // Log the battle characters and enemies
+    info!("battle characters: {:?}", resource.characters);
+    info!("battle enemies: {:?}", resource.enemies);
+
+    // Insert the populated BattleCurrentEntities resource into the world
+    commands.insert_resource(resource);
+}
+
 
 /// Spawns player characters and enemies when entering a battle.
 ///
@@ -30,19 +78,16 @@ impl Plugin for BattleEntitiesPlugin {
 /// - `asset_server`: Asset server for loading character and enemy models.
 /// - `players`: Query for retrieving the current player entity in battle.
 /// - `character_party`: Resource containing the player's party members.
-/// - `meshes`: Mutable resource for storing generated meshes.
-fn spawn_entities(
+pub fn spawn_entities(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut players: Query<(&mut Transform, &WorldPlayer), (With<InBattle>, With<WorldPlayer>)>,
+    mut players: Query<(Entity, &mut Transform, &WorldPlayer), (With<InBattle>, With<WorldPlayer>)>,
     character_party: Res<CharacterParty>,
-    mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    let (mut transform, world_player) = match players.get_single_mut() {
+    let (world_entity, mut transform, world_player) = match players.get_single_mut() {
         Ok(data) => data,
         Err(_) => return,
     };
-
 
     let mut location = Transform::from_xyz(-10.0, 51.0, 25.0).translation;
     let party_members = character_party.clone().members;
@@ -51,6 +96,7 @@ fn spawn_entities(
         if member.name == world_player.displayed_character.name {
             transform.translation = location;
             transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);
+            commands.entity(world_entity).insert(BattleMember);
         } else {
             generate_character(&mut commands, &asset_server, location, &member);
         }
@@ -61,7 +107,7 @@ fn spawn_entities(
     let mut location = Transform::from_xyz(-10.0, 51.0, 15.0).translation;
 
     for index in 0..count {
-        generate_enemies(&mut commands, &asset_server, &mut meshes, location, index);
+        generate_enemies(&mut commands, &asset_server, location, index);
         location.x += 2.5;
     }
 }
@@ -81,7 +127,7 @@ fn generate_character(
     location: Vec3,
     character: &Character,
 ) {
-    commands.spawn(CharacterBundle {
+    commands.spawn((CharacterBundle {
         scene: SceneRoot(asset_server.load(GltfAssetLabel::Scene(0)
             .from_asset(format!("entities/characters/{}.glb", character.name)))),
         name: Name::new(character.name.to_string()),
@@ -100,7 +146,8 @@ fn generate_character(
         },
         locked_axes: LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,
         collider: Collider::capsule(Vec3::new(0.0, 0.2, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2),
-    });
+        character_operation: CharacterOperation::default(),
+    }, BattleMember));
 }
 
 /// Spawns an enemy entity at the given location.
@@ -110,13 +157,11 @@ fn generate_character(
 /// # Parameters
 /// - `commands`: Command buffer for spawning entities.
 /// - `asset_server`: Asset server for loading enemy models.
-/// - `meshes`: Mutable resource for adding generated meshes.
 /// - `location`: Spawn position of the enemy.
 /// - `index`: A unique index to differentiate enemies.
 fn generate_enemies(
     commands: &mut Commands,
     asset_server: &AssetServer,
-    meshes: &mut ResMut<Assets<Mesh>>,
     location: Vec3,
     index: u32,
 ) {
@@ -131,11 +176,13 @@ fn generate_enemies(
             ..default()
         },
         LivingEntity,
-        BattleEntityStatus::default(),
+        ObserveAble,
+        BattleMember,
         RigidBody::Dynamic,
         Velocity::default(),
         Damping {
             angular_damping: 1.0,
+
             linear_damping: 1.0,
         },
         LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,
@@ -144,10 +191,6 @@ fn generate_enemies(
             Vec3::new(0.0, 1.6, 0.0),
             0.2,
         )
-    )).with_children(|children| {
-        children.spawn((
-            Transform::from_xyz(0.0, 0.8, 0.0),
-            Mesh3d(meshes.add(Capsule3d::new(0.2, 1.4)))
-        )).observe(on_mouse_click).observe(on_mouse_enter).observe(on_mouse_leave);
-    });
+    ));
 }
+

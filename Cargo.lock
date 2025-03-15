@@ -350,6 +350,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
+name = "battle_lib"
+version = "0.0.1"
+dependencies = [
+ "bevy",
+ "bevy_mod_outline",
+ "bevy_rapier3d",
+ "system",
+]
+
+[[package]]
 name = "bevy"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -995,11 +1005,11 @@ dependencies = [
 
 [[package]]
 name = "bevy_mod_outline"
-version = "0.9.0"
-source = "git+https://github.com/komadori/bevy_mod_outline.git#f323daf9efae16432f349b576e8e67146c8d0355"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8be81a7b5640918fbf627a34e0df4b80ddfb6d8c6fdc65829d1c43918ebb0a9"
 dependencies = [
  "bevy",
- "bevy_image",
  "bitfield",
  "interpolation",
  "nonmax",
@@ -3140,6 +3150,7 @@ name = "mira-war-of-realms"
 version = "0.1.0"
 dependencies = [
  "audio_lib",
+ "battle_lib",
  "bevy",
  "bevy-inspector-egui",
  "bevy_fluent",
@@ -4644,6 +4655,7 @@ name = "system"
 version = "0.0.1"
 dependencies = [
  "bevy",
+ "bevy_mod_outline",
  "bevy_rapier3d",
  "serde",
  "toml",

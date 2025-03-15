@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use system::battle_commons::{ActiveCharacterOption, AttackOperation};
 use system::commons::{WorldPlayer, WorldPlayerState};
 use system::config::ConfigService;
 use system::events::player_events::PlayerActionEvent;
@@ -25,6 +26,7 @@ impl Plugin for PlayerInputPlugin {
                                  track_stable_ground,
                                  check_void_fall
         ).run_if(in_game_states));
+        app.add_systems(Update, battle_input_system.run_if(in_state(GameState::InGame(InGameState::Battle))));
     }
 }
 
@@ -176,6 +178,35 @@ fn input_attack(
         }
     }
 }
+
+/// A system that handles player input for selecting battle operations (e.g., attack, spell, ultimate).
+///
+/// This system listens for specific key presses based on the player's configured input settings
+/// and updates the currently selected battle operation accordingly. The battle operation can be
+/// one of three types: Attack, Ability, or Ultimate.
+pub fn battle_input_system(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut active_operation: ResMut<ActiveCharacterOption>,
+    general_config: Res<ConfigService>
+) {
+    // Fetch the keys mapped to specific actions from the configuration service
+    let attack_key = convert(general_config.input_config.battle_attack_0.as_str()).expect("Fetch key for (attack 0) was failed!");
+    let spell_key = convert(general_config.input_config.battle_spell_0.as_str()).expect("Fetch key for (spell 0) was failed!");
+    let ultimate_key = convert(general_config.input_config.battle_ultimate.as_str()).expect("Fetch key for (ultimate) was failed!");
+
+    // Update the selected operation based on the key press
+    if keyboard.just_pressed(attack_key) {
+        // Set the selected operation to an attack with ID 1 when the attack key is pressed
+        active_operation.selected_operation = AttackOperation::Attack(1);
+    } else if keyboard.just_pressed(spell_key) {
+        // Set the selected operation to a spell with ID 1 when the spell key is pressed
+        active_operation.selected_operation = AttackOperation::Ability(1);
+    } else if keyboard.just_pressed(ultimate_key) {
+        // Set the selected operation to an ultimate attack when the ultimate key is pressed
+        active_operation.selected_operation = AttackOperation::Ultimate;
+    }
+}
+
 
 /// Tracks the last stable ground position of the player, updating it when the player is above a threshold height.
 ///

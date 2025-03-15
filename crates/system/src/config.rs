@@ -73,6 +73,15 @@ pub struct InputConfig {
     /// The key used to make the player sprint.
     pub player_sprint: String,
 
+    /// The key used to change to attack at battle
+    pub battle_attack_0: String,
+
+    /// The key used to change to spell at battle
+    pub battle_spell_0: String,
+
+    /// The key used to change to ultimate at battle
+    pub battle_ultimate: String,
+
     /// The key used to toggle debug change.
     pub debug_change: String,
 
@@ -107,6 +116,9 @@ impl Default for InputConfig {
             player_left: String::from("A"),
             player_right: String::from("D"),
             player_sprint: String::from("ShiftLeft"),
+            battle_attack_0: String::from("Q"),
+            battle_spell_0: String::from("E"),
+            battle_ultimate: String::from("Space"),
             debug_change: String::from("F3"),
             world_inspector_ui: String::from("F1"),
             cursor_lock_button: String::from("Escape"),

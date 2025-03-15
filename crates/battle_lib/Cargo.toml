@@ -1,29 +1,25 @@
 [package]
-name = "system"
+name = "battle_lib"
 version = "0.0.1"
 edition = "2024"
 authors = ["Daniel Ramke <daniel.ramke@outlook.com>"]
 
 [lib]
-name = "system"
+name = "battle_lib"
 path = "src/lib.rs"
 
 [dependencies]
 bevy_rapier3d = {version = "0.29.0", features = ["simd-nightly", "debug-render-3d", "default"]}
 bevy_mod_outline = {version = "0.9.1"}
 
-serde = { version = "^1.0", features = ["derive"] }
-toml = {version = "^0.8.0", features = ["parse", "display"]}
+system = { path = "../system" }
 
 [dependencies.bevy]
 version = "0.15.3"
 default-features = false
 features = [
-    "animation",
-    "bevy_animation",
-    "bevy_state",
-    "multi_threaded",
-    "bevy_core_pipeline",
     "bevy_asset",
-    "bevy_pbr",
+    "bevy_core_pipeline",
+    "multi_threaded",
+    "bevy_mesh_picking_backend"
 ]

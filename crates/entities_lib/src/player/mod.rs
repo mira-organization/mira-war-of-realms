@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_rapier3d::prelude::*;
+use system::battle_commons::{ActiveCharacterOption, AttackOperation};
 use system::characters::CharacterParty;
 use system::commons::{AnimatedPlayer, Animations, Character, LivingEntity, WorldPlayer};
 use system::states::GameState;
@@ -65,6 +66,11 @@ pub fn create_world_player(
         graph: graph.clone()
     });
 
+    commands.insert_resource(ActiveCharacterOption {
+        character: character.displayed_character.clone(),
+        selected_operation: AttackOperation::Attack(1),
+    });
+
     character_party.members.insert(1, character.displayed_character.clone());
     character_party.members.insert(2, Character {
         name: String::from("placeholder"),
@@ -78,6 +84,7 @@ pub fn create_world_player(
         AnimatedPlayer,
         Transform::from_xyz(40.0, 12.0, 40.0),
         character,
+        Character::default(),
         LivingEntity,
         RigidBody::Dynamic,
         Velocity::default(),
