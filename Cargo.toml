@@ -36,7 +36,7 @@ debug = true
 [dependencies]
 
 # Debug
-bevy-inspector-egui = {version = "0.29.1" }
+bevy-inspector-egui = {version = "0.30.0" }
 
 # Fluent
 bevy_fluent = {version = "0.11"}
