@@ -1,9 +1,11 @@
 mod logic;
 mod observes;
 mod setup;
+mod fight;
 
 use bevy::prelude::*;
 use system::battle_commons::{ActiveCharacterOption, BattleSelectedStatus};
+use crate::fight::BattleFightPlugin;
 use crate::logic::BattleLogicPlugin;
 use crate::setup::BattleSetupPlugin;
 
@@ -14,6 +16,6 @@ impl Plugin for BattlePlugin {
         app.init_resource::<ActiveCharacterOption>();
         app.init_resource::<BattleSelectedStatus>();
         app.add_plugins(MeshPickingPlugin);
-        app.add_plugins((BattleSetupPlugin, BattleLogicPlugin));
+        app.add_plugins((BattleSetupPlugin, BattleLogicPlugin, BattleFightPlugin));
     }
 }

@@ -122,3 +122,12 @@ pub enum AttackOperation {
     /// The ultimate ability is typically a powerful action that does not require any additional parameters.
     Ultimate,
 }
+
+#[derive(Component, Reflect, Debug, Clone, Eq, PartialEq, Default)]
+#[reflect(Component)]
+pub enum CharacterTurnState {
+    Waiting,
+    #[default]
+    Selecting,
+    Attacking
+}

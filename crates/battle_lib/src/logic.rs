@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_mod_outline::{OutlineMode, OutlineStencil, OutlineVolume};
-use system::battle_commons::{ActiveCharacterOption, AttackOperation, BattleCurrentEntities, BattleSelectedStatus, ObserveAble};
-use system::commons::OutlineTargetBundle;
+use system::battle_commons::{ActiveCharacterOption, AttackOperation, BattleCurrentEntities, BattleSelectedStatus, CharacterTurnState, ObserveAble};
+use system::commons::{Character, OutlineTargetBundle};
 use system::states::{GameState, InGameState};
 use crate::observes::{on_mouse_click, on_mouse_enter, on_mouse_leave};
 use crate::setup::{setup_battle_entities, spawn_entities};
@@ -48,94 +48,106 @@ impl Plugin for BattleLogicPlugin {
 /// - **Basic Attack**: Highlights the selected entity.
 /// - **Ability**: Highlights the selected entity and its adjacent targets.
 /// - **Ultimate**: Highlights all enemies.
-fn detect_current_character_operation(
+pub fn detect_current_character_operation(
     mut commands: Commands,
+    mut character_query: Query<&mut CharacterTurnState, With<Character>>,
     action_operation: Res<ActiveCharacterOption>,
     battle_members: Res<BattleCurrentEntities>,
     mut selected: ResMut<BattleSelectedStatus>,
     parent: Query<&Parent>
 ) {
-    info!("Detected current character operation");
-    match action_operation.selected_operation {
-        AttackOperation::Attack(1) => {
-            clear_outline(&mut commands, &battle_members);
-
-            if !selected.sub_selected.is_empty() {
-                selected.sub_selected.clear();
-            }
-
-            if let Some(entity) = selected.selected {
-                if let Ok(parent_entity) = parent.get(entity) {
-                    commands.entity(parent_entity.get()).insert(OutlineTargetBundle::default());
-                } else {
-                    commands.entity(entity).insert(OutlineTargetBundle::default());
-                }
-            }
+    for mut turn_state in character_query.iter_mut() {
+        if turn_state.eq(&CharacterTurnState::Waiting)
+            || turn_state.eq(&CharacterTurnState::Attacking) {
+            continue;
         }
-        AttackOperation::Ability(1) => {
-            if let Some(selected_entity) = selected.selected {
-                let mut selected_slot = None;
 
+        info!("Detected current character operation");
+        match action_operation.selected_operation {
+            AttackOperation::Attack(1) => {
                 clear_outline(&mut commands, &battle_members);
 
                 if !selected.sub_selected.is_empty() {
                     selected.sub_selected.clear();
                 }
 
-                for (slot, entity) in battle_members.enemies.iter() {
-                    if *entity == selected_entity {
-                        selected_slot = Some(*slot);
-                        break;
+                if let Some(entity) = selected.selected {
+                    if let Ok(parent_entity) = parent.get(entity) {
+                        commands.entity(parent_entity.get()).insert(OutlineTargetBundle::default());
+                    } else {
+                        commands.entity(entity).insert(OutlineTargetBundle::default());
                     }
                 }
 
-                if let Some(slot) = selected_slot {
-                    commands.entity(selected_entity).insert(OutlineTargetBundle::default());
+                *turn_state = CharacterTurnState::Attacking;
+            }
+            AttackOperation::Ability(1) => {
+                if let Some(selected_entity) = selected.selected {
+                    let mut selected_slot = None;
 
-                    let adjacent_slots = match slot {
-                        1 => vec![2],
-                        2 => vec![1, 3],
-                        3 => vec![2, 4],
-                        4 => vec![3],
-                        _ => vec![],
-                    };
+                    clear_outline(&mut commands, &battle_members);
 
-                    for adj_slot in adjacent_slots {
-                        if let Some(&adj_entity) = battle_members.enemies.get(&adj_slot) {
-                            commands.entity(adj_entity).insert(OutlineTargetBundle {
-                                volume: OutlineVolume {
-                                    visible: true,
-                                    width: 3.0,
-                                    colour: Color::srgb(0.7, 0.0, 0.3),
-                                },
-                                ..default()
-                            });
+                    if !selected.sub_selected.is_empty() {
+                        selected.sub_selected.clear();
+                    }
+
+                    for (slot, entity) in battle_members.enemies.iter() {
+                        if *entity == selected_entity {
+                            selected_slot = Some(*slot);
+                            break;
+                        }
+                    }
+
+                    if let Some(slot) = selected_slot {
+                        commands.entity(selected_entity).insert(OutlineTargetBundle::default());
+
+                        let adjacent_slots = match slot {
+                            1 => vec![2],
+                            2 => vec![1, 3],
+                            3 => vec![2, 4],
+                            4 => vec![3],
+                            _ => vec![],
+                        };
+
+                        for adj_slot in adjacent_slots {
+                            if let Some(&adj_entity) = battle_members.enemies.get(&adj_slot) {
+                                commands.entity(adj_entity).insert(OutlineTargetBundle {
+                                    volume: OutlineVolume {
+                                        visible: true,
+                                        width: 3.0,
+                                        colour: Color::srgb(0.7, 0.0, 0.3),
+                                    },
+                                    ..default()
+                                });
+                            }
+                        }
+                    }
+                    *turn_state = CharacterTurnState::Attacking;
+                }
+            }
+            AttackOperation::Ultimate => {
+                let mut slot = 0;
+                for (_, enemies) in battle_members.enemies.clone() {
+                    if selected.selected.is_some() {
+                        commands.entity(enemies).insert(OutlineTargetBundle {
+                            volume: OutlineVolume {
+                                visible: true,
+                                width: 3.0,
+                                colour: Color::srgb(0.7, 0.0, 0.3),
+                            },
+                            ..default()
+                        });
+                        slot += 1;
+
+                        if !selected.sub_selected.contains_key(&slot) {
+                            selected.sub_selected.insert(slot, enemies);
                         }
                     }
                 }
+                *turn_state = CharacterTurnState::Attacking;
             }
+            _ => {}
         }
-        AttackOperation::Ultimate => {
-            let mut slot = 0;
-            for (_, enemies) in battle_members.enemies.clone() {
-                if selected.selected.is_some() {
-                    commands.entity(enemies).insert(OutlineTargetBundle {
-                        volume: OutlineVolume {
-                            visible: true,
-                            width: 3.0,
-                            colour: Color::srgb(0.7, 0.0, 0.3),
-                        },
-                        ..default()
-                    });
-                    slot += 1;
-
-                    if !selected.sub_selected.contains_key(&slot) {
-                        selected.sub_selected.insert(slot, enemies);
-                    }
-                }
-            }
-        }
-        _ => {}
     }
 }
 
