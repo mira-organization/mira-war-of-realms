@@ -9,6 +9,7 @@ use entities_lib::EntitiesPlugin;
 use system::config::{ConfigService, DummySaveData};
 use system::states::GameState;
 use environment_lib::environment::EnvironmentPlugin;
+use system::battle_commons::CharacterTurnState;
 use system::characters::CharacterParty;
 use system::commons::Character;
 use system::events::EventManagerPlugin;
@@ -30,6 +31,7 @@ impl Plugin for ManagerPlugin {
         app.insert_resource(ConfigService::new());
         app.insert_resource(WorldInspectorState::default());
         app.insert_resource(DummySaveData::default());
+        app.init_resource::<CharacterTurnState>();
         app.insert_resource(CharacterParty {
             team_leader: Character::default(),
             members: HashMap::new()

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_mod_outline::{OutlineMode, OutlineStencil, OutlineVolume};
-use system::battle_commons::{ActiveCharacterOption, AttackOperation, BattleCurrentEntities, BattleSelectedStatus, CharacterTurnState, ObserveAble};
-use system::commons::{Character, OutlineTargetBundle};
+use system::battle_commons::{ActiveCharacterOption, AttackOperation, BattleCurrentEntities, BattleSelectedStatus, ObserveAble};
+use system::commons::{OutlineTargetBundle};
 use system::states::{GameState, InGameState};
 use crate::observes::{on_mouse_click, on_mouse_enter, on_mouse_leave};
 use crate::setup::{setup_battle_entities, spawn_entities};
@@ -53,16 +53,8 @@ pub fn detect_current_character_operation(
     action_operation: Res<ActiveCharacterOption>,
     battle_members: Res<BattleCurrentEntities>,
     mut selected: ResMut<BattleSelectedStatus>,
-    mut character_state: ResMut<CharacterTurnState>,
     parent: Query<&Parent>
 ) {
-    if character_state.entity.is_none() {
-        character_state.entity = Some(action_operation.clone().character);
-        character_state.action = action_operation.selected_operation.clone();
-    } else {
-        return;
-    }
-
     info!("Detected current character operation");
     match action_operation.selected_operation {
         AttackOperation::Attack(1) => {

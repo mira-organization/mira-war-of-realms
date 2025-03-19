@@ -104,7 +104,7 @@ impl Default for CharacterOperation {
 /// Represents the different types of operations a character can perform in combat.
 ///
 /// These operations define the character's actions during combat, such as performing an attack, using an ability, or activating an ultimate.
-#[derive(Component, Reflect, Debug, Clone)]
+#[derive(Component, Reflect, Debug, Clone, Eq, PartialEq)]
 #[reflect(Component)]
 pub enum AttackOperation {
     /// Represents a basic attack.
