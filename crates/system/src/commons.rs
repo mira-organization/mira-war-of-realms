@@ -552,3 +552,9 @@ impl Default for OutlineTargetBundle {
         }
     }
 }
+
+#[derive(Resource, Debug, Clone)]
+pub struct BeforeBattleLocation(pub Vec3);
+
+#[derive(Component)]
+pub struct ToRemoveAfterBattle;

@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy_rapier3d::dynamics::RigidBody;
 use bevy_rapier3d::geometry::{AsyncSceneCollider, ComputedColliderShape, TriMeshFlags};
-use system::battle_commons::InBattle;
-use system::commons::WorldPlayer;
+use system::battle_commons::{BattleMember, InBattle};
+use system::commons::{BeforeBattleLocation, ToRemoveAfterBattle, WorldPlayer};
 use system::states::{GameState, InGameState};
 use system::events::world_events::WorldEntityHitEntityEvent;
 use crate::environment::{BattleEnvironment, CurrentAreaScenes, EnvironmentScene};
@@ -22,7 +22,6 @@ impl Plugin for EnvSwapSystemPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, pre_load_battle.run_if(in_state(GameState::InGame(InGameState::Main))));
         app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), load_battle_scene);
-        app.add_systems(Update, temp_leave_battle.run_if(in_state(GameState::InGame(InGameState::Battle))));
         app.add_systems(OnEnter(GameState::InGame(InGameState::BattleEnd)), temp_swap_to_main);
     }
 }
@@ -39,7 +38,7 @@ fn pre_load_battle(
     mut hit_event: EventReader<WorldEntityHitEntityEvent>,
     area: Res<CurrentAreaScenes>,
     mut commands: Commands,
-    world_player_query: Query<Entity, With<WorldPlayer>>,
+    world_player_query: Query<(Entity, &Transform), With<WorldPlayer>>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
     for event in hit_event.read() {
@@ -47,8 +46,14 @@ fn pre_load_battle(
         if area.0.len() > 3 {
             if sender_a_player {
                 commands.entity(event.sender).insert(InBattle);
+                commands.entity(event.entity).insert(ToRemoveAfterBattle);
+                let (_, transform) = world_player_query.get(event.sender).unwrap();
+                commands.insert_resource(BeforeBattleLocation(transform.translation));
             } else {
                 commands.entity(event.entity).insert(InBattle);
+                commands.entity(event.sender).insert(ToRemoveAfterBattle);
+                let (_, transform) = world_player_query.get(event.entity).unwrap();
+                commands.insert_resource(BeforeBattleLocation(transform.translation));
             }
             info!("Starting Battle [{:?}]", area.0.len());
             next_state.set(GameState::InGame(InGameState::Battle));
@@ -88,39 +93,33 @@ fn load_battle_scene(
     info!("Loading Battle Scenes");
 }
 
-/// Allows players to leave the battle scene when pressing `L`.
-///
-/// # Parameters
-/// - `commands`: Removes battle markers and de-spawns battle environment.
-/// - `players`: Moves players out of the battle area.
-/// - `battle_query`: Identifies battle environment entities to remove.
-/// - `keyboard`: Detects key input for leaving.
-/// - `next_state`: Transitions game state to `BattleEnd`.
-fn temp_leave_battle(
-    mut commands: Commands,
-    mut players: Query<(Entity, &mut Transform), With<InBattle>>,
-    battle_query: Query<Entity, With<BattleEnvironment>>,
-    keyboard: Res<ButtonInput<KeyCode>>,
-    mut next_state: ResMut<NextState<GameState>>,
-) {
-    if keyboard.just_pressed(KeyCode::KeyL) {
-        for (entity, mut transform) in players.iter_mut() {
-            commands.entity(entity).remove::<InBattle>();
-            transform.translation = Vec3::new(40.0, 12.0, 40.0);
-        }
-
-        for entity in battle_query.iter() {
-            commands.entity(entity).despawn_recursive();
-        }
-        next_state.set(GameState::InGame(InGameState::BattleEnd));
-        info!("Leaving Battle Scenes");
-    }
-}
-
 /// Transitions the game state back to `Main` after the battle ends.
 ///
 /// # Parameters
 /// - `next_state`: Transitions the game state to `Main`.
-fn temp_swap_to_main(mut next_state: ResMut<NextState<GameState>>) {
+fn temp_swap_to_main(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
+    mut players: Query<(Entity, &mut Transform), With<InBattle>>,
+    battle_members: Query<Entity, (With<BattleMember>, Without<WorldPlayer>)>,
+    world_enemy: Query<Entity, With<ToRemoveAfterBattle>>,
+    last_pos: Res<BeforeBattleLocation>,
+    battle_query: Query<Entity, With<BattleEnvironment>>,
+) {
+    for (entity, mut transform) in players.iter_mut() {
+        commands.entity(entity).remove::<InBattle>();
+        transform.translation = last_pos.0;
+    }
+    for entity in battle_query.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    for entity in world_enemy.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    for members in battle_members.iter() {
+        commands.entity(members).despawn_recursive();
+    }
     next_state.set(GameState::InGame(InGameState::Main));
 }

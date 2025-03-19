@@ -89,6 +89,9 @@ pub fn detect_current_character_operation(
                 }
 
                 if let Some(slot) = selected_slot {
+                    if commands.get_entity(selected_entity).is_none() {
+                        return;
+                    }
                     commands.entity(selected_entity).insert(OutlineTargetBundle::default());
 
                     let adjacent_slots = match slot {
@@ -101,6 +104,9 @@ pub fn detect_current_character_operation(
 
                     for adj_slot in adjacent_slots {
                         if let Some(&adj_entity) = battle_members.enemies.get(&adj_slot) {
+                            if commands.get_entity(adj_entity).is_none() {
+                                continue;
+                            }
                             commands.entity(adj_entity).insert(OutlineTargetBundle {
                                 volume: OutlineVolume {
                                     visible: true,
@@ -122,6 +128,9 @@ pub fn detect_current_character_operation(
             let mut slot = 0;
             for (_, enemies) in battle_members.enemies.clone() {
                 if selected.selected.is_some() {
+                    if commands.get_entity(enemies).is_none() {
+                        continue;
+                    }
                     commands.entity(enemies).insert(OutlineTargetBundle {
                         volume: OutlineVolume {
                             visible: true,
@@ -208,11 +217,13 @@ fn set_observe_entities(
 /// # Behavior
 /// - Removes all outline-related components from enemy entities.
 fn clear_outline(commands: &mut Commands, battle_members: &Res<BattleCurrentEntities>) {
-    for (_, entities) in battle_members.enemies.clone() {
-        commands.entity(entities)
-            .remove::<OutlineVolume>()
-            .remove::<OutlineMode>()
-            .remove::<OutlineStencil>()
-            .remove::<OutlineTargetBundle>();
+    for (_, entity) in battle_members.enemies.iter() {
+        if commands.get_entity(*entity).is_some() {
+            commands.entity(*entity)
+                .remove::<OutlineVolume>()
+                .remove::<OutlineMode>()
+                .remove::<OutlineStencil>()
+                .remove::<OutlineTargetBundle>();
+        }
     }
 }
