@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
+use bevy::utils::HashMap;
 use bevy_rapier3d::prelude::*;
 use system::battle_commons::{BattleCurrentEntities, BattleMember, CharacterOperation, InBattle, ObserveAble};
 use system::characters::{CharacterBundle, CharacterParty};
@@ -23,6 +24,38 @@ impl Plugin for BattleSetupPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), spawn_entities);
         app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), setup_battle_entities.after(spawn_entities));
+        app.add_systems(Update, update_enemy_position
+            .run_if(in_state(GameState::InGame(InGameState::Battle)))
+            .run_if(resource_changed::<BattleCurrentEntities>));
+    }
+}
+
+fn update_enemy_position(
+    mut battle_entities: ResMut<BattleCurrentEntities>,
+    mut transforms: Query<&mut Transform>
+) {
+    if battle_entities.enemies.is_empty()
+        || battle_entities.characters.is_empty() {
+        return;
+    }
+    let mut sorted_enemies: Vec<_> = battle_entities.enemies.iter().collect();
+    sorted_enemies.sort_by_key(|(slot, _)| **slot);
+
+    let mut new_enemies = HashMap::new();
+    let mut location = Transform::from_xyz(-10.0, 51.0, 15.0).translation;
+    let mut new_slot = 1;
+
+    for (_, &entity) in sorted_enemies {
+        if let Ok(mut transform) = transforms.get_mut(entity) {
+            transform.translation = location;
+            new_enemies.insert(new_slot, entity);
+            new_slot += 1;
+            location.x += 2.5;
+        }
+    }
+
+    if battle_entities.enemies.len() != new_enemies.len() {
+        battle_entities.enemies = new_enemies;
     }
 }
 
@@ -39,11 +72,10 @@ impl Plugin for BattleSetupPlugin {
 /// # Resource
 /// This system creates and inserts a `BattleCurrentEntities` resource, which contains separate mappings for characters and enemies.
 pub fn setup_battle_entities(
-    mut commands: Commands,
     query: Query<Entity, With<BattleMember>>,
     character_query: Query<&Character>,
+    mut battle_entities: ResMut<BattleCurrentEntities>,
 ) {
-    let mut resource = BattleCurrentEntities::default();
     let mut c_index = 0;
     let mut e_index = 0;
 
@@ -52,20 +84,17 @@ pub fn setup_battle_entities(
         if let Ok(_) = character_query.get(entity) {
             // If the entity is a character, increment the character index and add it to the resource
             c_index += 1;
-            resource.characters.insert(c_index, entity);
+            battle_entities.characters.insert(c_index, entity);
         } else {
             // If the entity is not a character, increment the enemy index and add it to the resource
             e_index += 1;
-            resource.enemies.insert(e_index, entity);
+            battle_entities.enemies.insert(e_index, entity);
         }
     }
 
     // Log the battle characters and enemies
-    info!("battle characters: {:?}", resource.characters);
-    info!("battle enemies: {:?}", resource.enemies);
-
-    // Insert the populated BattleCurrentEntities resource into the world
-    commands.insert_resource(resource);
+    info!("battle characters: {:?}", battle_entities.characters);
+    info!("battle enemies: {:?}", battle_entities.enemies);
 }
 
 

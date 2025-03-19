@@ -42,6 +42,7 @@ fn character_perform_attack(
 
         character_turn_state.entity = None;
         if battle_members.enemies.is_empty() {
+            battle_members.characters.clear();
             next_state.set(GameState::InGame(InGameState::BattleEnd));
             info!("Leaving Battle Scenes");
         }
