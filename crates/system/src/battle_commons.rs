@@ -9,7 +9,7 @@ use crate::commons::Character;
 #[derive(Resource, Clone, Debug)]
 pub struct BattleSelectedStatus {
     /// Indicates whether the entity is currently selected.
-    pub selected: Option<Entity>,
+    pub selected: Option<(usize, Entity)>,
     pub sub_selected: HashMap<usize, Entity>,
 }
 
@@ -28,6 +28,7 @@ impl Default for BattleSelectedStatus {
 
 #[derive(Resource, Debug, Clone, Default)]
 pub struct BattleCurrentEntities {
+    pub need_patch: bool,
     pub enemies: HashMap<usize, Entity>,
     pub characters: HashMap<usize, Entity>,
 }
@@ -137,3 +138,7 @@ impl Default for CharacterTurnState {
         }
     }
 }
+
+#[derive(Component, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct Slot(pub usize);

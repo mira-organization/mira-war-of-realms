@@ -26,7 +26,7 @@ fn character_perform_attack(
         let attack = character.current_stats.attack * 0.5;
 
         for (entity, mut enemy) in enemy_query.iter_mut() {
-            if let Some(selected_entity) = selected.selected {
+            if let Some((_, selected_entity)) = selected.selected {
                 if entity == selected_entity {
                     apply_damage(&mut enemy, entity, attack, &mut commands, &mut battle_members);
                     continue;
@@ -75,6 +75,7 @@ fn apply_damage(
         }
         info!("De-spawning enemy {:?}!", enemy.name);
         battle_members.enemies.remove(&slot_to_remove);
+        battle_members.need_patch = true;
         commands.entity(entity).despawn_recursive();
     }
 }

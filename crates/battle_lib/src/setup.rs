@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy::utils::HashMap;
 use bevy_rapier3d::prelude::*;
-use system::battle_commons::{BattleCurrentEntities, BattleMember, CharacterOperation, InBattle, ObserveAble};
+use system::battle_commons::{BattleCurrentEntities, BattleMember, CharacterOperation, InBattle, ObserveAble, Slot};
 use system::characters::{CharacterBundle, CharacterParty};
 use system::commons::{Character, Enemy, LivingEntity, WorldPlayer};
 use system::states::{GameState, InGameState};
@@ -25,8 +25,7 @@ impl Plugin for BattleSetupPlugin {
         app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), spawn_entities);
         app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), setup_battle_entities.after(spawn_entities));
         app.add_systems(Update, update_enemy_position
-            .run_if(in_state(GameState::InGame(InGameState::Battle)))
-            .run_if(resource_changed::<BattleCurrentEntities>));
+            .run_if(in_state(GameState::InGame(InGameState::Battle))));
     }
 }
 
@@ -38,24 +37,26 @@ fn update_enemy_position(
         || battle_entities.characters.is_empty() {
         return;
     }
-    let mut sorted_enemies: Vec<_> = battle_entities.enemies.iter().collect();
-    sorted_enemies.sort_by_key(|(slot, _)| **slot);
 
-    let mut new_enemies = HashMap::new();
-    let mut location = Transform::from_xyz(-10.0, 51.0, 15.0).translation;
-    let mut new_slot = 1;
+    if battle_entities.need_patch {
+        let mut sorted_enemies: Vec<_> = battle_entities.enemies.iter().collect();
+        sorted_enemies.sort_by_key(|(slot, _)| **slot);
 
-    for (_, &entity) in sorted_enemies {
-        if let Ok(mut transform) = transforms.get_mut(entity) {
-            transform.translation = location;
-            new_enemies.insert(new_slot, entity);
-            new_slot += 1;
-            location.x += 2.5;
+        let mut new_enemies = HashMap::new();
+        let mut location = Transform::from_xyz(-10.0, 51.0, 15.0).translation;
+        let mut new_slot = 1;
+
+        for (_, &entity) in sorted_enemies {
+            if let Ok(mut transform) = transforms.get_mut(entity) {
+                transform.translation = location;
+                new_enemies.insert(new_slot, entity);
+                new_slot += 1;
+                location.x += 2.5;
+            }
         }
-    }
 
-    if battle_entities.enemies.len() != new_enemies.len() {
         battle_entities.enemies = new_enemies;
+        battle_entities.need_patch = false;
     }
 }
 
@@ -132,10 +133,10 @@ pub fn spawn_entities(
         location.x += 2.5;
     }
 
-    let count: u32 = 4;
+    let count: usize = 4;
     let mut location = Transform::from_xyz(-10.0, 51.0, 15.0).translation;
 
-    for index in 0..count {
+    for index in 1..=count {
         generate_enemies(&mut commands, &asset_server, location, index);
         location.x += 2.5;
     }
@@ -192,7 +193,7 @@ fn generate_enemies(
     commands: &mut Commands,
     asset_server: &AssetServer,
     location: Vec3,
-    index: u32,
+    index: usize,
 ) {
     let enemy = Enemy::default();
 
@@ -209,12 +210,12 @@ fn generate_enemies(
         LivingEntity,
         ObserveAble,
         BattleMember,
+        Slot(index),
         enemy.clone(),
         RigidBody::Dynamic,
         Velocity::default(),
         Damping {
             angular_damping: 1.0,
-
             linear_damping: 1.0,
         },
         LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,

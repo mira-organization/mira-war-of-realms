@@ -63,7 +63,7 @@ pub fn detect_current_character_operation(
                 selected.sub_selected.clear();
             }
 
-            if let Some(entity) = selected.selected {
+            if let Some((_, entity)) = selected.selected {
                 if let Ok(parent_entity) = parent.get(entity) {
                     commands.entity(parent_entity.get()).insert(OutlineTargetBundle::default());
                 } else {
@@ -72,7 +72,7 @@ pub fn detect_current_character_operation(
             }
         }
         AttackOperation::Ability(1) => {
-            if let Some(selected_entity) = selected.selected {
+            if let Some((_, selected_entity)) = selected.selected {
                 let mut selected_slot = None;
 
                 clear_outline(&mut commands, &battle_members);
@@ -94,13 +94,14 @@ pub fn detect_current_character_operation(
                     }
                     commands.entity(selected_entity).insert(OutlineTargetBundle::default());
 
-                    let adjacent_slots = match slot {
-                        1 => vec![2],
-                        2 => vec![1, 3],
-                        3 => vec![2, 4],
-                        4 => vec![3],
-                        _ => vec![],
-                    };
+                    let mut adjacent_slots = Vec::new();
+
+                    if let Some(&_left) = battle_members.enemies.get(&(slot - 1)) {
+                        adjacent_slots.push(slot - 1);
+                    }
+                    if let Some(&_right) = battle_members.enemies.get(&(slot + 1)) {
+                        adjacent_slots.push(slot + 1);
+                    }
 
                     for adj_slot in adjacent_slots {
                         if let Some(&adj_entity) = battle_members.enemies.get(&adj_slot) {
@@ -170,7 +171,7 @@ fn select_encounter_target(
     let target = battle_members.enemies.get(&1);
     if let Some(target) = target {
         if selected.selected.is_none() {
-            selected.selected = Some(target.clone());
+            selected.selected = Some((1, target.clone()));
             commands.entity(target.clone()).insert(OutlineTargetBundle::default());
         }
     }

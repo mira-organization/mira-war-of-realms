@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use system::battle_commons::{BattleSelectedStatus};
+use system::battle_commons::{BattleSelectedStatus, Slot};
 
 /// Handles mouse click events on interactive objects.
 ///
@@ -10,15 +10,17 @@ use system::battle_commons::{BattleSelectedStatus};
 pub fn on_mouse_click(
     event: Trigger<Pointer<Click>>,
     mut selected: ResMut<BattleSelectedStatus>,
-    parent: Query<&Parent>
+    parent: Query<&Parent>,
+    slot: Query<&Slot>,
 ) {
     let target = event.target;
     let parent_entity = parent.get(target).map(|p| p.get()).ok();
 
-    if let Some(selected_entity) = selected.selected {
+    if let Some((_, selected_entity)) = selected.selected {
         if let Some(parent_entity) = parent_entity {
             if selected_entity != parent_entity {
-                selected.selected = Some(parent_entity);
+                let index = slot.get(parent_entity).unwrap();
+                selected.selected = Some((index.0, parent_entity));
             }
         }
     }
