@@ -53,7 +53,6 @@ pub fn detect_current_character_operation(
     action_operation: Res<ActiveCharacterOption>,
     battle_members: Res<BattleCurrentEntities>,
     mut selected: ResMut<BattleSelectedStatus>,
-    parent: Query<&Parent>
 ) {
     match action_operation.selected_operation {
         AttackOperation::Attack(1) => {
@@ -64,11 +63,7 @@ pub fn detect_current_character_operation(
             }
 
             if let Some((_, entity)) = selected.selected {
-                if let Ok(parent_entity) = parent.get(entity) {
-                    commands.entity(parent_entity.get()).insert(OutlineTargetBundle::default());
-                } else {
-                    commands.entity(entity).insert(OutlineTargetBundle::default());
-                }
+                commands.entity(entity).insert(OutlineTargetBundle::default());
             }
         }
         AttackOperation::Ability(1) => {
