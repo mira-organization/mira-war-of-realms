@@ -8,7 +8,7 @@ use bevy_mod_outline::{AutoGenerateOutlineNormalsPlugin, OutlinePlugin};
 use bevy_rapier3d::plugin::PhysicsSet;
 use bevy_third_person_camera::{CameraSyncSet, ThirdPersonCameraPlugin};
 use system::characters::CharacterParty;
-use system::commons::{AccountPlayer, Character, Elements, WorldPlayer};
+use system::commons::{AccountPlayer, Character, Elements, Enemy, WorldPlayer};
 use crate::enemies::ai::AiPlugin;
 use crate::enemies::EnemiesPlugin;
 use crate::player::PlayerPlugin;
@@ -32,6 +32,7 @@ impl Plugin for EntitiesPlugin {
         app.register_type::<AccountPlayer>();
         app.register_type::<WorldPlayer>();
         app.register_type::<Character>();
+        app.register_type::<Enemy>();
         app.register_type::<CharacterParty>();
         app.register_type::<Elements>();
         app.add_plugins((ThirdPersonCameraPlugin, AtmospherePlugin, OutlinePlugin, AutoGenerateOutlineNormalsPlugin::default()));

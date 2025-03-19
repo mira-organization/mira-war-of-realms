@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use system::battle_commons::{ActiveCharacterOption, AttackOperation};
+use system::battle_commons::{ActiveCharacterOption, AttackOperation, CharacterTurnState};
 use system::commons::{WorldPlayer, WorldPlayerState};
 use system::config::ConfigService;
 use system::events::player_events::PlayerActionEvent;
@@ -187,7 +187,8 @@ fn input_attack(
 pub fn battle_input_system(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut active_operation: ResMut<ActiveCharacterOption>,
-    general_config: Res<ConfigService>
+    general_config: Res<ConfigService>,
+    mut character_state: ResMut<CharacterTurnState>,
 ) {
     // Fetch the keys mapped to specific actions from the configuration service
     let attack_key = convert(general_config.input_config.battle_attack_0.as_str()).expect("Fetch key for (attack 0) was failed!");
@@ -196,12 +197,33 @@ pub fn battle_input_system(
 
     // Update the selected operation based on the key press
     if keyboard.just_pressed(attack_key) {
+        if active_operation.selected_operation.eq(&AttackOperation::Attack(1)) {
+            if character_state.entity.is_none() {
+                character_state.entity = Some(active_operation.character.clone());
+                character_state.action = AttackOperation::Attack(1);
+            }
+            return;
+        }
         // Set the selected operation to an attack with ID 1 when the attack key is pressed
         active_operation.selected_operation = AttackOperation::Attack(1);
     } else if keyboard.just_pressed(spell_key) {
+        if active_operation.selected_operation.eq(&AttackOperation::Ability(1)) {
+            if character_state.entity.is_none() {
+                character_state.entity = Some(active_operation.character.clone());
+                character_state.action = AttackOperation::Ability(1);
+            }
+            return;
+        }
         // Set the selected operation to a spell with ID 1 when the spell key is pressed
         active_operation.selected_operation = AttackOperation::Ability(1);
     } else if keyboard.just_pressed(ultimate_key) {
+        if active_operation.selected_operation.eq(&AttackOperation::Ultimate) {
+            if character_state.entity.is_none() {
+                character_state.entity = Some(active_operation.character.clone());
+                character_state.action = AttackOperation::Ultimate;
+            }
+            return;
+        }
         // Set the selected operation to an ultimate attack when the ultimate key is pressed
         active_operation.selected_operation = AttackOperation::Ultimate;
     }

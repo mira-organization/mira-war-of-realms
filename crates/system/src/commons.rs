@@ -118,6 +118,8 @@ pub enum WorldPlayerState {
 pub struct Character {
     /// The character's name
     pub name: String,
+    /// The character's current stats
+    pub current_stats: CharacterCurrentStats,
     /// The character's base attributes.
     pub base_attributes: CharacterBaseAttributes,
     /// The character's extra attributes.
@@ -131,9 +133,36 @@ impl Default for Character {
     fn default() -> Self {
         Self {
             name: String::from("ignara"),
+            current_stats: CharacterCurrentStats::default(),
             base_attributes: CharacterBaseAttributes::default(),
             extra_attributes: CharacterExtraAttributes::default(),
             damage_attributes: CharacterDamageAttributes::default(),
+        }
+    }
+}
+#[derive(Component, Resource, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct CharacterCurrentStats {
+    /// The character's current hp value
+    pub hp: f64,
+    /// The character's current super armor value
+    pub super_armor: f64,
+    /// The character's current attack value
+    pub attack: f64,
+    /// The character's current defense value
+    pub defense: f64,
+    /// The character's current speed value
+    pub speed: f64,
+}
+
+impl Default for CharacterCurrentStats {
+    fn default() -> Self {
+        Self {
+            hp: 280.0,
+            super_armor: 100.0,
+            attack: 60.0,
+            defense: 45.0,
+            speed: 50.0
         }
     }
 }
@@ -144,15 +173,15 @@ impl Default for Character {
 #[reflect(Component)]
 pub struct CharacterBaseAttributes {
     /// The character's health points.
-    pub hp: usize,
+    pub hp: f64,
     /// The maximum super armor points of the character.
-    pub max_super_armor: usize,
+    pub max_super_armor: f64,
     /// The character's attack value.
-    pub attack: usize,
+    pub attack: f64,
     /// The character's defense value.
-    pub defense: usize,
+    pub defense: f64,
     /// The character's speed value.
-    pub speed: usize,
+    pub speed: f64,
 }
 
 impl Default for CharacterBaseAttributes {
@@ -164,11 +193,11 @@ impl Default for CharacterBaseAttributes {
     /// - `speed`: 50
     fn default() -> Self {
         Self {
-            hp: 280,
-            max_super_armor: 100,
-            attack: 60,
-            defense: 45,
-            speed: 50,
+            hp: 280.0,
+            max_super_armor: 100.0,
+            attack: 60.0,
+            defense: 45.0,
+            speed: 50.0,
         }
     }
 }
@@ -340,6 +369,84 @@ pub enum EnemyState {
     Attacking,
 }
 
+#[derive(Component, Resource, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct Enemy {
+    pub name: String,
+    pub family: String,
+    pub current_stats: EnemyCurrentStats,
+    pub base_stats: EnemyBaseStats,
+    pub special_attributes: EnemySpecialAttributes,
+}
+
+impl Default for Enemy {
+    fn default() -> Self {
+        Self {
+            name: String::from("placeholder"),
+            family: String::from("test_enemy"),
+            current_stats: EnemyCurrentStats::default(),
+            base_stats: EnemyBaseStats::default(),
+            special_attributes: EnemySpecialAttributes::default(),
+        }
+    }
+}
+
+#[derive(Component, Resource, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct EnemyCurrentStats {
+    pub hp: f64,
+    pub super_armor: f64,
+    pub attack: f64,
+    pub defense: f64,
+    pub speed: f64
+}
+
+impl Default for EnemyCurrentStats {
+    fn default() -> Self {
+        Self {
+            hp: 120.0,
+            super_armor: 75.0,
+            attack: 12.0,
+            defense: 20.0,
+            speed: 35.0
+        }
+    }
+}
+
+#[derive(Component, Resource, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct EnemyBaseStats {
+    pub hp: f64,
+    pub max_super_armor: f64,
+    pub attack: f64,
+    pub defense: f64,
+    pub speed: f64
+}
+
+impl Default for EnemyBaseStats {
+    fn default() -> Self {
+        Self {
+            hp: 120.0,
+            max_super_armor: 75.0,
+            attack: 12.0,
+            defense: 20.0,
+            speed: 35.0
+        }
+    }
+}
+
+#[derive(Component, Resource, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct EnemySpecialAttributes {
+
+}
+
+impl Default for EnemySpecialAttributes {
+    fn default() -> Self {
+        Self {}
+    }
+}
+
 /// Represents a collection of animations and their associated animation graph for an entity.
 ///
 /// This component is used to define and manage animations for entities, such as enemies or characters,
@@ -445,3 +552,9 @@ impl Default for OutlineTargetBundle {
         }
     }
 }
+
+#[derive(Resource, Debug, Clone)]
+pub struct BeforeBattleLocation(pub Vec3);
+
+#[derive(Component)]
+pub struct ToRemoveAfterBattle;

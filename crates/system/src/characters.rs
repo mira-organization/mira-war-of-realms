@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy::utils::HashMap;
 use bevy_rapier3d::prelude::{Collider, Damping, LockedAxes, RigidBody, Velocity};
-use crate::battle_commons::CharacterOperation;
+use crate::battle_commons::{CharacterOperation};
 use crate::commons::Character;
 
 /// Represents a character party, including the team leader and other party members.

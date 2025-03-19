@@ -9,7 +9,7 @@ use crate::commons::Character;
 #[derive(Resource, Clone, Debug)]
 pub struct BattleSelectedStatus {
     /// Indicates whether the entity is currently selected.
-    pub selected: Option<Entity>,
+    pub selected: Option<(usize, Entity)>,
     pub sub_selected: HashMap<usize, Entity>,
 }
 
@@ -28,6 +28,7 @@ impl Default for BattleSelectedStatus {
 
 #[derive(Resource, Debug, Clone, Default)]
 pub struct BattleCurrentEntities {
+    pub need_patch: bool,
     pub enemies: HashMap<usize, Entity>,
     pub characters: HashMap<usize, Entity>,
 }
@@ -104,7 +105,7 @@ impl Default for CharacterOperation {
 /// Represents the different types of operations a character can perform in combat.
 ///
 /// These operations define the character's actions during combat, such as performing an attack, using an ability, or activating an ultimate.
-#[derive(Component, Reflect, Debug, Clone)]
+#[derive(Component, Reflect, Debug, Clone, Eq, PartialEq)]
 #[reflect(Component)]
 pub enum AttackOperation {
     /// Represents a basic attack.
@@ -122,3 +123,22 @@ pub enum AttackOperation {
     /// The ultimate ability is typically a powerful action that does not require any additional parameters.
     Ultimate,
 }
+
+#[derive(Resource, Debug, Clone)]
+pub struct CharacterTurnState {
+    pub entity: Option<Character>,
+    pub action: AttackOperation,
+}
+
+impl Default for CharacterTurnState {
+    fn default() -> Self {
+        Self {
+            entity: None,
+            action: AttackOperation::Ultimate,
+        }
+    }
+}
+
+#[derive(Component, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct Slot(pub usize);

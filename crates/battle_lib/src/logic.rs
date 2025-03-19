@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_mod_outline::{OutlineMode, OutlineStencil, OutlineVolume};
 use system::battle_commons::{ActiveCharacterOption, AttackOperation, BattleCurrentEntities, BattleSelectedStatus, ObserveAble};
-use system::commons::OutlineTargetBundle;
+use system::commons::{OutlineTargetBundle};
 use system::states::{GameState, InGameState};
 use crate::observes::{on_mouse_click, on_mouse_enter, on_mouse_leave};
 use crate::setup::{setup_battle_entities, spawn_entities};
@@ -48,14 +48,13 @@ impl Plugin for BattleLogicPlugin {
 /// - **Basic Attack**: Highlights the selected entity.
 /// - **Ability**: Highlights the selected entity and its adjacent targets.
 /// - **Ultimate**: Highlights all enemies.
-fn detect_current_character_operation(
+pub fn detect_current_character_operation(
     mut commands: Commands,
     action_operation: Res<ActiveCharacterOption>,
     battle_members: Res<BattleCurrentEntities>,
     mut selected: ResMut<BattleSelectedStatus>,
     parent: Query<&Parent>
 ) {
-    info!("Detected current character operation");
     match action_operation.selected_operation {
         AttackOperation::Attack(1) => {
             clear_outline(&mut commands, &battle_members);
@@ -64,7 +63,7 @@ fn detect_current_character_operation(
                 selected.sub_selected.clear();
             }
 
-            if let Some(entity) = selected.selected {
+            if let Some((_, entity)) = selected.selected {
                 if let Ok(parent_entity) = parent.get(entity) {
                     commands.entity(parent_entity.get()).insert(OutlineTargetBundle::default());
                 } else {
@@ -73,7 +72,7 @@ fn detect_current_character_operation(
             }
         }
         AttackOperation::Ability(1) => {
-            if let Some(selected_entity) = selected.selected {
+            if let Some((_, selected_entity)) = selected.selected {
                 let mut selected_slot = None;
 
                 clear_outline(&mut commands, &battle_members);
@@ -85,23 +84,30 @@ fn detect_current_character_operation(
                 for (slot, entity) in battle_members.enemies.iter() {
                     if *entity == selected_entity {
                         selected_slot = Some(*slot);
-                        break;
+                        continue;
                     }
                 }
 
                 if let Some(slot) = selected_slot {
+                    if commands.get_entity(selected_entity).is_none() {
+                        return;
+                    }
                     commands.entity(selected_entity).insert(OutlineTargetBundle::default());
 
-                    let adjacent_slots = match slot {
-                        1 => vec![2],
-                        2 => vec![1, 3],
-                        3 => vec![2, 4],
-                        4 => vec![3],
-                        _ => vec![],
-                    };
+                    let mut adjacent_slots = Vec::new();
+
+                    if let Some(&_left) = battle_members.enemies.get(&(slot - 1)) {
+                        adjacent_slots.push(slot - 1);
+                    }
+                    if let Some(&_right) = battle_members.enemies.get(&(slot + 1)) {
+                        adjacent_slots.push(slot + 1);
+                    }
 
                     for adj_slot in adjacent_slots {
                         if let Some(&adj_entity) = battle_members.enemies.get(&adj_slot) {
+                            if commands.get_entity(adj_entity).is_none() {
+                                continue;
+                            }
                             commands.entity(adj_entity).insert(OutlineTargetBundle {
                                 volume: OutlineVolume {
                                     visible: true,
@@ -110,6 +116,10 @@ fn detect_current_character_operation(
                                 },
                                 ..default()
                             });
+
+                            if !selected.sub_selected.contains_key(&adj_slot) {
+                                selected.sub_selected.insert(adj_slot, adj_entity);
+                            }
                         }
                     }
                 }
@@ -119,6 +129,9 @@ fn detect_current_character_operation(
             let mut slot = 0;
             for (_, enemies) in battle_members.enemies.clone() {
                 if selected.selected.is_some() {
+                    if commands.get_entity(enemies).is_none() {
+                        continue;
+                    }
                     commands.entity(enemies).insert(OutlineTargetBundle {
                         volume: OutlineVolume {
                             visible: true,
@@ -158,7 +171,7 @@ fn select_encounter_target(
     let target = battle_members.enemies.get(&1);
     if let Some(target) = target {
         if selected.selected.is_none() {
-            selected.selected = Some(target.clone());
+            selected.selected = Some((1, target.clone()));
             commands.entity(target.clone()).insert(OutlineTargetBundle::default());
         }
     }
@@ -205,11 +218,13 @@ fn set_observe_entities(
 /// # Behavior
 /// - Removes all outline-related components from enemy entities.
 fn clear_outline(commands: &mut Commands, battle_members: &Res<BattleCurrentEntities>) {
-    for (_, entities) in battle_members.enemies.clone() {
-        commands.entity(entities)
-            .remove::<OutlineVolume>()
-            .remove::<OutlineMode>()
-            .remove::<OutlineStencil>()
-            .remove::<OutlineTargetBundle>();
+    for (_, entity) in battle_members.enemies.iter() {
+        if commands.get_entity(*entity).is_some() {
+            commands.entity(*entity)
+                .remove::<OutlineVolume>()
+                .remove::<OutlineMode>()
+                .remove::<OutlineStencil>()
+                .remove::<OutlineTargetBundle>();
+        }
     }
 }
