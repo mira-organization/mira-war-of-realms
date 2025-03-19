@@ -55,7 +55,6 @@ pub fn detect_current_character_operation(
     mut selected: ResMut<BattleSelectedStatus>,
     parent: Query<&Parent>
 ) {
-    info!("Detected current character operation");
     match action_operation.selected_operation {
         AttackOperation::Attack(1) => {
             clear_outline(&mut commands, &battle_members);
@@ -85,7 +84,7 @@ pub fn detect_current_character_operation(
                 for (slot, entity) in battle_members.enemies.iter() {
                     if *entity == selected_entity {
                         selected_slot = Some(*slot);
-                        break;
+                        continue;
                     }
                 }
 
@@ -110,6 +109,10 @@ pub fn detect_current_character_operation(
                                 },
                                 ..default()
                             });
+
+                            if !selected.sub_selected.contains_key(&adj_slot) {
+                                selected.sub_selected.insert(adj_slot, adj_entity);
+                            }
                         }
                     }
                 }
