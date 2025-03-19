@@ -123,11 +123,17 @@ pub enum AttackOperation {
     Ultimate,
 }
 
-#[derive(Component, Reflect, Debug, Clone, Eq, PartialEq, Default)]
-#[reflect(Component)]
-pub enum CharacterTurnState {
-    Waiting,
-    #[default]
-    Selecting,
-    Attacking
+#[derive(Resource, Debug, Clone)]
+pub struct CharacterTurnState {
+    pub entity: Option<Character>,
+    pub action: AttackOperation,
+}
+
+impl Default for CharacterTurnState {
+    fn default() -> Self {
+        Self {
+            entity: None,
+            action: AttackOperation::Ultimate,
+        }
+    }
 }

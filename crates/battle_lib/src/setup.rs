@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy_rapier3d::prelude::*;
-use system::battle_commons::{BattleCurrentEntities, BattleMember, CharacterOperation, CharacterTurnState, InBattle, ObserveAble};
+use system::battle_commons::{BattleCurrentEntities, BattleMember, CharacterOperation, InBattle, ObserveAble};
 use system::characters::{CharacterBundle, CharacterParty};
 use system::commons::{Character, LivingEntity, WorldPlayer};
 use system::states::{GameState, InGameState};
@@ -96,7 +96,7 @@ pub fn spawn_entities(
         if member.name == world_player.displayed_character.name {
             transform.translation = location;
             transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);
-            commands.entity(world_entity).insert(BattleMember).insert(CharacterTurnState::default());
+            commands.entity(world_entity).insert(BattleMember);
         } else {
             generate_character(&mut commands, &asset_server, location, &member);
         }
@@ -147,7 +147,6 @@ fn generate_character(
         locked_axes: LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,
         collider: Collider::capsule(Vec3::new(0.0, 0.2, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2),
         character_operation: CharacterOperation::default(),
-        character_turn_state: CharacterTurnState::Waiting,
     }, BattleMember));
 }
 
