@@ -3,7 +3,7 @@ use bevy::render::view::NoFrustumCulling;
 use bevy_rapier3d::prelude::*;
 use system::battle_commons::{BattleCurrentEntities, BattleMember, CharacterOperation, InBattle, ObserveAble};
 use system::characters::{CharacterBundle, CharacterParty};
-use system::commons::{Character, LivingEntity, WorldPlayer};
+use system::commons::{Character, Enemy, LivingEntity, WorldPlayer};
 use system::states::{GameState, InGameState};
 
 /// A plugin responsible for setting up the battle state in the game.
@@ -165,11 +165,13 @@ fn generate_enemies(
     location: Vec3,
     index: u32,
 ) {
+    let enemy = Enemy::default();
+
     commands.spawn((
         SceneRoot(
-            asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/enemies/test_enemy/placeholder.glb"))
+            asset_server.load(GltfAssetLabel::Scene(0).from_asset(format!("entities/enemies/{}/{}.glb", enemy.family, enemy.name)))
         ),
-        Name::new(format!("Enemy0{}", index)),
+        Name::new(format!("Enemy-0{}", index)),
         Transform {
             translation: location,
             rotation: Quat::from_rotation_y(std::f32::consts::PI),
@@ -178,6 +180,7 @@ fn generate_enemies(
         LivingEntity,
         ObserveAble,
         BattleMember,
+        enemy.clone(),
         RigidBody::Dynamic,
         Velocity::default(),
         Damping {

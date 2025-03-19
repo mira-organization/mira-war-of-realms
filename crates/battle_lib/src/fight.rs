@@ -1,20 +1,42 @@
 use bevy::prelude::*;
-use system::battle_commons::CharacterTurnState;
+use system::battle_commons::{BattleSelectedStatus, CharacterTurnState};
+use system::commons::{Character, Enemy};
 use system::states::{GameState, InGameState};
 
 pub struct BattleFightPlugin;
 
 impl Plugin for BattleFightPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, perform_attack.run_if(in_state(GameState::InGame(InGameState::Battle))));
+        app.add_systems(Update, character_perform_attack.run_if(in_state(GameState::InGame(InGameState::Battle))));
     }
 }
 
-fn perform_attack(mut character_turn_state: ResMut<CharacterTurnState>) {
+fn character_perform_attack(
+    mut character_turn_state: ResMut<CharacterTurnState>,
+    mut enemy_query: Query<(Entity, &mut Enemy), (With<Enemy>, Without<Character>)>,
+    selected: Res<BattleSelectedStatus>,
+) {
     if character_turn_state.entity.is_some() {
         let perform = character_turn_state.action.clone();
-        let name = character_turn_state.entity.clone().unwrap().name;
-        info!("Character {:?} perform: {:?}", name, perform);
+        let character = character_turn_state.entity.clone().unwrap();
+        info!("Character {:?} perform: {:?}", character.name, perform);
+
+        for (entity, mut enemy) in enemy_query.iter_mut() {
+            if let Some(selected_entity) = selected.selected {
+                if selected_entity == entity {
+
+                    let attack = character.current_stats.attack * 0.5;
+                    info!("send attack ({})", attack);
+                    let reduced_defense = enemy.current_stats.defense * 0.2;
+                    let calc_dmg = attack - reduced_defense;
+                    info!("correct damage ({})", calc_dmg);
+
+                    enemy.current_stats.hp -= calc_dmg;
+
+                    info!("new hp from {:?}, {}", enemy.name, enemy.current_stats.hp);
+                }
+            }
+        }
         character_turn_state.entity = None;
     }
 }

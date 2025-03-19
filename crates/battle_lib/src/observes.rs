@@ -30,8 +30,8 @@ pub fn on_mouse_click(
 ///
 /// # Parameters
 /// - `event`: The event containing information about the entity being hovered over.
-pub fn on_mouse_enter(event: Trigger<Pointer<Over>>) {
-    info!("Entered pointer {:?}", event.entity());
+pub fn on_mouse_enter(_event: Trigger<Pointer<Over>>) {
+
 }
 
 /// Handles mouse hover leave events on interactive objects.
@@ -40,6 +40,6 @@ pub fn on_mouse_enter(event: Trigger<Pointer<Over>>) {
 ///
 /// # Parameters
 /// - `event`: The event containing information about the entity being left.
-pub fn on_mouse_leave(event: Trigger<Pointer<Out>>) {
-    info!("Leaving pointer {:?}", event.entity());
+pub fn on_mouse_leave(_event: Trigger<Pointer<Out>>) {
+
 }
