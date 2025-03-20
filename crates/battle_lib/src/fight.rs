@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use system::battle_commons::{BattleCurrentEntities, BattleSelectedStatus, CharacterTurnState};
-use system::commons::{Character, Enemy};
+use system::commons::{Character, Enemy, TurnOrder};
 use system::states::{GameState, InGameState};
 
 pub struct BattleFightPlugin;
@@ -18,6 +18,7 @@ fn character_perform_attack(
     mut battle_members: ResMut<BattleCurrentEntities>,
     selected: Res<BattleSelectedStatus>,
     mut next_state: ResMut<NextState<GameState>>,
+    mut turn_order: ResMut<TurnOrder>,
 ) {
     if let Some(character) = character_turn_state.entity.clone() {
         let perform = character_turn_state.action.clone();
@@ -41,6 +42,7 @@ fn character_perform_attack(
         }
 
         character_turn_state.entity = None;
+        turn_order.next = true;
         if battle_members.enemies.is_empty() {
             battle_members.characters.clear();
             next_state.set(GameState::InGame(InGameState::BattleEnd));

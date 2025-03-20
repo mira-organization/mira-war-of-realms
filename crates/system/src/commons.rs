@@ -558,3 +558,20 @@ pub struct BeforeBattleLocation(pub Vec3);
 
 #[derive(Component)]
 pub struct ToRemoveAfterBattle;
+
+#[derive(Resource, Debug, Clone)]
+pub struct TurnOrder {
+    pub order: Vec<Entity>,
+    pub current_index: usize,
+    pub next: bool
+}
+
+impl Default for TurnOrder {
+    fn default() -> Self {
+        Self {
+            order: Vec::new(),
+            current_index: 0,
+            next: true
+        }
+    }
+}
