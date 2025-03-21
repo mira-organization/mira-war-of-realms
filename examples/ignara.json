@@ -1,0 +1,33 @@
+{
+  "name": "Ignara",
+  "lastname": "Vermilion",
+  "abilities": [
+    {
+      "name": "Fire Ball",
+      "family": "Attack",
+      "selection_type": "Single",
+      "target_type": "Enemy",
+      "scaling_type": "Attack",
+      "scaling": 0.5,
+      "base_value": 5.0
+    },
+    {
+      "name": "Fire Storm",
+      "family": "Ability",
+      "selection_type": "Expansion=3",
+      "target_type": "Enemy",
+      "scaling_type": "Attack",
+      "scaling": 0.9,
+      "base_value": 20.0
+    },
+    {
+      "name": "Meteor",
+      "family": "Ultimate",
+      "selection_type": "Aoe",
+      "target_type": "Enemy",
+      "scaling_type": "Attack",
+      "scaling": 1.2,
+      "base_value": 35.0
+    }
+  ]
+}

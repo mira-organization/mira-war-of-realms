@@ -3,7 +3,7 @@ use bevy::render::view::NoFrustumCulling;
 use bevy::utils::HashMap;
 use bevy_rapier3d::prelude::{Collider, Damping, LockedAxes, RigidBody, Velocity};
 use crate::battle_commons::{CharacterOperation};
-use crate::commons::Character;
+use crate::commons::{Character, CharacterAbilitySet};
 
 /// Represents a character party, including the team leader and other party members.
 ///
@@ -70,6 +70,8 @@ pub struct CharacterBundle {
     /// The operations available to the character, such as attacks, abilities, and ultimate moves.
     /// This holds the list of actions that the character can perform in combat.
     pub character_operation: CharacterOperation,
+
+    pub character_ability_set: CharacterAbilitySet,
 }
 
 
