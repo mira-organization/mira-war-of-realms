@@ -3,6 +3,7 @@ mod observes;
 mod setup;
 mod fight;
 mod turn_logic;
+mod character_operations;
 
 use bevy::prelude::*;
 use system::battle_commons::{ActiveCharacterOption, BattleSelectedStatus, Slot};
