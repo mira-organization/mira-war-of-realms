@@ -15,7 +15,9 @@ pub fn single_target_operation(
     }
 
     if let Some((_, entity)) = selected.selected {
-        commands.entity(entity).insert(OutlineTargetBundle::default());
+        if commands.get_entity(entity).is_some() {
+            commands.entity(entity).insert(OutlineTargetBundle::default());
+        }
     }
 }
 

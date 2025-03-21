@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use crate::commons::Character;
+use crate::commons::{Character, CharacterAbility};
 
 /// Represents the status of a battle entity, including whether it is currently selected.
 ///
@@ -61,24 +61,27 @@ pub struct BattleEnemy {
 /// This resource holds the information about the active character and the operation they are performing (e.g., attack, ability, ultimate).
 /// It is used to track the character's state in combat and the operation being executed.
 #[derive(Resource, Debug, Clone)]
-pub struct ActiveCharacterOption {
+pub struct TurnCurrentMemberInfo {
     /// The active character in the game.
     /// This character will have attributes and abilities that influence the operations they can perform.
-    pub character: Character,
+    pub character: Option<Character>,
 
     /// The operation selected by the active character.
     /// This could be an attack, ability, or ultimate action, with specific parameters depending on the operation type.
-    pub selected_operation: AttackOperation
+    pub selected_operation: Option<CharacterAbility>,
+
+    pub pre_operation: Option<CharacterAbility>
 }
 
-impl Default for ActiveCharacterOption {
+impl Default for TurnCurrentMemberInfo {
     /// Provides a default `ActiveCharacterOption`.
     ///
     /// The default character is created using `Character::default()`, and the default operation is a basic attack with strength 1.
     fn default() -> Self {
         Self {
-            character: Character::default(),
-            selected_operation: AttackOperation::Attack(1)
+            character: None,
+            selected_operation: None,
+            pre_operation: None
         }
     }
 }
@@ -122,21 +125,6 @@ pub enum AttackOperation {
     ///
     /// The ultimate ability is typically a powerful action that does not require any additional parameters.
     Ultimate,
-}
-
-#[derive(Resource, Debug, Clone)]
-pub struct CharacterTurnState {
-    pub entity: Option<Character>,
-    pub action: AttackOperation,
-}
-
-impl Default for CharacterTurnState {
-    fn default() -> Self {
-        Self {
-            entity: None,
-            action: AttackOperation::Ultimate,
-        }
-    }
 }
 
 #[derive(Component, Reflect, Debug, Clone)]

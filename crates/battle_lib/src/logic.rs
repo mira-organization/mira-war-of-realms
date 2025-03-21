@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use system::battle_commons::{ActiveCharacterOption, AttackOperation, BattleCurrentEntities, BattleSelectedStatus, ObserveAble};
-use system::commons::{OutlineTargetBundle};
+use system::battle_commons::{TurnCurrentMemberInfo, BattleCurrentEntities, BattleSelectedStatus, ObserveAble};
+use system::commons::{OutlineTargetBundle, SelectionType};
 use system::states::{GameState, InGameState};
 use crate::character_operations::{aoe_target_operation, expansion_target_operation, single_target_operation};
 use crate::observes::{on_mouse_click, on_mouse_enter, on_mouse_leave};
@@ -25,7 +25,7 @@ impl Plugin for BattleLogicPlugin {
         app.add_systems(Update, detect_current_character_operation
             .run_if(in_state(GameState::InGame(InGameState::Battle)))
             .run_if(
-                resource_changed::<ActiveCharacterOption>
+                resource_changed::<TurnCurrentMemberInfo>
                     .or(resource_changed::<BattleSelectedStatus>)
             )
         );
@@ -50,15 +50,17 @@ impl Plugin for BattleLogicPlugin {
 /// - **Ultimate**: Highlights all enemies.
 pub fn detect_current_character_operation(
     mut commands: Commands,
-    action_operation: Res<ActiveCharacterOption>,
+    action_operation: Res<TurnCurrentMemberInfo>,
     battle_members: Res<BattleCurrentEntities>,
     mut selected: ResMut<BattleSelectedStatus>,
 ) {
-    match action_operation.selected_operation {
-        AttackOperation::Attack(1) => single_target_operation(&mut commands, &battle_members, &mut selected),
-        AttackOperation::Ability(1) => expansion_target_operation(&mut commands, &battle_members, &mut selected),
-        AttackOperation::Ultimate => aoe_target_operation(&mut commands, &battle_members, &mut selected),
-        _ => {}
+    if let Some(pre_operation) = action_operation.pre_operation.clone() {
+        match pre_operation.selection_type {
+            SelectionType::Single => single_target_operation(&mut commands, &battle_members, &mut selected),
+            SelectionType::Expansion(3) => expansion_target_operation(&mut commands, &battle_members, &mut selected),
+            SelectionType::Aoe => aoe_target_operation(&mut commands, &battle_members, &mut selected),
+            _ => {}
+        }
     }
 }
 

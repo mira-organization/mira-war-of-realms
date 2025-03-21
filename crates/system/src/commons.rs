@@ -625,7 +625,7 @@ impl Default for TurnOrder {
     }
 }
 
-#[derive(Component, Reflect, Debug, Clone)]
+#[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
 #[reflect(Component)]
 pub enum SelectionType {
     Single,
@@ -633,7 +633,7 @@ pub enum SelectionType {
     Expansion(usize)
 }
 
-#[derive(Component, Reflect, Debug, Clone)]
+#[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
 #[reflect(Component)]
 pub enum AbilityType {
     Attack,
@@ -641,7 +641,7 @@ pub enum AbilityType {
     Ultimate
 }
 
-#[derive(Component, Reflect, Debug, Clone)]
+#[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
 #[reflect(Component)]
 pub enum TargetType {
     Allay,
@@ -649,7 +649,7 @@ pub enum TargetType {
     All
 }
 
-#[derive(Component, Reflect, Debug, Clone)]
+#[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
 #[reflect(Component)]
 pub enum ScalingType {
     Hp,

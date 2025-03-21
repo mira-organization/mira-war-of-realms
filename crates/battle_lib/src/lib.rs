@@ -6,7 +6,7 @@ mod turn_logic;
 mod character_operations;
 
 use bevy::prelude::*;
-use system::battle_commons::{ActiveCharacterOption, BattleSelectedStatus, Slot};
+use system::battle_commons::{TurnCurrentMemberInfo, BattleSelectedStatus, Slot};
 use system::commons::TurnOrder;
 use crate::fight::BattleFightPlugin;
 use crate::logic::BattleLogicPlugin;
@@ -18,7 +18,7 @@ pub struct BattlePlugin;
 impl Plugin for BattlePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Slot>();
-        app.init_resource::<ActiveCharacterOption>();
+        app.init_resource::<TurnCurrentMemberInfo>();
         app.init_resource::<BattleSelectedStatus>();
         app.init_resource::<TurnOrder>();
 

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use system::battle_commons::{ActiveCharacterOption, AttackOperation, CharacterTurnState};
-use system::commons::{WorldPlayer, WorldPlayerState};
+use system::battle_commons::{TurnCurrentMemberInfo};
+use system::commons::{AbilityType, Character, CharacterAbilitySet, TurnOrder, WorldPlayer, WorldPlayerState};
 use system::config::ConfigService;
 use system::events::player_events::PlayerActionEvent;
 use system::PLAYER_VOID_THRESHOLD;
@@ -186,9 +186,10 @@ fn input_attack(
 /// one of three types: Attack, Ability, or Ultimate.
 pub fn battle_input_system(
     keyboard: Res<ButtonInput<KeyCode>>,
-    mut active_operation: ResMut<ActiveCharacterOption>,
+    turn_current_member_info: ResMut<TurnCurrentMemberInfo>,
     general_config: Res<ConfigService>,
-    mut character_state: ResMut<CharacterTurnState>,
+    character_query: Query<(&Character, &CharacterAbilitySet)>,
+    turn_order: Res<TurnOrder>
 ) {
     // Fetch the keys mapped to specific actions from the configuration service
     let attack_key = convert(general_config.input_config.battle_attack_0.as_str()).expect("Fetch key for (attack 0) was failed!");
@@ -197,35 +198,54 @@ pub fn battle_input_system(
 
     // Update the selected operation based on the key press
     if keyboard.just_pressed(attack_key) {
-        if active_operation.selected_operation.eq(&AttackOperation::Attack(1)) {
-            if character_state.entity.is_none() {
-                character_state.entity = Some(active_operation.character.clone());
-                character_state.action = AttackOperation::Attack(1);
-            }
-            return;
-        }
-        // Set the selected operation to an attack with ID 1 when the attack key is pressed
-        active_operation.selected_operation = AttackOperation::Attack(1);
+
+        fetch_battle_operation(turn_order, character_query, turn_current_member_info, AbilityType::Attack);
+
     } else if keyboard.just_pressed(spell_key) {
-        if active_operation.selected_operation.eq(&AttackOperation::Ability(1)) {
-            if character_state.entity.is_none() {
-                character_state.entity = Some(active_operation.character.clone());
-                character_state.action = AttackOperation::Ability(1);
-            }
-            return;
-        }
-        // Set the selected operation to a spell with ID 1 when the spell key is pressed
-        active_operation.selected_operation = AttackOperation::Ability(1);
+
+        fetch_battle_operation(turn_order, character_query, turn_current_member_info, AbilityType::Ability);
+
     } else if keyboard.just_pressed(ultimate_key) {
-        if active_operation.selected_operation.eq(&AttackOperation::Ultimate) {
-            if character_state.entity.is_none() {
-                character_state.entity = Some(active_operation.character.clone());
-                character_state.action = AttackOperation::Ultimate;
+
+        fetch_battle_operation(turn_order, character_query, turn_current_member_info, AbilityType::Ultimate);
+
+    }
+}
+
+fn fetch_battle_operation(
+    turn_order: Res<TurnOrder>,
+    query: Query<(&Character, &CharacterAbilitySet)>,
+    mut turn_current_member_info: ResMut<TurnCurrentMemberInfo>,
+    family: AbilityType
+) {
+    if let Some(current_entity) = turn_order.order.get(turn_order.current_index - 1) {
+        info!("entity: {:?}", current_entity);
+        let (character, ability_set) = match query.get(*current_entity) {
+            Ok((character, ability_set)) => (character, ability_set),
+            Err(_) => {
+                warn!("This is not your turn!");
+                return;
             }
-            return;
+        };
+
+        if let Some(current_operation) = turn_current_member_info.pre_operation.clone() {
+            if current_operation.family.eq(&family) {
+                turn_current_member_info.selected_operation = Some(current_operation);
+                return;
+            }
         }
-        // Set the selected operation to an ultimate attack when the ultimate key is pressed
-        active_operation.selected_operation = AttackOperation::Ultimate;
+
+        let mut operation = None;
+        for abilities in ability_set.0.clone() {
+            if abilities.family.eq(&family) {
+                operation = Some(abilities);
+                break;
+            }
+        }
+
+        turn_current_member_info.character = Some(character.clone());
+        turn_current_member_info.pre_operation = operation;
+        info!("Battle operation: {:?}", turn_current_member_info.clone().pre_operation.unwrap().name);
     }
 }
 

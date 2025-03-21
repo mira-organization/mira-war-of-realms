@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use system::battle_commons::{BattleCurrentEntities, BattleSelectedStatus, CharacterTurnState};
+use system::battle_commons::{BattleCurrentEntities, BattleSelectedStatus, TurnCurrentMemberInfo};
 use system::commons::{Character, Enemy, TurnOrder};
 use system::states::{GameState, InGameState};
 
@@ -13,40 +13,46 @@ impl Plugin for BattleFightPlugin {
 
 fn character_perform_attack(
     mut commands: Commands,
-    mut character_turn_state: ResMut<CharacterTurnState>,
     mut enemy_query: Query<(Entity, &mut Enemy), (With<Enemy>, Without<Character>)>,
     mut battle_members: ResMut<BattleCurrentEntities>,
     selected: Res<BattleSelectedStatus>,
     mut next_state: ResMut<NextState<GameState>>,
     mut turn_order: ResMut<TurnOrder>,
+    mut turn_current_member_info: ResMut<TurnCurrentMemberInfo>
 ) {
-    if let Some(character) = character_turn_state.entity.clone() {
-        let perform = character_turn_state.action.clone();
-        info!("Character {:?} performs: {:?}", character.name, perform);
+    if let Some(character) = turn_current_member_info.character.clone() {
+        if let Some(operation) = turn_current_member_info.selected_operation.clone() {
 
-        let attack = character.current_stats.attack * 0.5;
+            info!("Character: {:?} performs: {:?}", character.name, operation.name);
+            let attack = character.current_stats.attack * 0.5;
+            for (entity, mut enemy) in enemy_query.iter_mut() {
+                if let Some((_, selected_entity)) = selected.selected {
+                    if entity == selected_entity {
+                        apply_damage(&mut enemy, entity, attack, &mut commands, &mut battle_members);
+                        continue;
+                    }
+                }
 
-        for (entity, mut enemy) in enemy_query.iter_mut() {
-            if let Some((_, selected_entity)) = selected.selected {
-                if entity == selected_entity {
-                    apply_damage(&mut enemy, entity, attack, &mut commands, &mut battle_members);
-                    continue;
+                for sub_entity in selected.sub_selected.values() {
+                    if entity == *sub_entity {
+                        apply_damage(&mut enemy, entity, attack, &mut commands, &mut battle_members);
+                    }
                 }
             }
 
-            for sub_entity in selected.sub_selected.values() {
-                if entity == *sub_entity {
-                    apply_damage(&mut enemy, entity, attack, &mut commands, &mut battle_members);
-                }
+            if turn_current_member_info.character.is_some() {
+                turn_current_member_info.character = None;
             }
-        }
 
-        character_turn_state.entity = None;
-        turn_order.next = true;
-        if battle_members.enemies.is_empty() {
-            battle_members.characters.clear();
-            next_state.set(GameState::InGame(InGameState::BattleEnd));
-            info!("Leaving Battle Scenes");
+            if turn_current_member_info.selected_operation.is_some() {
+                turn_current_member_info.selected_operation = None;
+            }
+            turn_order.next = true;
+            if battle_members.enemies.is_empty() {
+                battle_members.characters.clear();
+                next_state.set(GameState::InGame(InGameState::BattleEnd));
+                info!("Leaving Battle Scenes");
+            }
         }
     }
 }
