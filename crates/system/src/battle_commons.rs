@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use crate::commons::Character;
+use crate::commons::{Character, CharacterAbility};
 
 /// Represents the status of a battle entity, including whether it is currently selected.
 ///
@@ -26,12 +26,22 @@ impl Default for BattleSelectedStatus {
     }
 }
 
+/// Resource that holds the current entities involved in the battle.
+///
+/// This resource tracks the state of battle participants, including enemies and characters,
+/// as well as whether a patch (state update) is needed.
+///
+/// # Fields
+/// - `need_patch`: A flag indicating if the battle state needs to be updated. Used for optimizations.
+/// - `enemies`: A `HashMap` mapping enemy identifiers (usually indices) to their corresponding `Entity` instances.
+/// - `characters`: A `HashMap` mapping character identifiers (usually indices) to their corresponding `Entity` instances.
 #[derive(Resource, Debug, Clone, Default)]
 pub struct BattleCurrentEntities {
-    pub need_patch: bool,
-    pub enemies: HashMap<usize, Entity>,
-    pub characters: HashMap<usize, Entity>,
+    pub need_patch: bool,                          // Indicates if a state update is needed
+    pub enemies: HashMap<usize, Entity>,           // Mapping of enemy indices to their entity references
+    pub characters: HashMap<usize, Entity>,        // Mapping of character indices to their entity references
 }
+
 
 /// Marker component indicating that an entity is currently in battle.
 ///
@@ -40,11 +50,20 @@ pub struct BattleCurrentEntities {
 #[reflect(Component)]
 pub struct InBattle;
 
+/// Marker component indicating that an entity can be observed in battle.
+///
+/// Entities with this component can be targeted or tracked during combat
+/// for various mechanics such as enemy targeting or battle UI updates.
 #[derive(Component, Debug, Clone)]
 pub struct ObserveAble;
 
+/// Marker component indicating that an entity is a participant in battle.
+///
+/// This component is used to differentiate between battle participants
+/// (players, enemies, or NPCs) and other entities that exist in the game world.
 #[derive(Component, Debug, Clone)]
 pub struct BattleMember;
+
 
 /// Represents an enemy entity specifically in a battle scenario.
 ///
@@ -61,24 +80,27 @@ pub struct BattleEnemy {
 /// This resource holds the information about the active character and the operation they are performing (e.g., attack, ability, ultimate).
 /// It is used to track the character's state in combat and the operation being executed.
 #[derive(Resource, Debug, Clone)]
-pub struct ActiveCharacterOption {
+pub struct TurnCurrentMemberInfo {
     /// The active character in the game.
     /// This character will have attributes and abilities that influence the operations they can perform.
-    pub character: Character,
+    pub character: Option<Character>,
 
     /// The operation selected by the active character.
     /// This could be an attack, ability, or ultimate action, with specific parameters depending on the operation type.
-    pub selected_operation: AttackOperation
+    pub selected_operation: Option<CharacterAbility>,
+
+    pub pre_operation: Option<CharacterAbility>
 }
 
-impl Default for ActiveCharacterOption {
+impl Default for TurnCurrentMemberInfo {
     /// Provides a default `ActiveCharacterOption`.
     ///
     /// The default character is created using `Character::default()`, and the default operation is a basic attack with strength 1.
     fn default() -> Self {
         Self {
-            character: Character::default(),
-            selected_operation: AttackOperation::Attack(1)
+            character: None,
+            selected_operation: None,
+            pre_operation: None
         }
     }
 }
@@ -124,21 +146,8 @@ pub enum AttackOperation {
     Ultimate,
 }
 
-#[derive(Resource, Debug, Clone)]
-pub struct CharacterTurnState {
-    pub entity: Option<Character>,
-    pub action: AttackOperation,
-}
-
-impl Default for CharacterTurnState {
-    fn default() -> Self {
-        Self {
-            entity: None,
-            action: AttackOperation::Ultimate,
-        }
-    }
-}
-
+/// Represents the character or enemy slot.
+/// Is needed for calculate the correct outlines.
 #[derive(Component, Reflect, Debug, Clone)]
 #[reflect(Component)]
 pub struct Slot(pub usize);

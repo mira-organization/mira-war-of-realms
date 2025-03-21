@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use system::battle_commons::{ActiveCharacterOption, AttackOperation, CharacterTurnState};
-use system::commons::{WorldPlayer, WorldPlayerState};
+use system::battle_commons::{TurnCurrentMemberInfo};
+use system::commons::{AbilityType, Character, CharacterAbilitySet, TurnOrder, WorldPlayer, WorldPlayerState};
 use system::config::ConfigService;
 use system::events::player_events::PlayerActionEvent;
 use system::PLAYER_VOID_THRESHOLD;
@@ -186,9 +186,10 @@ fn input_attack(
 /// one of three types: Attack, Ability, or Ultimate.
 pub fn battle_input_system(
     keyboard: Res<ButtonInput<KeyCode>>,
-    mut active_operation: ResMut<ActiveCharacterOption>,
+    turn_current_member_info: ResMut<TurnCurrentMemberInfo>,
     general_config: Res<ConfigService>,
-    mut character_state: ResMut<CharacterTurnState>,
+    character_query: Query<(&Character, &CharacterAbilitySet)>,
+    turn_order: Res<TurnOrder>
 ) {
     // Fetch the keys mapped to specific actions from the configuration service
     let attack_key = convert(general_config.input_config.battle_attack_0.as_str()).expect("Fetch key for (attack 0) was failed!");
@@ -197,37 +198,87 @@ pub fn battle_input_system(
 
     // Update the selected operation based on the key press
     if keyboard.just_pressed(attack_key) {
-        if active_operation.selected_operation.eq(&AttackOperation::Attack(1)) {
-            if character_state.entity.is_none() {
-                character_state.entity = Some(active_operation.character.clone());
-                character_state.action = AttackOperation::Attack(1);
-            }
-            return;
-        }
-        // Set the selected operation to an attack with ID 1 when the attack key is pressed
-        active_operation.selected_operation = AttackOperation::Attack(1);
+
+        fetch_battle_operation(turn_order, character_query, turn_current_member_info, AbilityType::Attack);
+
     } else if keyboard.just_pressed(spell_key) {
-        if active_operation.selected_operation.eq(&AttackOperation::Ability(1)) {
-            if character_state.entity.is_none() {
-                character_state.entity = Some(active_operation.character.clone());
-                character_state.action = AttackOperation::Ability(1);
-            }
-            return;
-        }
-        // Set the selected operation to a spell with ID 1 when the spell key is pressed
-        active_operation.selected_operation = AttackOperation::Ability(1);
+
+        fetch_battle_operation(turn_order, character_query, turn_current_member_info, AbilityType::Ability);
+
     } else if keyboard.just_pressed(ultimate_key) {
-        if active_operation.selected_operation.eq(&AttackOperation::Ultimate) {
-            if character_state.entity.is_none() {
-                character_state.entity = Some(active_operation.character.clone());
-                character_state.action = AttackOperation::Ultimate;
-            }
-            return;
-        }
-        // Set the selected operation to an ultimate attack when the ultimate key is pressed
-        active_operation.selected_operation = AttackOperation::Ultimate;
+
+        fetch_battle_operation(turn_order, character_query, turn_current_member_info, AbilityType::Ultimate);
+
     }
 }
+
+/// Fetches the battle operation for the current character's turn based on the provided ability family.
+///
+/// This function checks the current entity's abilities and selects an operation for the turn. It will
+/// choose an ability that matches the specified `AbilityType` (family). If the entity has already
+/// selected an operation for this turn, it will be reused. Otherwise, the function searches through
+/// the character's available abilities and assigns the first one that matches the `AbilityType`.
+///
+/// # Parameters
+/// - `turn_order`: A resource that holds the current turn order and the index of the current entity.
+/// - `query`: A query to get both the `Character` and their `CharacterAbilitySet` components for the current entity.
+/// - `turn_current_member_info`: A mutable resource holding the information about the current turn's member, including
+///   the character and their selected operation.
+/// - `family`: The `AbilityType` that is used to filter the character's abilities for the operation. This helps
+///   to select the relevant ability based on the turn's context (e.g., attack, defense, etc.).
+///
+/// # Behavior
+/// - If it's not the current entity's turn or the entity has no ability matching the `AbilityType`, it returns early.
+/// - If the entity has already selected an operation of the given `AbilityType`, it is reused.
+/// - If no operation is selected, it will search the character's abilities and choose the first one matching the `AbilityType`.
+///
+/// # Logs
+/// - Logs the selected operation's name when found.
+fn fetch_battle_operation(
+    turn_order: Res<TurnOrder>,
+    query: Query<(&Character, &CharacterAbilitySet)>,
+    mut turn_current_member_info: ResMut<TurnCurrentMemberInfo>,
+    family: AbilityType,
+) {
+    // Get the entity currently in turn
+    if let Some(current_entity) = turn_order.order.get(turn_order.current_index - 1) {
+        info!("entity: {:?}", current_entity);
+
+        // Attempt to fetch character and ability set for the entity
+        let (character, ability_set) = match query.get(*current_entity) {
+            Ok((character, ability_set)) => (character, ability_set),
+            Err(_) => {
+                warn!("This is not your turn!");
+                return;
+            }
+        };
+
+        // If a previous operation of the same family exists, reuse it
+        if let Some(current_operation) = turn_current_member_info.pre_operation.clone() {
+            if current_operation.family.eq(&family) {
+                turn_current_member_info.selected_operation = Some(current_operation);
+                return;
+            }
+        }
+
+        // Search for the first ability matching the specified family
+        let mut operation = None;
+        for abilities in ability_set.0.clone() {
+            if abilities.family.eq(&family) {
+                operation = Some(abilities);
+                break;
+            }
+        }
+
+        // Update the turn information with the selected operation
+        turn_current_member_info.character = Some(character.clone());
+        turn_current_member_info.pre_operation = operation;
+
+        // Log the selected battle operation
+        info!("Battle operation: {:?}", turn_current_member_info.clone().pre_operation.unwrap().name);
+    }
+}
+
 
 
 /// Tracks the last stable ground position of the player, updating it when the player is above a threshold height.

@@ -140,6 +140,55 @@ impl Default for Character {
         }
     }
 }
+
+#[derive(Component, Reflect, Debug, Clone)]
+pub struct CharacterAbilitySet(pub Vec<CharacterAbility>);
+
+impl Default for CharacterAbilitySet {
+    fn default() -> Self {
+        Self(vec![
+            CharacterAbility {
+                name: String::from("Debug Attack"),
+                family: AbilityType::Attack,
+                selection_type: SelectionType::Single,
+                target_type: TargetType::Enemy,
+                scaling_type: ScalingType::Attack,
+                scaling: 0.5,
+                base_value: 5.0,
+            },
+            CharacterAbility {
+                name: String::from("Debug Ability"),
+                family: AbilityType::Ability,
+                selection_type: SelectionType::Expansion(3),
+                target_type: TargetType::Enemy,
+                scaling_type: ScalingType::Attack,
+                scaling: 0.9,
+                base_value: 20.0,
+            },
+            CharacterAbility {
+                name: String::from("Debug Ultimate"),
+                family: AbilityType::Ultimate,
+                selection_type: SelectionType::Aoe,
+                target_type: TargetType::Enemy,
+                scaling_type: ScalingType::Attack,
+                scaling: 1.2,
+                base_value: 35.0,
+            },
+        ])
+    }
+}
+
+#[derive(Component, Reflect, Debug, Clone)]
+pub struct CharacterAbility {
+    pub name: String,
+    pub family: AbilityType,
+    pub selection_type: SelectionType,
+    pub target_type: TargetType,
+    pub scaling_type: ScalingType,
+    pub scaling: f64,
+    pub base_value: f64,
+}
+
 #[derive(Component, Resource, Reflect, Debug, Clone)]
 #[reflect(Component)]
 pub struct CharacterCurrentStats {
@@ -558,3 +607,53 @@ pub struct BeforeBattleLocation(pub Vec3);
 
 #[derive(Component)]
 pub struct ToRemoveAfterBattle;
+
+#[derive(Resource, Debug, Clone)]
+pub struct TurnOrder {
+    pub order: Vec<Entity>,
+    pub current_index: usize,
+    pub next: bool
+}
+
+impl Default for TurnOrder {
+    fn default() -> Self {
+        Self {
+            order: Vec::new(),
+            current_index: 0,
+            next: true
+        }
+    }
+}
+
+#[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
+#[reflect(Component)]
+pub enum SelectionType {
+    Single,
+    Aoe,
+    Expansion(usize)
+}
+
+#[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
+#[reflect(Component)]
+pub enum AbilityType {
+    Attack,
+    Ability,
+    Ultimate
+}
+
+#[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
+#[reflect(Component)]
+pub enum TargetType {
+    Allay,
+    Enemy,
+    All
+}
+
+#[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
+#[reflect(Component)]
+pub enum ScalingType {
+    Hp,
+    Defense,
+    Attack,
+    Speed
+}

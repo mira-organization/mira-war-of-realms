@@ -4,7 +4,7 @@ use bevy::utils::HashMap;
 use bevy_rapier3d::prelude::*;
 use system::battle_commons::{BattleCurrentEntities, BattleMember, CharacterOperation, InBattle, ObserveAble, Slot};
 use system::characters::{CharacterBundle, CharacterParty};
-use system::commons::{Character, Enemy, LivingEntity, WorldPlayer};
+use system::commons::{Character, CharacterAbilitySet, Enemy, LivingEntity, WorldPlayer};
 use system::states::{GameState, InGameState};
 
 /// A plugin responsible for setting up the battle state in the game.
@@ -29,36 +29,59 @@ impl Plugin for BattleSetupPlugin {
     }
 }
 
+/// Updates the positions of the enemies in the battle and reassigns them new slots.
+///
+/// This function checks if the list of enemies and characters is not empty and if a patch
+/// (state update) is needed. It then sorts the enemies by their slot, reassigns them new positions
+/// based on a defined starting point, and updates the transformation for each enemy entity.
+///
+/// # Parameters
+/// - `battle_entities`: A mutable reference to the `BattleCurrentEntities` resource, which holds the list of enemies
+///   and characters in the current battle.
+/// - `transforms`: A query to get the mutable `Transform` components of entities, which are updated to set the new positions.
+///
+/// # Behavior
+/// - If the `battle_entities.enemies` or `battle_entities.characters` is empty, the function exits early.
+/// - If `battle_entities.need_patch` is `true`, the enemy positions are updated by sorting them by their current slot,
+///   assigning new positions starting from `(-10.0, 51.0, 15.0)` and incrementing the x-coordinate for each enemy.
+/// - The enemy entities are then assigned to new slots in the `battle_entities.enemies` map.
+/// - After the positions are updated, the `battle_entities.need_patch` flag is set to `false` to indicate no further patch is needed.
 fn update_enemy_position(
     mut battle_entities: ResMut<BattleCurrentEntities>,
-    mut transforms: Query<&mut Transform>
+    mut transforms: Query<&mut Transform>,
 ) {
-    if battle_entities.enemies.is_empty()
-        || battle_entities.characters.is_empty() {
+    // Early exit if there are no enemies or characters in the battle
+    if battle_entities.enemies.is_empty() || battle_entities.characters.is_empty() {
         return;
     }
 
+    // Proceed only if a patch is needed
     if battle_entities.need_patch {
+        // Sort enemies by their current slot (index)
         let mut sorted_enemies: Vec<_> = battle_entities.enemies.iter().collect();
         sorted_enemies.sort_by_key(|(slot, _)| **slot);
 
+        // Initialize variables to assign new positions
         let mut new_enemies = HashMap::new();
         let mut location = Transform::from_xyz(-10.0, 51.0, 15.0).translation;
         let mut new_slot = 1;
 
+        // Update the position of each enemy and assign them new slots
         for (_, &entity) in sorted_enemies {
             if let Ok(mut transform) = transforms.get_mut(entity) {
-                transform.translation = location;
-                new_enemies.insert(new_slot, entity);
-                new_slot += 1;
-                location.x += 2.5;
+                transform.translation = location;  // Set new position
+                new_enemies.insert(new_slot, entity);  // Reassign enemy to new slot
+                new_slot += 1;  // Increment the slot index
+                location.x += 2.5;  // Move next enemy slightly to the right
             }
         }
 
+        // Update the battle_entities with the new slot assignments
         battle_entities.enemies = new_enemies;
-        battle_entities.need_patch = false;
+        battle_entities.need_patch = false;  // Indicate that the patch is complete
     }
 }
+
 
 /// A system that sets up the battle entities by categorizing them into characters and enemies.
 ///
@@ -126,7 +149,9 @@ pub fn spawn_entities(
         if member.name == world_player.displayed_character.name {
             transform.translation = location;
             transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);
-            commands.entity(world_entity).insert(BattleMember);
+            commands.entity(world_entity)
+                .insert(BattleMember)
+                .insert(CharacterAbilitySet::default());
         } else {
             generate_character(&mut commands, &asset_server, location, &member);
         }
@@ -177,6 +202,7 @@ fn generate_character(
         locked_axes: LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,
         collider: Collider::capsule(Vec3::new(0.0, 0.2, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2),
         character_operation: CharacterOperation::default(),
+        character_ability_set: CharacterAbilitySet::default()
     }, BattleMember));
 }
 
