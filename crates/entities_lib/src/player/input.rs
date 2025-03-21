@@ -212,14 +212,39 @@ pub fn battle_input_system(
     }
 }
 
+/// Fetches the battle operation for the current character's turn based on the provided ability family.
+///
+/// This function checks the current entity's abilities and selects an operation for the turn. It will
+/// choose an ability that matches the specified `AbilityType` (family). If the entity has already
+/// selected an operation for this turn, it will be reused. Otherwise, the function searches through
+/// the character's available abilities and assigns the first one that matches the `AbilityType`.
+///
+/// # Parameters
+/// - `turn_order`: A resource that holds the current turn order and the index of the current entity.
+/// - `query`: A query to get both the `Character` and their `CharacterAbilitySet` components for the current entity.
+/// - `turn_current_member_info`: A mutable resource holding the information about the current turn's member, including
+///   the character and their selected operation.
+/// - `family`: The `AbilityType` that is used to filter the character's abilities for the operation. This helps
+///   to select the relevant ability based on the turn's context (e.g., attack, defense, etc.).
+///
+/// # Behavior
+/// - If it's not the current entity's turn or the entity has no ability matching the `AbilityType`, it returns early.
+/// - If the entity has already selected an operation of the given `AbilityType`, it is reused.
+/// - If no operation is selected, it will search the character's abilities and choose the first one matching the `AbilityType`.
+///
+/// # Logs
+/// - Logs the selected operation's name when found.
 fn fetch_battle_operation(
     turn_order: Res<TurnOrder>,
     query: Query<(&Character, &CharacterAbilitySet)>,
     mut turn_current_member_info: ResMut<TurnCurrentMemberInfo>,
-    family: AbilityType
+    family: AbilityType,
 ) {
+    // Get the entity currently in turn
     if let Some(current_entity) = turn_order.order.get(turn_order.current_index - 1) {
         info!("entity: {:?}", current_entity);
+
+        // Attempt to fetch character and ability set for the entity
         let (character, ability_set) = match query.get(*current_entity) {
             Ok((character, ability_set)) => (character, ability_set),
             Err(_) => {
@@ -228,6 +253,7 @@ fn fetch_battle_operation(
             }
         };
 
+        // If a previous operation of the same family exists, reuse it
         if let Some(current_operation) = turn_current_member_info.pre_operation.clone() {
             if current_operation.family.eq(&family) {
                 turn_current_member_info.selected_operation = Some(current_operation);
@@ -235,6 +261,7 @@ fn fetch_battle_operation(
             }
         }
 
+        // Search for the first ability matching the specified family
         let mut operation = None;
         for abilities in ability_set.0.clone() {
             if abilities.family.eq(&family) {
@@ -243,11 +270,15 @@ fn fetch_battle_operation(
             }
         }
 
+        // Update the turn information with the selected operation
         turn_current_member_info.character = Some(character.clone());
         turn_current_member_info.pre_operation = operation;
+
+        // Log the selected battle operation
         info!("Battle operation: {:?}", turn_current_member_info.clone().pre_operation.unwrap().name);
     }
 }
+
 
 
 /// Tracks the last stable ground position of the player, updating it when the player is above a threshold height.

@@ -26,12 +26,22 @@ impl Default for BattleSelectedStatus {
     }
 }
 
+/// Resource that holds the current entities involved in the battle.
+///
+/// This resource tracks the state of battle participants, including enemies and characters,
+/// as well as whether a patch (state update) is needed.
+///
+/// # Fields
+/// - `need_patch`: A flag indicating if the battle state needs to be updated. Used for optimizations.
+/// - `enemies`: A `HashMap` mapping enemy identifiers (usually indices) to their corresponding `Entity` instances.
+/// - `characters`: A `HashMap` mapping character identifiers (usually indices) to their corresponding `Entity` instances.
 #[derive(Resource, Debug, Clone, Default)]
 pub struct BattleCurrentEntities {
-    pub need_patch: bool,
-    pub enemies: HashMap<usize, Entity>,
-    pub characters: HashMap<usize, Entity>,
+    pub need_patch: bool,                          // Indicates if a state update is needed
+    pub enemies: HashMap<usize, Entity>,           // Mapping of enemy indices to their entity references
+    pub characters: HashMap<usize, Entity>,        // Mapping of character indices to their entity references
 }
+
 
 /// Marker component indicating that an entity is currently in battle.
 ///
@@ -40,11 +50,20 @@ pub struct BattleCurrentEntities {
 #[reflect(Component)]
 pub struct InBattle;
 
+/// Marker component indicating that an entity can be observed in battle.
+///
+/// Entities with this component can be targeted or tracked during combat
+/// for various mechanics such as enemy targeting or battle UI updates.
 #[derive(Component, Debug, Clone)]
 pub struct ObserveAble;
 
+/// Marker component indicating that an entity is a participant in battle.
+///
+/// This component is used to differentiate between battle participants
+/// (players, enemies, or NPCs) and other entities that exist in the game world.
 #[derive(Component, Debug, Clone)]
 pub struct BattleMember;
+
 
 /// Represents an enemy entity specifically in a battle scenario.
 ///
@@ -127,6 +146,8 @@ pub enum AttackOperation {
     Ultimate,
 }
 
+/// Represents the character or enemy slot.
+/// Is needed for calculate the correct outlines.
 #[derive(Component, Reflect, Debug, Clone)]
 #[reflect(Component)]
 pub struct Slot(pub usize);
