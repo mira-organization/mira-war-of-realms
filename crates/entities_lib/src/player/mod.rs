@@ -3,7 +3,6 @@ mod animation;
 
 use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
-use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_rapier3d::prelude::*;
 use system::battle_commons::TurnCurrentMemberInfo;
 use system::characters::CharacterParty;
@@ -122,6 +121,5 @@ fn create_player_camera(mut commands: Commands) {
         Camera3d::default(),
         CameraController::default(),
         PlayerWorldCamera,
-        AtmosphereCamera::default()
     ));
 }

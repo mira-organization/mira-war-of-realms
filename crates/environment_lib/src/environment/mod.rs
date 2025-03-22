@@ -2,12 +2,9 @@ mod env_init;
 mod env_handles;
 mod ready_up_handles;
 
-use std::f32::consts::PI;
-use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use serde::Deserialize;
-use system::states::GameState;
 use crate::environment::env_handles::EnvSwapSystemPlugin;
 use crate::environment::env_init::EnvInitPlugin;
 use crate::environment::ready_up_handles::ReadyUpHandles;
@@ -30,7 +27,7 @@ impl Plugin for EnvironmentPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<EnvironmentListResource>();
         app.add_plugins((EnvInitPlugin, ReadyUpHandles, EnvSwapSystemPlugin));
-        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_light);
+        //app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_light);
     }
 }
 
@@ -181,7 +178,7 @@ pub enum LightType {
 }
 
 
-fn create_light(mut commands: Commands) {
+/*fn create_light(mut commands: Commands) {
     // Spawn the directional light entity
     commands.spawn((
         DirectionalLight {
@@ -203,4 +200,4 @@ fn create_light(mut commands: Commands) {
         }
             .build(),
     ));
-}
+}*/

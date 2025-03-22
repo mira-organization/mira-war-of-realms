@@ -28,6 +28,7 @@ impl Plugin for ManagerPlugin {
         app.init_state::<GameState>();
 
         // Insert global configuration resource
+        app.insert_resource(ClearColor(Color::srgb_u8(0, 0, 0)));
         app.insert_resource(ConfigService::new());
         app.insert_resource(WorldInspectorState::default());
         app.insert_resource(DummySaveData::default());
