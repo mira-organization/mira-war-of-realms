@@ -9,6 +9,8 @@ name = "ui_lib"
 path = "src/lib.rs"
 
 [dependencies]
+bevy_lunex = { version = "0.3.2", features = ["default"] }
+
 system = { path = "../system" }
 
 [dependencies.bevy]

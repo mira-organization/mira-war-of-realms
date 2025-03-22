@@ -120,6 +120,12 @@ pub fn create_world_player(
 fn create_player_camera(mut commands: Commands) {
     commands.spawn((
         Camera3d::default(),
+        Camera {
+            hdr: true,
+            order: 0,
+            clear_color: ClearColorConfig::None,
+            ..default()
+        },
         CameraController::default(),
         PlayerWorldCamera,
         AtmosphereCamera::default()
