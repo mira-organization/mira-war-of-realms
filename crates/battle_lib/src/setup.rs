@@ -1,3 +1,4 @@
+use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy::utils::HashMap;
@@ -189,7 +190,7 @@ fn generate_character(
         culling: NoFrustumCulling,
         transform: Transform {
             translation: location,
-            rotation: Quat::from_rotation_y(0.0),
+            rotation: Quat::from_rotation_y(PI),
             ..default()
         },
         character: character.clone(),
@@ -230,7 +231,7 @@ fn generate_enemies(
         Name::new(format!("Enemy-0{}", index)),
         Transform {
             translation: location,
-            rotation: Quat::from_rotation_y(std::f32::consts::PI),
+            rotation: Quat::from_rotation_y(0.0),
             ..default()
         },
         LivingEntity,

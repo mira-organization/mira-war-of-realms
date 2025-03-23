@@ -657,3 +657,6 @@ pub enum ScalingType {
     Attack,
     Speed
 }
+
+#[derive(Component)]
+pub struct MainCamera;

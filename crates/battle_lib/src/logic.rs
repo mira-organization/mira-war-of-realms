@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use system::battle_commons::{TurnCurrentMemberInfo, BattleCurrentEntities, BattleSelectedStatus, ObserveAble};
+use bevy::render::view::RenderLayers;
+use system::battle_commons::{TurnCurrentMemberInfo, BattleCurrentEntities, BattleSelectedStatus, ObserveAble, SelectMarker};
 use system::commons::{OutlineTargetBundle, SelectionType};
 use system::states::{GameState, InGameState};
 use crate::character_operations::{aoe_target_operation, expansion_target_operation, single_target_operation};
@@ -110,7 +111,9 @@ fn set_observe_entities(
         commands.entity(entity).with_children(|children| {
             children.spawn((
                 Transform::from_xyz(0.0, 0.9, 0.0),
-                Mesh3d(meshes.add(Capsule3d::new(0.275, 1.6)))
+                Mesh3d(meshes.add(Capsule3d::new(0.275, 1.6))),
+                SelectMarker,
+                RenderLayers::layer(0),
             ))
                 .observe(on_mouse_click)
                 .observe(on_mouse_enter)

@@ -151,3 +151,6 @@ pub enum AttackOperation {
 #[derive(Component, Reflect, Debug, Clone)]
 #[reflect(Component)]
 pub struct Slot(pub usize);
+
+#[derive(Component)]
+pub struct SelectMarker;

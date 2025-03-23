@@ -26,5 +26,7 @@ features = [
     "default_font",
     "multi_threaded",
     "png",
-    "jpeg"
+    "jpeg",
+    "bevy_mesh_picking_backend",
+    "bevy_picking"
 ]
