@@ -14,9 +14,10 @@ pub fn single_target_operation(
     commands: &mut Commands,
     battle_members: &BattleCurrentEntities,
     selected: &mut BattleSelectedStatus,
+    existing_entities: Query<Entity>,
 ) {
     // Clear any existing outlines from previous selections.
-    clear_outline(commands, battle_members);
+    clear_outline(commands, battle_members, &existing_entities);
 
     // Clear any sub-selected targets if there are any.
     if !selected.sub_selected.is_empty() {
@@ -24,11 +25,7 @@ pub fn single_target_operation(
     }
 
     // If there is a selected entity, apply the target outline.
-    if let Some((_, entity)) = selected.selected {
-        if commands.get_entity(entity).is_some() {
-            commands.entity(entity).insert(OutlineTargetBundle::default());
-        }
-    }
+    insert_outline_target(commands, &selected, &existing_entities);
 }
 
 /// Performs the operation for selecting an expansion of targets around the currently selected one.
@@ -42,13 +39,14 @@ pub fn expansion_target_operation(
     commands: &mut Commands,
     battle_members: &BattleCurrentEntities,
     selected: &mut BattleSelectedStatus,
+    existing_entities: Query<Entity>,
 ) {
     // If there is a selected entity, find the corresponding slot.
     if let Some((_, selected_entity)) = selected.selected {
         let mut selected_slot = None;
 
         // Clear any existing outlines.
-        clear_outline(commands, battle_members);
+        clear_outline(commands, battle_members, &existing_entities);
 
         // Clear sub-selected targets.
         if !selected.sub_selected.is_empty() {
@@ -71,9 +69,7 @@ pub fn expansion_target_operation(
             }
 
             // Apply the outline to the selected entity.
-            if commands.get_entity(selected_entity).is_some() {
-                commands.entity(selected_entity).insert(OutlineTargetBundle::default());
-            }
+            insert_outline_target(commands, &selected, &existing_entities);
 
             let mut adjacent_slots = Vec::new();
 
@@ -156,12 +152,13 @@ pub fn aoe_target_operation(
 /// # Parameters
 /// - `commands`: Command buffer to modify entities.
 /// - `battle_members`: The entities currently engaged in battle.
+/// - `existing_entities`: Query for find world entity instance of selected entity
 ///
 /// # Behavior
 /// - Removes all outline-related components from enemy entities.
-fn clear_outline(commands: &mut Commands, battle_members: &BattleCurrentEntities) {
+fn clear_outline(commands: &mut Commands, battle_members: &BattleCurrentEntities, existing_entities: &Query<Entity>) {
     for (_, entity) in battle_members.enemies.iter() {
-        if commands.get_entity(*entity).is_some() {
+        if existing_entities.get(*entity).is_ok() {
             commands.entity(*entity)
                 .remove::<OutlineVolume>()
                 .remove::<OutlineMode>()
@@ -170,3 +167,23 @@ fn clear_outline(commands: &mut Commands, battle_members: &BattleCurrentEntities
         }
     }
 }
+
+/// Adds an `OutlineTargetBundle` to the selected entity if it exists and is not already marked.
+///
+/// # Arguments
+/// * `commands` - Provides access to the `Commands` struct for modifying entities.
+/// * `selected` - A reference to the current `BattleSelectedStatus`, which stores the currently selected entity.
+/// * `existing_entities` - A query to check if the entity exists and whether it already has the `OutlineTargetBundle`.
+fn insert_outline_target(
+    commands: &mut Commands,
+    selected: &BattleSelectedStatus,
+    existing_entities: &Query<Entity>,
+) {
+    // Checks if an entity is currently selected.
+    if let Some((_, entity)) = selected.selected {
+        if existing_entities.get(entity).is_ok() {
+            commands.entity(entity).insert(OutlineTargetBundle::default());
+        }
+    }
+}
+

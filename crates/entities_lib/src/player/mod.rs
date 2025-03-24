@@ -2,12 +2,12 @@ mod input;
 mod animation;
 
 use bevy::prelude::*;
-use bevy::render::view::NoFrustumCulling;
+use bevy::render::view::{NoFrustumCulling, RenderLayers};
 use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_rapier3d::prelude::*;
 use system::battle_commons::TurnCurrentMemberInfo;
 use system::characters::CharacterParty;
-use system::commons::{AnimatedPlayer, Animations, Character, LivingEntity, WorldPlayer};
+use system::commons::{AnimatedPlayer, Animations, Character, LivingEntity, MainCamera, WorldPlayer};
 use system::states::GameState;
 use crate::camera::{CameraController, GameCameraPlugin, PlayerWorldCamera};
 use crate::player::animation::PlayerAnimationPlugin;
@@ -120,6 +120,14 @@ pub fn create_world_player(
 fn create_player_camera(mut commands: Commands) {
     commands.spawn((
         Camera3d::default(),
+        Camera {
+            hdr: true,
+            order: 0,
+            clear_color: ClearColorConfig::None,
+            ..default()
+        },
+        MainCamera,
+        RenderLayers::from_layers(&[0, 1]),
         CameraController::default(),
         PlayerWorldCamera,
         AtmosphereCamera::default()

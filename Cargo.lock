@@ -991,6 +991,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_lunex"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ea0bd471f202a075bcbed73051ba2e19839c5f93b8a24d7df271bf175fecb27"
+dependencies = [
+ "bevy",
+ "bevy_rich_text3d",
+ "colored",
+ "radsort",
+]
+
+[[package]]
 name = "bevy_macro_utils"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1228,6 +1240,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "bevy_rich_text3d"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57601b9430ef61d3f17d74f3da0731460bf00fc465da4c45626214b8be1152f6"
+dependencies = [
+ "bevy",
+ "cosmic-text",
+ "sys-locale",
+ "thiserror 2.0.11",
+ "zeno 0.3.2",
 ]
 
 [[package]]
@@ -1791,6 +1816,15 @@ name = "color_quant"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3d7b894f5411737b7867f4827955924d7c254fc9f4d91a6aad6b097804b1018b"
+
+[[package]]
+name = "colored"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
+dependencies = [
+ "windows-sys 0.59.0",
+]
 
 [[package]]
 name = "combine"
@@ -4850,7 +4884,7 @@ checksum = "cbd59f3f359ddd2c95af4758c18270eddd9c730dde98598023cdabff472c2ca2"
 dependencies = [
  "skrifa",
  "yazi",
- "zeno",
+ "zeno 0.2.3",
 ]
 
 [[package]]
@@ -5299,6 +5333,8 @@ name = "ui_lib"
 version = "0.0.1"
 dependencies = [
  "bevy",
+ "bevy_lunex",
+ "bevy_rapier3d",
  "system",
 ]
 
@@ -6263,6 +6299,12 @@ name = "zeno"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd15f8e0dbb966fd9245e7498c7e9e5055d9e5c8b676b95bd67091cd11a1e697"
+
+[[package]]
+name = "zeno"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc0de2315dc13d00e5df3cd6b8d2124a6eaec6a2d4b6a1c5f37b7efad17fcc17"
 
 [[package]]
 name = "zerocopy"
