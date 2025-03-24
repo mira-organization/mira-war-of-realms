@@ -68,6 +68,12 @@ fn setup_main_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
                             } else if i == 2 {
                                 debug_context.enabled = !debug_context.enabled;
                             }
+                        })
+                        .observe(move |_: Trigger<Pointer<Over>> | {
+                            info!("Enter pointer {}!", i);
+                        })
+                        .observe(move |_: Trigger<Pointer<Out>> | {
+                            info!("Leave pointer {}!", i);
                         });
                 }
             });

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
-use bevy_lunex::{Ab, Rl, UiColor, UiLayout, UiLayoutRoot};
+use bevy::window::SystemCursorIcon;
+use bevy_lunex::{Ab, OnHoverSetCursor, Rl, UiBase, UiColor, UiHover, UiLayout, UiLayoutRoot, UiStateTrait};
 
 #[derive(Component)]
 pub struct MainHudMarker;
@@ -50,7 +51,8 @@ pub struct IconBundle {
     pub ui_layout: UiLayout,
     pub ui_color: UiColor,
     pub sprite: Sprite,
-    pub layer: RenderLayers
+    pub layer: RenderLayers,
+    pub on_hover_set_cursor: OnHoverSetCursor,
 }
 
 impl IconBundle {
@@ -67,9 +69,13 @@ impl IconBundle {
                 .pos1((Rl(100.0) - Ab(300.0) + Ab(x_offset), Ab(0.0) + Ab(y_offset)))
                 .pos2((Rl(100.0) - Ab(300.0) + Ab(x_offset + size), Ab(y_offset + size)))
                 .pack(),
-            ui_color: UiColor::from(Color::srgb(1.0, 1.0, 1.0).with_alpha(1.0)),
+            ui_color:            UiColor::new(vec![
+                (UiBase::id(), Color::srgb(1.0, 1.0, 1.0).with_alpha(1.0)),
+                (UiHover::id(), Color::srgb(0.8, 0.8, 0.8).with_alpha(1.0))
+            ]),
             sprite: Sprite::from(asset),
             layer: RenderLayers::layer(2),
+            on_hover_set_cursor: OnHoverSetCursor::new(SystemCursorIcon::Pointer),
         }
     }
 }
