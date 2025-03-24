@@ -152,5 +152,6 @@ pub enum AttackOperation {
 #[reflect(Component)]
 pub struct Slot(pub usize);
 
+/// Marker for selected childs for the battle stages.
 #[derive(Component)]
 pub struct SelectMarker;

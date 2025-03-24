@@ -168,14 +168,24 @@ fn clear_outline(commands: &mut Commands, battle_members: &BattleCurrentEntities
     }
 }
 
+/// Adds an `OutlineTargetBundle` to the selected entity if it exists and is not already marked.
+///
+/// # Arguments
+/// * `commands` - Provides access to the `Commands` struct for modifying entities.
+/// * `selected` - A reference to the current `BattleSelectedStatus`, which stores the currently selected entity.
+/// * `existing_entities` - A query to check if the entity exists and whether it already has the `OutlineTargetBundle`.
 fn insert_outline_target(
     commands: &mut Commands,
     selected: &BattleSelectedStatus,
-    existing_entities: &Query<Entity>,
+    existing_entities: &Query<(Entity, Option<&OutlineTargetBundle>)>,
 ) {
+    // Checks if an entity is currently selected.
     if let Some((_, entity)) = selected.selected {
-        if existing_entities.get(entity).is_ok() {
+        // Verifies that the entity exists and does not already have an `OutlineTargetBundle`.
+        if let Ok((_, None)) = existing_entities.get(entity) {
+            // Adds the `OutlineTargetBundle` to visually highlight the entity.
             commands.entity(entity).insert(OutlineTargetBundle::default());
         }
     }
 }
+
