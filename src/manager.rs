@@ -6,7 +6,7 @@ use audio_lib::audio::AudioHandlerPlugin;
 use audio_lib::AudioStorePlugin;
 use battle_lib::BattlePlugin;
 use entities_lib::EntitiesPlugin;
-use system::config::{ConfigService, DummySaveData};
+use system::config::{ConfigService, DummySaveData, WorldInspectorState};
 use system::states::GameState;
 use environment_lib::environment::EnvironmentPlugin;
 use system::battle_commons::{BattleCurrentEntities};
@@ -51,22 +51,6 @@ impl Plugin for ManagerPlugin {
         app.add_systems(Update, (toggle_debug_system, toggle_world_inspector_interface_system));
     }
 }
-
-/// Represents the state of the World Inspector UI.
-///
-/// This resource holds a single boolean value indicating whether the World Inspector UI
-/// is currently visible or hidden. The state can be toggled by user input (e.g., a key press),
-/// and this struct is used to track the visibility of the World Inspector in the application.
-///
-/// The `WorldInspectorState` is initialized to `false` (hidden) by default.
-///
-/// # Fields
-///
-/// * `0`: A boolean value that represents the visibility of the World Inspector UI.
-///   - `true`: The World Inspector is visible.
-///   - `false`: The World Inspector is hidden.
-#[derive(Resource, Default, Debug)]
-pub struct WorldInspectorState(pub bool);
 
 /// Toggles the debug rendering system on or off based on a configured key input.
 ///

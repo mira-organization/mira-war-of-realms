@@ -35,7 +35,7 @@ impl Plugin for BattleFightPlugin {
 ///
 /// # Returns:
 /// This function does not return any value but affects the game state, battle entities, and the next turn order.
-fn character_perform_attack(
+pub fn character_perform_attack(
     mut commands: Commands,
     mut enemy_query: Query<(Entity, &mut Enemy), (With<Enemy>, Without<Character>)>,
     mut battle_members: ResMut<BattleCurrentEntities>,

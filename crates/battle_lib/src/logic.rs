@@ -4,6 +4,7 @@ use system::battle_commons::{TurnCurrentMemberInfo, BattleCurrentEntities, Battl
 use system::commons::{OutlineTargetBundle, SelectionType};
 use system::states::{GameState, InGameState};
 use crate::character_operations::{aoe_target_operation, expansion_target_operation, single_target_operation};
+use crate::fight::character_perform_attack;
 use crate::observes::{on_mouse_click, on_mouse_enter, on_mouse_leave};
 use crate::setup::{setup_battle_entities, spawn_entities};
 
@@ -28,7 +29,7 @@ impl Plugin for BattleLogicPlugin {
             .run_if(
                 resource_changed::<TurnCurrentMemberInfo>
                     .or(resource_changed::<BattleSelectedStatus>)
-            )
+            ).after(character_perform_attack)
         );
     }
 }
@@ -54,11 +55,12 @@ pub fn detect_current_character_operation(
     action_operation: Res<TurnCurrentMemberInfo>,
     battle_members: Res<BattleCurrentEntities>,
     mut selected: ResMut<BattleSelectedStatus>,
+    existing_entities: Query<Entity>
 ) {
     if let Some(pre_operation) = action_operation.pre_operation.clone() {
         match pre_operation.selection_type {
-            SelectionType::Single => single_target_operation(&mut commands, &battle_members, &mut selected),
-            SelectionType::Expansion(3) => expansion_target_operation(&mut commands, &battle_members, &mut selected),
+            SelectionType::Single => single_target_operation(&mut commands, &battle_members, &mut selected, existing_entities),
+            SelectionType::Expansion(3) => expansion_target_operation(&mut commands, &battle_members, &mut selected, existing_entities),
             SelectionType::Aoe => aoe_target_operation(&mut commands, &battle_members, &mut selected),
             _ => {}
         }

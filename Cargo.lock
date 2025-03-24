@@ -5334,6 +5334,7 @@ version = "0.0.1"
 dependencies = [
  "bevy",
  "bevy_lunex",
+ "bevy_rapier3d",
  "system",
 ]
 
