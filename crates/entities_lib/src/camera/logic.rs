@@ -103,7 +103,7 @@ fn rotation_mouse(
         body_set,
         player_position + Vec3::Y * 0.5,
         Vec3::NEG_Y,
-        1.5,
+        1.75,
         true,
         QueryFilter::default().exclude_collider(player_entity),
     ) {
@@ -111,7 +111,7 @@ fn rotation_mouse(
     }
 
     // Ensure the camera doesn't go too close to the player.
-    if target_distance <= camera.zoom.min + 0.2 && final_translation.y < player_position.y {
+    if target_distance <= camera.zoom.min + 0.1 && final_translation.y < player_position.y - 0.4 {
         let test_rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch + 0.02, 0.0);
         let test_translation = player_position + test_rotation.mul_vec3(Vec3::new(0.0, 0.0, -target_distance));
 
@@ -120,7 +120,7 @@ fn rotation_mouse(
             body_set,
             test_translation,
             (player_position - test_translation).normalize(),
-            (player_position - test_translation).length(),
+            (player_position - test_translation).length() - 1.5,
             true,
             QueryFilter::default().exclude_collider(player_entity),
         ).is_none() {
@@ -130,7 +130,7 @@ fn rotation_mouse(
 
     // Adjust vertical camera position if too close to the player.
     let distance_to_player = (final_translation - player_position).length();
-    if distance_to_player < camera.zoom.offset_swap && final_translation.y > player_position.y {
+    if distance_to_player < camera.zoom.offset_swap && final_translation.y > player_position.y - 0.4 {
         final_translation.y += 0.6;
     }
 
@@ -140,7 +140,7 @@ fn rotation_mouse(
         body_set,
         player_position,
         (final_translation - player_position).normalize(),
-        target_distance + 1.0,
+        target_distance + 2.25,
         true,
         QueryFilter::default().exclude_collider(player_entity),
     ) {
