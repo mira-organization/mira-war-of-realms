@@ -135,16 +135,25 @@ fn rotation_mouse(
     }
 
     // Final collision check to ensure camera doesn't pass through walls.
-    if let Some((_hit_entity, _)) = rapier_context.cast_ray(
+    if let Some((_hit_entity, hit)) = rapier_context.cast_ray_and_get_normal(
         colliders,
         body_set,
-        player_position,
+        player_position, // Cast from player position
         (final_translation - player_position).normalize(),
-        target_distance + 2.25,
+        target_distance + 2.25, // Check within max distance
         true,
         QueryFilter::default().exclude_collider(player_entity),
     ) {
-        final_translation = player_position + (final_translation - player_position).normalize() * (target_distance - 0.1);
+        // Directly set the final translation to the hit point, avoiding hanging at edges
+        final_translation = hit.point;
+
+        // Keep a minimum offset to prevent the camera from clipping into walls
+        final_translation += hit.normal * 0.15;
+
+        // Ensure the camera does not go under the ground
+        if final_translation.y < player_position.y - 0.4 {
+            final_translation.y = player_position.y - 0.4;
+        }
     }
 
     // Set final camera position.
