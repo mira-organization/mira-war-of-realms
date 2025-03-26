@@ -140,7 +140,7 @@ fn rotation_mouse(
         body_set,
         player_position, // Cast from player position
         (final_translation - player_position).normalize(),
-        target_distance + 2.25, // Check within max distance
+        target_distance + 1.5, // Check within max distance
         true,
         QueryFilter::default().exclude_collider(player_entity),
     ) {
