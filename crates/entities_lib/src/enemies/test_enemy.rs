@@ -37,7 +37,7 @@ fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
         ),
         Name::new("Enemy-Test"),
         AnimatedMob,
-        Transform::from_xyz(-32.0, 50.0, 15.0),
+        Transform::from_xyz(-32.0, 15.0, 15.0),
         AiSetup {
             state: AiState::Idle,
             path: vec![

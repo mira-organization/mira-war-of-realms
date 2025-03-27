@@ -17,8 +17,8 @@ pub struct CameraLogicPlugin;
 impl Plugin for CameraLogicPlugin {
     fn build(&self, app: &mut App) {
         // Add systems for camera rotation, zoom, and cursor toggle, with conditions based on cursor lock state.
-        app.add_systems(PreUpdate, rotation_mouse.run_if(cursor_lock_condition));
-        app.add_systems(Update, zoom_mouse.run_if(cursor_lock_condition));
+        app.add_systems(PreUpdate, camera_core_logic.run_if(cursor_lock_condition));
+        app.add_systems(Update, zoom_mouse.run_if(cursor_lock_condition).after(camera_core_logic));
         app.add_systems(Update, toggle_cursor);
     }
 }
@@ -31,7 +31,7 @@ impl Plugin for CameraLogicPlugin {
 /// - `player_query`: Query to access the player entity and transform for position reference.
 /// - `rapier_query`: Query to access the physics context to detect obstacles for camera collision detection.
 /// - `mouse_events`: EventReader for mouse motion events to determine mouse movement.
-fn rotation_mouse(
+fn camera_core_logic(
     window_query: Query<&Window, With<PrimaryWindow>>,
     mut camera_query: Query<(&CameraController, &mut Transform), With<CameraController>>,
     player_query: Query<(Entity, &Transform), (With<WorldPlayer>, Without<CameraController>)>,
