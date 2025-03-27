@@ -24,17 +24,21 @@ pub struct CameraController {
     pub lock_active: bool,    // Indicates whether the camera is locked to the player's viewpoint.
     pub zoom: Zoom,           // Holds zoom-related parameters (min, max zoom, etc.).
     pub offset: Offset,       // Offset that modifies the camera's position relative to the player.
+    pub to_head: f32,
     pub target_range: f32,    // Detection range for enemies (higher means far detection).
+    pub smoother: f32,
 }
 
 impl Default for CameraController {
     fn default() -> Self {
         Self {
-            sensitivity: Vec2::new(0.55, 0.55), // Default sensitivity values for the camera.
+            sensitivity: Vec2::new(0.45, 0.45), // Default sensitivity values for the camera.
             lock_active: true, // Camera is locked to the player by default.
             zoom: Zoom::new(1.0, 6.0), // Set the default zoom range (min: 1.0, max: 6.0).
             offset: Offset::new(0.0, 0.8), // Set default offset values for camera positioning.
+            to_head: 0.6,
             target_range: 7.5,
+            smoother: 0.7,
         }
     }
 }
