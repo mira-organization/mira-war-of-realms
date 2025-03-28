@@ -17,8 +17,8 @@ pub struct CameraLogicPlugin;
 impl Plugin for CameraLogicPlugin {
     fn build(&self, app: &mut App) {
         // Add systems for camera rotation, zoom, and cursor toggle, with conditions based on cursor lock state.
-        app.add_systems(PreUpdate, rotation_mouse.run_if(cursor_lock_condition));
-        app.add_systems(Update, zoom_mouse.run_if(cursor_lock_condition));
+        app.add_systems(PreUpdate, camera_core_logic.run_if(cursor_lock_condition));
+        app.add_systems(Update, zoom_mouse.run_if(cursor_lock_condition).after(camera_core_logic));
         app.add_systems(Update, toggle_cursor);
     }
 }
@@ -31,7 +31,7 @@ impl Plugin for CameraLogicPlugin {
 /// - `player_query`: Query to access the player entity and transform for position reference.
 /// - `rapier_query`: Query to access the physics context to detect obstacles for camera collision detection.
 /// - `mouse_events`: EventReader for mouse motion events to determine mouse movement.
-fn rotation_mouse(
+fn camera_core_logic(
     window_query: Query<&Window, With<PrimaryWindow>>,
     mut camera_query: Query<(&CameraController, &mut Transform), With<CameraController>>,
     player_query: Query<(Entity, &Transform), (With<WorldPlayer>, Without<CameraController>)>,
@@ -87,7 +87,7 @@ fn rotation_mouse(
         body_set,
         player_position,
         (final_translation - player_position).normalize(),
-        camera.zoom.max,
+        0.1,
         true,
         QueryFilter::default().exclude_collider(player_entity),
     ) {
@@ -103,53 +103,49 @@ fn rotation_mouse(
         body_set,
         player_position + Vec3::Y * 0.5,
         Vec3::NEG_Y,
-        1.5,
+        0.0,
         true,
         QueryFilter::default().exclude_collider(player_entity),
     ) {
         final_translation.y = final_translation.y.max(floor_hit.point.y + 0.35);
     }
 
-    // Ensure the camera doesn't go too close to the player.
-    if target_distance <= camera.zoom.min + 0.2 && final_translation.y < player_position.y {
-        let test_rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch + 0.02, 0.0);
-        let test_translation = player_position + test_rotation.mul_vec3(Vec3::new(0.0, 0.0, -target_distance));
-
-        if rapier_context.cast_ray(
-            colliders,
-            body_set,
-            test_translation,
-            (player_position - test_translation).normalize(),
-            (player_position - test_translation).length(),
-            true,
-            QueryFilter::default().exclude_collider(player_entity),
-        ).is_none() {
-            camera_transform.rotation = test_rotation;
-        }
-    }
-
     // Adjust vertical camera position if too close to the player.
     let distance_to_player = (final_translation - player_position).length();
-    if distance_to_player < camera.zoom.offset_swap && final_translation.y > player_position.y {
-        final_translation.y += 0.6;
+    if distance_to_player < camera.zoom.offset_swap && final_translation.y > player_position.y - 0.8 {
+        final_translation.y += camera.to_head;
     }
 
     // Final collision check to ensure camera doesn't pass through walls.
-    if let Some((_hit_entity, _)) = rapier_context.cast_ray(
+    if let Some((_hit_entity, hit)) = rapier_context.cast_ray_and_get_normal(
         colliders,
         body_set,
-        player_position,
+        player_position, // Cast from player position
         (final_translation - player_position).normalize(),
-        target_distance + 1.0,
+        target_distance + 0.1, // Check within max distance
         true,
         QueryFilter::default().exclude_collider(player_entity),
     ) {
-        final_translation = player_position + (final_translation - player_position).normalize() * (target_distance - 0.1);
+        // Directly set the final translation to the hit point, avoiding hanging at edges
+        final_translation = hit.point;
+
+        // Keep a minimum offset to prevent the camera from clipping into walls
+        final_translation += hit.normal * 0.15;
+
+        // Ensure the camera does not go under the ground
+        if final_translation.y < player_position.y - 0.4 {
+            final_translation.y = player_position.y - 0.4;
+        }
     }
 
+    // Apply a small delay on movement with a fraction of interpolation
+    let interpolation_factor = camera.smoother; // Small factor for smooth movement
+    camera_transform.translation = camera_transform.translation.lerp(final_translation, interpolation_factor);
+
     // Set final camera position.
-    camera_transform.translation = final_translation;
+    camera_transform.translation = camera_transform.translation;
 }
+
 
 /// System to handle zoom functionality based on mouse scroll input.
 ///
