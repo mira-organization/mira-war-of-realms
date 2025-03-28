@@ -1,9 +1,18 @@
+use std::fs::{File, OpenOptions};
+use std::io::Write;
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use bevy::image::ImageSamplerDescriptor;
+use bevy::log::tracing_subscriber::Layer;
+use bevy::log::{tracing_subscriber, BoxedLayer, Level, LogPlugin};
+use bevy::log::tracing_subscriber::fmt::writer::BoxMakeWriter;
 use bevy::prelude::*;
 use bevy::render::render_resource::WgpuFeatures;
 use bevy::render::RenderPlugin;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::window::WindowResolution;
+use chrono::Utc;
+use system::LOG_ENV_FILTER;
 use crate::manager::ManagerPlugin;
 
 /// Initializes a new `App` with custom plugins and configurations.
@@ -52,7 +61,11 @@ pub fn create<'a>(app: &'a mut App, title: &'a str, width: f32, height: f32) -> 
         ImagePlugin {
             default_sampler: ImageSamplerDescriptor::nearest()
         }
-    ))
+    ).set(LogPlugin {
+        level: Level::DEBUG,
+        filter: LOG_ENV_FILTER.to_string(),
+        custom_layer: log_file_appender,
+    }))
         .add_plugins(ManagerPlugin)
 }
 
@@ -73,5 +86,79 @@ pub fn create_gpu_settings() -> WgpuSettings {
         features: WgpuFeatures::POLYGON_MODE_LINE,
         backends: Some(Backends::PRIMARY),
         ..default()
+    }
+}
+
+/// Initializes a log file appender for the application.
+///
+/// This function creates a `logs` directory if it does not exist and generates a log file
+/// with a timestamped name in the format `bevy-DD-MM-YYYY.log`. It then sets up a
+/// logging layer that writes log messages to this file.
+///
+/// # Parameters
+/// - `_app`: A mutable reference to the Bevy `App`. (Currently unused)
+///
+/// # Returns
+/// - `Some(BoxedLayer)`: If the log file was successfully created and opened.
+/// - `None`: If there was an error creating the log directory or opening the file.
+///
+/// # Logging Details
+/// - The log file is set up to append new logs.
+/// - ANSI formatting is disabled for better readability in plain text files.
+/// - The log writer ensures proper synchronization using `Arc<Mutex<File>>`.
+fn log_file_appender(_app: &mut App) -> Option<BoxedLayer> {
+    let log_dir = PathBuf::from("logs");
+    std::fs::create_dir_all(&log_dir).ok()?; // Ensure the logs directory exists
+
+    // Generate a timestamped log filename
+    let timestamp = Utc::now().format("bevy-%d-%m-%Y.log").to_string();
+    let log_path = log_dir.join(timestamp);
+
+    // Open the log file for appending, creating it if necessary
+    let file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(log_path)
+        .ok()?;
+
+    // Wrap the file in an Arc<Mutex<File>> for safe shared access
+    let file_arc = Arc::new(Mutex::new(file));
+
+    // Create a shutdown log marker to write an initial log entry when dropped
+    let _shutdown_logger = StartLogText {
+        file: Arc::clone(&file_arc),
+    };
+
+    // Create a log writer that clones the file handle for each log entry
+    let writer = BoxMakeWriter::new(move || {
+        let file = file_arc.lock().unwrap().try_clone().expect("Failed to clone log file handle");
+        Box::new(file) as Box<dyn Write + Send>
+    });
+
+    // Return a tracing subscriber layer configured to write logs to the file
+    Some(Box::new(tracing_subscriber::fmt::layer()
+        .with_ansi(false) // Disable ANSI formatting
+        .with_writer(writer)
+        .boxed()
+    ))
+}
+
+/// Helper struct to insert a start log entry when logging is initialized.
+///
+/// When this struct is dropped, it writes a separator message to the log file
+/// to indicate when logging has started.
+struct StartLogText {
+    file: Arc<Mutex<File>>, // Shared reference to the log file
+}
+
+impl Drop for StartLogText {
+    /// Writes a log entry to indicate the start of a new logging session.
+    fn drop(&mut self) {
+        let mut file = self.file.lock().unwrap();
+        let _ = writeln!(
+            file,
+            "\n====================================== [ Start ] ======================================\n"
+        );
+        let _ = file.flush(); // Ensure the message is written to disk
     }
 }
