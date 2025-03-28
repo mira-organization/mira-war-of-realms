@@ -12,3 +12,18 @@ pub mod battle_commons;
 pub mod run_conditions;
 
 pub const PLAYER_VOID_THRESHOLD: f32 = -100.0;
+
+pub const LOG_ENV_FILTER: &str = "info,\
+wgpu_core=warn,wgpu_hal=warn,\
+offset_allocator=error,\
+naga=warn,\
+bevy_render=info,\
+symphonia_core=warn,\
+symphonia_format_ogg=warn,\
+symphonia_codec_vorbis=warn,\
+mira_war_of_realms=debug,\
+environment_lib=debug,\
+audio_lib=debug,\
+battle_lib=debug,\
+ui_lib=debug,\
+entities_lib=debug";
