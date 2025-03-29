@@ -265,6 +265,7 @@ fn process_gltf_lights(
             if let Some(extras) = &node.extras {
                 if let Ok(parsed) = serde_json::from_str::<Value>(&extras.value) {
                     if let Some(bevy_json) = parsed.get("bevy_value").and_then(|v| v.as_str()) {
+                        debug!("Extras: {:?}", bevy_json);
                         if let Ok(light_data) = serde_json::from_str::<LightData>(bevy_json) {
                             spawn_light(commands, node, light_data);
                         }
@@ -282,11 +283,14 @@ fn process_gltf_lights(
 /// - `node`: Reference to the GLTF node containing transformation data.
 /// - `light_data`: The extracted light data to configure the light entity.
 fn spawn_light(commands: &mut Commands, node: &GltfNode, light_data: LightData) {
+    debug!("Spawning light: {:?}", light_data);
     let light = match light_data.name.as_str() {
         "point" => LightType::Point(PointLight {
             intensity: light_data.intensity.unwrap_or(1000.0),
-            range: light_data.range.unwrap_or(10.0),
+            range: light_data.range.unwrap_or(2.0),
             color: Color::srgb(light_data.color[0], light_data.color[1], light_data.color[2]),
+            radius: light_data.radius.unwrap_or(1.5),
+            shadows_enabled: light_data.shadows.unwrap_or(true),
             ..Default::default()
         }),
         "spot" => LightType::Spot(SpotLight {
@@ -294,7 +298,14 @@ fn spawn_light(commands: &mut Commands, node: &GltfNode, light_data: LightData) 
             color: Color::srgb(light_data.color[0], light_data.color[1], light_data.color[2]),
             inner_angle: light_data.inner_cone.unwrap_or(0.1),
             outer_angle: light_data.outer_cone.unwrap_or(0.5),
+            shadows_enabled: light_data.shadows.unwrap_or(true),
             ..Default::default()
+        }),
+        "area" => LightType::Area(DirectionalLight {
+            illuminance: light_data.intensity.unwrap_or(1000.0),
+            color: Color::srgb(1.0, 0.0, 0.0),
+            shadows_enabled: light_data.shadows.unwrap_or(true),
+           ..default()
         }),
         _ => return,
     };
@@ -303,5 +314,6 @@ fn spawn_light(commands: &mut Commands, node: &GltfNode, light_data: LightData) 
     match light {
         LightType::Point(point_light) => commands.spawn((point_light, transform)),
         LightType::Spot(spot_light) => commands.spawn((spot_light, transform)),
+        LightType::Area(area_light) => commands.spawn((area_light, transform)),
     };
 }
