@@ -30,7 +30,7 @@ impl Plugin for EnvironmentPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<EnvironmentListResource>();
         app.add_plugins((EnvInitPlugin, ReadyUpHandles, EnvSwapSystemPlugin));
-        //app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_light);
+        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_light);
     }
 }
 
@@ -182,7 +182,6 @@ pub struct LightData {
 pub enum LightType {
     Point(PointLight),
     Spot(SpotLight),
-    Area(DirectionalLight)
 }
 
 
