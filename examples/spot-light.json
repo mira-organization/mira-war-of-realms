@@ -1,0 +1,1 @@
+{ "name": "spot", "intensity": 150000.0, "range": 5.0, "radius": 2.5 , "color": [ 0.0, 1.0, 0.0 ], "shadows": true, "inner_cone": 0.1, "outer_cone": 0.5 }
