@@ -27,6 +27,20 @@ impl Default for AttackHitBox {
     }
 }
 
+#[derive(Component, Reflect, Debug, Clone)]
+#[reflect(Component)]
+pub struct AttackBoxSettings {
+    pub max_range: f32,
+}
+
+impl Default for AttackBoxSettings {
+    fn default() -> Self {
+        Self {
+            max_range: 5.0,
+        }
+    }
+}
+
 /// The `LivingEntity` component is used to mark entities as living, such as characters, NPCs, or monsters.
 ///
 /// This component is primarily used for categorization, and it doesn't carry any additional data on its own.

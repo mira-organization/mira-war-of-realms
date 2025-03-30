@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use system::battle_commons::{TurnCurrentMemberInfo};
-use system::commons::{AbilityType, Character, CharacterAbilitySet, TurnOrder, WorldPlayer, WorldPlayerState};
+use system::commons::{AbilityType, AttackBoxSettings, Character, CharacterAbilitySet, TurnOrder, WorldEnemy, WorldPlayer, WorldPlayerState};
 use system::config::ConfigService;
 use system::events::player_events::PlayerActionEvent;
 use system::PLAYER_VOID_THRESHOLD;
@@ -153,7 +153,8 @@ fn update_movement(
 fn input_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     mut commands: Commands,
-    query: Query<Entity, With<WorldPlayer>>,
+    mut query: Query<(Entity, &mut Transform, &AttackBoxSettings), With<WorldPlayer>>,
+    enemy_query: Query<&Transform, (With<WorldEnemy>, Without<WorldPlayer>)>,
     mut input_event_writer: EventWriter<PlayerActionEvent>,
     current_state: Res<State<GameState>>,
 ) {
@@ -165,13 +166,47 @@ fn input_attack(
         input_event_writer.send(PlayerActionEvent::Attacking);
 
         // Spawn the attack hit_box if the player exists in the query
-        if let Ok(player) = query.get_single() {
-            let hit_box_position = Vec3::new(0.0, 0.8, 3.0);
+        if let Ok((player, mut player_transform, config)) = query.get_single_mut() {
+            let closest_enemy = enemy_query
+                .iter()
+                .filter(|enemy_transform| {
+                    player_transform.translation.distance(enemy_transform.translation) <= config.max_range
+                })
+                .min_by(|a, b| {
+                    player_transform
+                        .translation
+                        .distance(a.translation)
+                        .partial_cmp(&player_transform.translation.distance(b.translation))
+                        .unwrap()
+                });
+
+            let (hit_box_position, rotation, enemy_translation) = if let Some(enemy_transform) = closest_enemy {
+                let direction = (enemy_transform.translation - player_transform.translation).normalize();
+                let distance_to_enemy = player_transform.translation.distance(enemy_transform.translation);
+                let attack_range = distance_to_enemy.min(config.max_range);
+
+                let attack_offset = direction * attack_range;
+
+                let look_rotation = Quat::from_rotation_arc(Vec3::Z, direction);
+
+                (attack_offset + Vec3::Y * 0.8, look_rotation, enemy_transform.translation)
+            } else {
+                let default_offset = Vec3::new(0.0, 0.8, 3.0);
+                (default_offset, player_transform.rotation, Vec3::new(0.0, 0.0, 0.0))
+            };
+
+            player_transform.rotation = rotation;
+
+            debug!("Player: {:?}, Enemy: {:?}, Hit-Box Position: {:?}", player_transform.translation, enemy_translation, hit_box_position);
+
             spawn_attack_hit_box(
                 &mut commands,
                 player,
                 Collider::ball(0.75),
-                Transform::from_translation(hit_box_position),
+                Transform {
+                    translation: hit_box_position,
+                    ..Default::default()
+                },
                 Some(Color::srgb_u8(0, 255, 155)),
                 0.001
             );

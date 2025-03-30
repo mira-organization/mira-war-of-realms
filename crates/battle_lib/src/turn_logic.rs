@@ -104,7 +104,9 @@ fn battle_order_system(
             if turn_order.order.is_empty() {
                 return;
             }
-            current_entity = turn_order.order[turn_order.current_index];
+            if turn_order.current_index < turn_order.order.len() {
+                current_entity = turn_order.order[turn_order.current_index];
+            }
             continue;
         } else {
             break;

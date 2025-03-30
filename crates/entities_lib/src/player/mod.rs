@@ -2,12 +2,12 @@ mod input;
 mod animation;
 
 use bevy::prelude::*;
-use bevy::render::view::{NoFrustumCulling, RenderLayers};
+use bevy::render::view::{RenderLayers};
 use bevy_atmosphere::prelude::AtmosphereCamera;
-use bevy_rapier3d::prelude::*;
 use system::battle_commons::TurnCurrentMemberInfo;
+use system::bundles::WorldPlayerBundle;
 use system::characters::CharacterParty;
-use system::commons::{AnimatedPlayer, Animations, Character, LivingEntity, MainCamera, WorldPlayer};
+use system::commons::{Animations, AttackBoxSettings, Character, MainCamera, WorldPlayer};
 use system::states::GameState;
 use crate::camera::{CameraController, GameCameraPlugin, PlayerWorldCamera};
 use crate::player::animation::PlayerAnimationPlugin;
@@ -79,34 +79,16 @@ pub fn create_world_player(
     });
 
     commands.spawn((
-        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)))),
-        Name::new("WorldPlayer"),
-        NoFrustumCulling,
-        AnimatedPlayer,
-        Transform::from_xyz(40.0, 12.0, 40.0),
-        character,
-        Character::default(),
-        LivingEntity,
-        RigidBody::Dynamic,
-        Velocity::default(),
-        GravityScale(2.5),
-        Damping {
-            angular_damping: 2.0,
-            linear_damping: 2.0
-        },
-        LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z,
-        Collider::capsule(Vec3::new(0.0, 0.2, 0.0), Vec3::new(0.0, 1.6, 0.0), 0.2),
-        KinematicCharacterController {
-            max_slope_climb_angle: 45_f32.to_radians(),
-            min_slope_slide_angle: 35_f32.to_radians(),
-            autostep: Some(CharacterAutostep {
-                include_dynamic_bodies: true,
-                min_width: CharacterLength::Absolute(0.05),
-                max_height: CharacterLength::Absolute(0.55)
-            }),
-            snap_to_ground: Some(CharacterLength::Absolute(0.075)),
+        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(
+            format!("entities/characters/{}.glb", character.displayed_character.name),
+        ))),
+        WorldPlayerBundle {
+            attack_box_settings: AttackBoxSettings {
+                max_range: 7.0
+            },
             ..default()
-        }
+        },
+        Character::default(),
     ));
 }
 
