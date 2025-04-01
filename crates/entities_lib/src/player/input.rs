@@ -184,8 +184,7 @@ fn input_attack(
                 let direction = (enemy_transform.translation - player_transform.translation).normalize();
                 let distance_to_enemy = player_transform.translation.distance(enemy_transform.translation);
                 let attack_range = distance_to_enemy.min(config.max_range);
-
-                let attack_offset = direction * attack_range;
+                let attack_offset = Vec3::new(0.0, 0.0, attack_range);
 
                 let look_rotation = Quat::from_rotation_arc(Vec3::Z, direction);
 
