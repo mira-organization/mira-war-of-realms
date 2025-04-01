@@ -1,0 +1,53 @@
+{
+  "name": "Lira",
+  "lastname": "Luminus",
+  "model": "model/placeholder",
+  "world_attack_range": 8.5,
+  "animations": [
+    {
+      "key": "idle",
+      "index": 0
+    },
+    {
+      "key": "walk",
+      "index": 1
+    },
+    {
+      "key": "sprint",
+      "index": 2
+    },
+    {
+      "key": "idle-02",
+      "index": 3
+    }
+  ],
+  "abilities": [
+    {
+      "name": "Clock Hit",
+      "family": "Attack",
+      "selection_type": "Single",
+      "target_type": "Enemy",
+      "scaling_type": "Attack",
+      "scaling": 0.5,
+      "base_value": 6.5
+    },
+    {
+      "name": "Time Break",
+      "family": "Ability",
+      "selection_type": "Aoe",
+      "target_type": "Enemy",
+      "scaling_type": "Attack",
+      "scaling": 0.95,
+      "base_value": 25.0
+    },
+    {
+      "name": "Time Freeze",
+      "family": "Ultimate",
+      "selection_type": "Single",
+      "target_type": "Enemy",
+      "scaling_type": "Attack",
+      "scaling": 1.0,
+      "base_value": 25.0
+    }
+  ]
+}

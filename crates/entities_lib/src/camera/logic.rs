@@ -1,15 +1,18 @@
 use std::f32::consts::PI;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
+use bevy::render::view::RenderLayers;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
+use bevy_atmosphere::plugin::AtmosphereCamera;
 use bevy_rapier3d::pipeline::QueryFilter;
 use bevy_rapier3d::plugin::DefaultRapierContext;
 use bevy_rapier3d::prelude::{RapierContextColliders, RapierQueryPipeline, RapierRigidBodySet};
-use system::commons::WorldPlayer;
+use system::commons::{MainCamera, WorldPlayer};
 use system::config::ConfigService;
 use system::states::{GameState, InGameState};
 use system::utils::key_code::convert;
-use crate::camera::CameraController;
+use crate::camera::{CameraController, PlayerWorldCamera};
+use crate::player::create_world_player;
 
 /// Plugin for handling player camera logic including mouse rotation, zoom, and cursor locking.
 pub struct CameraLogicPlugin;
@@ -20,7 +23,32 @@ impl Plugin for CameraLogicPlugin {
         app.add_systems(PreUpdate, camera_core_logic.run_if(cursor_lock_condition));
         app.add_systems(Update, zoom_mouse.run_if(cursor_lock_condition).after(camera_core_logic));
         app.add_systems(Update, toggle_cursor);
+        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_player_camera.after(create_world_player));
     }
+}
+
+/// Spawns a new player camera entity with the necessary components.
+///
+/// This function spawns a 3D camera that follows the player, along with a camera controller
+/// and additional components for world and atmosphere-related camera behavior.
+///
+/// # Parameters
+/// - `commands`: The `Commands` struct used to spawn the camera entity.
+fn create_player_camera(mut commands: Commands) {
+    commands.spawn((
+        Camera3d::default(),
+        Camera {
+            hdr: true,
+            order: 0,
+            clear_color: ClearColorConfig::None,
+            ..default()
+        },
+        MainCamera,
+        RenderLayers::from_layers(&[0, 1]),
+        CameraController::default(),
+        PlayerWorldCamera,
+        AtmosphereCamera::default()
+    ));
 }
 
 /// System to handle camera rotation based on mouse input.

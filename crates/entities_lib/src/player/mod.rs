@@ -2,16 +2,14 @@ mod input;
 mod animation;
 
 use bevy::prelude::*;
-use bevy::render::view::{RenderLayers};
-use bevy_atmosphere::prelude::AtmosphereCamera;
 use system::battle_commons::TurnCurrentMemberInfo;
 use system::bundles::WorldPlayerBundle;
 use system::characters::CharacterParty;
-use system::commons::{Animations, AttackBoxSettings, Character, MainCamera, WorldPlayer};
+use system::commons::{Animations, AttackBoxSettings, Character, WorldPlayer};
 use system::config::DummySaveData;
 use system::data::JSONCharacter;
 use system::states::GameState;
-use crate::camera::{CameraController, GameCameraPlugin, PlayerWorldCamera};
+use crate::camera::{GameCameraPlugin, PlayerWorldCamera};
 use crate::player::animation::PlayerAnimationPlugin;
 use crate::player::input::PlayerInputPlugin;
 
@@ -29,7 +27,6 @@ impl Plugin for PlayerPlugin {
         app.insert_resource(LastStableGround(Vec3::ZERO));
         app.add_plugins((GameCameraPlugin, PlayerInputPlugin, PlayerAnimationPlugin));
         app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_world_player);
-        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_player_camera.after(create_world_player));
     }
 }
 
@@ -57,7 +54,7 @@ pub fn create_world_player(
 
     if let Some(data) = dummy_save_data.current_char.clone() {
         debug!("Loading Character: {:?}", data.name);
-        let model_path = format!("entities/characters/{}.glb", data.name.to_lowercase());
+        let model_path = format!("entities/characters/{}.glb", data.model.to_lowercase());
 
         let animations = graph
             .add_clips(
@@ -88,39 +85,15 @@ pub fn create_world_player(
 
         commands.spawn((
             SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(
-                format!("entities/characters/{}.glb", character.displayed_character.name),
+                model_path.clone(),
             ))),
             WorldPlayerBundle {
                 attack_box_settings: AttackBoxSettings {
-                    max_range: 7.0
+                    max_range: data.world_attack_range
                 },
                 ..default()
             },
             Character::default(),
         ));
     }
-}
-
-/// Spawns a new player camera entity with the necessary components.
-///
-/// This function spawns a 3D camera that follows the player, along with a camera controller
-/// and additional components for world and atmosphere-related camera behavior.
-///
-/// # Parameters
-/// - `commands`: The `Commands` struct used to spawn the camera entity.
-fn create_player_camera(mut commands: Commands) {
-    commands.spawn((
-        Camera3d::default(),
-        Camera {
-            hdr: true,
-            order: 0,
-            clear_color: ClearColorConfig::None,
-            ..default()
-        },
-        MainCamera,
-        RenderLayers::from_layers(&[0, 1]),
-        CameraController::default(),
-        PlayerWorldCamera,
-        AtmosphereCamera::default()
-    ));
 }
