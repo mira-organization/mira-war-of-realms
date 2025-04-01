@@ -84,12 +84,16 @@ pub struct InputConfig {
     /// The key used to change to ultimate at battle
     pub battle_ultimate: String,
 
+    /// The key used to change to character 01 in your party
     pub character_01: String,
 
+    /// The key used to change to character 02 in your party
     pub character_02: String,
 
+    /// The key used to change to character 03 in your party
     pub character_03: String,
 
+    /// The key used to change to character 04 in your party
     pub character_04: String,
 
     /// The key used to toggle debug change.

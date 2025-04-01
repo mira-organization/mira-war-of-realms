@@ -33,7 +33,7 @@ impl Plugin for ManagerPlugin {
         app.insert_resource(WorldInspectorState::default());
         app.insert_resource(DummySaveData::default());
         app.insert_resource(CurrentWorldCharacter::default());
-        app.insert_resource(ChangeCharacter::default());
+        app.insert_resource(ChangeCharacter(true));
         app.insert_resource(BattleCurrentEntities::default());
         app.insert_resource(CharacterParty {
             team_leader: Character::default(),

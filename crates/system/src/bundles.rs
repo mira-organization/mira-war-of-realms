@@ -28,7 +28,7 @@ impl Default for WorldPlayerBundle {
             name: Name::new("WorldPlayer"),
             no_frustum_culling: NoFrustumCulling,
             animated_player: AnimatedPlayer,
-            transform: Transform::from_xyz(40.0, 15.0, 40.0),
+            transform: Transform::from_xyz(40.0, 14.0, 40.0),
             world_player: WorldPlayer::default(),
             living_entity: LivingEntity,
             rigid_body: RigidBody::Dynamic,
