@@ -2,6 +2,7 @@ use bevy::asset::Handle;
 use bevy::prelude::*;
 use bevy_mod_outline::{AsyncSceneInheritOutline, OutlineMode, OutlineVolume};
 use crate::battle_commons::BattleEnemy;
+use crate::data::JSONCharacter;
 
 /// The `AttackHitBox` component represents the hit_box for an attack, which is used to detect collisions during combat.
 ///
@@ -132,6 +133,12 @@ pub enum WorldPlayerState {
 pub struct Character {
     /// The character's name
     pub name: String,
+
+    pub lastname: String,
+
+    pub model_path: String,
+
+    pub world_attack_range: f32,
     /// The character's current stats
     pub current_stats: CharacterCurrentStats,
     /// The character's base attributes.
@@ -147,12 +154,28 @@ impl Default for Character {
     fn default() -> Self {
         Self {
             name: String::from("ignara"),
+            lastname: String::from("None"),
+            model_path: String::from("models/ignara"),
+            world_attack_range: 7.0,
             current_stats: CharacterCurrentStats::default(),
             base_attributes: CharacterBaseAttributes::default(),
             extra_attributes: CharacterExtraAttributes::default(),
             damage_attributes: CharacterDamageAttributes::default(),
         }
     }
+}
+
+impl Character {
+
+    pub fn load_from_json(json: JSONCharacter) -> Self {
+        Self {
+            name: json.name,
+            model_path: json.model,
+            world_attack_range: json.world_attack_range,
+            ..default()
+        }
+    }
+
 }
 
 #[derive(Component, Reflect, Debug, Clone)]

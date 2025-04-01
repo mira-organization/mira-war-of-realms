@@ -79,6 +79,16 @@ pub fn convert(key: &str) -> Option<KeyCode> {
         "F22" => Some(KeyCode::F22),
         "F23" => Some(KeyCode::F23),
         "F24" => Some(KeyCode::F24),
+        "0" => Some(KeyCode::Digit0),
+        "1" => Some(KeyCode::Digit1),
+        "2" => Some(KeyCode::Digit2),
+        "3" => Some(KeyCode::Digit3),
+        "4" => Some(KeyCode::Digit4),
+        "5" => Some(KeyCode::Digit5),
+        "6" => Some(KeyCode::Digit6),
+        "7" => Some(KeyCode::Digit7),
+        "8" => Some(KeyCode::Digit8),
+        "9" => Some(KeyCode::Digit9),
         _ => None,
     }
 }

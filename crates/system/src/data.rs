@@ -1,5 +1,7 @@
 use std::fs;
+use bevy::prelude::{Entity, Resource};
 use serde::Deserialize;
+use crate::commons::Character;
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct JSONCharacter {
@@ -79,3 +81,9 @@ pub enum EScalingType {
     Attack,
     Speed
 }
+
+#[derive(Resource, Default, Clone, Debug)]
+pub struct ChangeCharacter(pub bool);
+
+#[derive(Resource, Default, Clone, Debug)]
+pub struct CurrentWorldCharacter(pub Option<(Entity, Character)>);

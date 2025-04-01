@@ -84,6 +84,14 @@ pub struct InputConfig {
     /// The key used to change to ultimate at battle
     pub battle_ultimate: String,
 
+    pub character_01: String,
+
+    pub character_02: String,
+
+    pub character_03: String,
+
+    pub character_04: String,
+
     /// The key used to toggle debug change.
     pub debug_change: String,
 
@@ -121,6 +129,10 @@ impl Default for InputConfig {
             battle_attack_0: String::from("Q"),
             battle_spell_0: String::from("E"),
             battle_ultimate: String::from("Space"),
+            character_01: String::from("1"),
+            character_02: String::from("2"),
+            character_03: String::from("3"),
+            character_04: String::from("4"),
             debug_change: String::from("F3"),
             world_inspector_ui: String::from("F1"),
             cursor_lock_button: String::from("Escape"),

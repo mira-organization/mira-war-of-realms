@@ -13,6 +13,12 @@ battle_attack_0 = "Q"
 battle_spell_0 = "E"
 battle_ultimate = "Space"
 
+# Swap Characters
+character_01 = "1"
+character_02 = "2"
+character_03 = "3"
+character_04 = "4"
+
 # Debug Functionen
 debug_change = "F3"
 world_inspector_ui = "F1"
