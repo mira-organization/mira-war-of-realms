@@ -11,6 +11,7 @@ pub mod battle_commons;
 
 pub mod run_conditions;
 pub mod bundles;
+pub mod data;
 
 pub const PLAYER_VOID_THRESHOLD: f32 = -100.0;
 

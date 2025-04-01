@@ -1,6 +1,26 @@
 {
   "name": "Ignara",
   "lastname": "Vermilion",
+  "model": "model/ignara",
+  "world_attack_range": 7.0,
+  "animations": [
+    {
+      "key": "idle",
+      "index": 0
+    },
+    {
+      "key": "walk",
+      "index": 1
+    },
+    {
+      "key": "sprint",
+      "index": 2
+    },
+    {
+      "key": "idle-02",
+      "index": 3
+    }
+  ],
   "abilities": [
     {
       "name": "Fire Ball",
@@ -14,7 +34,7 @@
     {
       "name": "Fire Storm",
       "family": "Ability",
-      "selection_type": "Expansion=3",
+      "selection_type": "Single",
       "target_type": "Enemy",
       "scaling_type": "Attack",
       "scaling": 0.9,

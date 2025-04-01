@@ -1,5 +1,6 @@
 pub mod attack_service;
 pub mod load_service;
+mod character_service;
 
 use bevy::prelude::*;
 use crate::service::attack_service::AttackService;

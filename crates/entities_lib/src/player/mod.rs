@@ -8,6 +8,8 @@ use system::battle_commons::TurnCurrentMemberInfo;
 use system::bundles::WorldPlayerBundle;
 use system::characters::CharacterParty;
 use system::commons::{Animations, AttackBoxSettings, Character, MainCamera, WorldPlayer};
+use system::config::DummySaveData;
+use system::data::JSONCharacter;
 use system::states::GameState;
 use crate::camera::{CameraController, GameCameraPlugin, PlayerWorldCamera};
 use crate::player::animation::PlayerAnimationPlugin;
@@ -47,49 +49,56 @@ pub fn create_world_player(
     mut commands: Commands,
     mut graphs: ResMut<Assets<AnimationGraph>>,
     asset_server: Res<AssetServer>,
-    mut character_party: ResMut<CharacterParty>
+    mut character_party: ResMut<CharacterParty>,
+    dummy_save_data: Res<DummySaveData>,
 ) {
     let character = WorldPlayer::default();
     let mut graph = AnimationGraph::new();
-    let animations = graph
-        .add_clips(
-            [
-                GltfAssetLabel::Animation(0).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
-                GltfAssetLabel::Animation(1).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
-                GltfAssetLabel::Animation(2).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
-                GltfAssetLabel::Animation(3).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
-            ].into_iter().map(|path| asset_server.load(path)),
-        1.0, graph.root).collect();
-    let graph = graphs.add(graph);
-    commands.insert_resource(Animations {
-        animations,
-        graph: graph.clone()
-    });
 
-    commands.insert_resource(TurnCurrentMemberInfo {
-        character: Some(character.displayed_character.clone()),
-        pre_operation: None,
-        selected_operation: None,
-    });
+    if let Some(data) = dummy_save_data.current_char.clone() {
+        debug!("Loading Character: {:?}", data.name);
+        let model_path = format!("entities/characters/{}.glb", data.name.to_lowercase());
 
-    character_party.members.insert(1, character.displayed_character.clone());
-    character_party.members.insert(2, Character {
-        name: String::from("placeholder"),
-        ..default()
-    });
+        let animations = graph
+            .add_clips(
+                [
+                    GltfAssetLabel::Animation(JSONCharacter::get_animation_by_name(&data, "idle").unwrap().index as usize).from_asset(model_path.clone()),
+                    GltfAssetLabel::Animation(JSONCharacter::get_animation_by_name(&data, "walk").unwrap().index as usize).from_asset(model_path.clone()),
+                    GltfAssetLabel::Animation(JSONCharacter::get_animation_by_name(&data, "sprint").unwrap().index as usize).from_asset(model_path.clone()),
+                    GltfAssetLabel::Animation(JSONCharacter::get_animation_by_name(&data, "idle-02").unwrap().index as usize).from_asset(model_path.clone()),
+                ].into_iter().map(|path| asset_server.load(path)),
+                1.0, graph.root).collect();
+        let graph = graphs.add(graph);
+        commands.insert_resource(Animations {
+            animations,
+            graph: graph.clone()
+        });
 
-    commands.spawn((
-        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(
-            format!("entities/characters/{}.glb", character.displayed_character.name),
-        ))),
-        WorldPlayerBundle {
-            attack_box_settings: AttackBoxSettings {
-                max_range: 7.0
-            },
+        commands.insert_resource(TurnCurrentMemberInfo {
+            character: Some(character.displayed_character.clone()),
+            pre_operation: None,
+            selected_operation: None,
+        });
+
+        character_party.members.insert(1, character.displayed_character.clone());
+        character_party.members.insert(2, Character {
+            name: String::from("placeholder"),
             ..default()
-        },
-        Character::default(),
-    ));
+        });
+
+        commands.spawn((
+            SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(
+                format!("entities/characters/{}.glb", character.displayed_character.name),
+            ))),
+            WorldPlayerBundle {
+                attack_box_settings: AttackBoxSettings {
+                    max_range: 7.0
+                },
+                ..default()
+            },
+            Character::default(),
+        ));
+    }
 }
 
 /// Spawns a new player camera entity with the necessary components.

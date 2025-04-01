@@ -1,7 +1,9 @@
 use std::fs;
 use std::path::Path;
+use bevy::log::error;
 use bevy::prelude::Resource;
 use serde::Deserialize;
+use crate::data::JSONCharacter;
 
 /// Configuration for general game settings such as backend and language preferences.
 #[derive(Deserialize, Debug)]
@@ -220,6 +222,8 @@ pub struct DummySaveData {
 
     /// The current area in the game world.
     pub current_area: usize,
+
+    pub current_char: Option<JSONCharacter>
 }
 
 impl Default for DummySaveData {
@@ -228,9 +232,22 @@ impl Default for DummySaveData {
     /// # Returns
     /// - `DummySaveData`: A default save data instance with `tutorial` for environment and `3` for area.
     fn default() -> Self {
-        Self {
-            current_environment: String::from("tutorial"),
-            current_area: 3,
+        match JSONCharacter::fetch("ignara") {
+            Ok(character) => {
+                Self {
+                    current_environment: String::from("tutorial"),
+                    current_area: 3,
+                    current_char: Some(character)
+                }
+            },
+            Err(err) => {
+                error!(err);
+                Self {
+                    current_environment: String::from("tutorial"),
+                    current_area: 3,
+                    current_char: None
+                }
+            }
         }
     }
 }
