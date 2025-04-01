@@ -53,7 +53,7 @@ pub fn spawn_attack_hit_box(commands: &mut Commands,
             timer: Timer::from_seconds(duration, TimerMode::Once)
         },
         RigidBody::KinematicPositionBased,
-        shape,
+        shape.clone(),
         ActiveCollisionTypes::default(),
         Sensor,
         Transform::from(transform),
