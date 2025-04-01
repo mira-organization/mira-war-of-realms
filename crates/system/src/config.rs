@@ -1,7 +1,9 @@
 use std::fs;
 use std::path::Path;
+use bevy::log::error;
 use bevy::prelude::Resource;
 use serde::Deserialize;
+use crate::data::JSONCharacter;
 
 /// Configuration for general game settings such as backend and language preferences.
 #[derive(Deserialize, Debug)]
@@ -82,6 +84,18 @@ pub struct InputConfig {
     /// The key used to change to ultimate at battle
     pub battle_ultimate: String,
 
+    /// The key used to change to character 01 in your party
+    pub character_01: String,
+
+    /// The key used to change to character 02 in your party
+    pub character_02: String,
+
+    /// The key used to change to character 03 in your party
+    pub character_03: String,
+
+    /// The key used to change to character 04 in your party
+    pub character_04: String,
+
     /// The key used to toggle debug change.
     pub debug_change: String,
 
@@ -119,6 +133,10 @@ impl Default for InputConfig {
             battle_attack_0: String::from("Q"),
             battle_spell_0: String::from("E"),
             battle_ultimate: String::from("Space"),
+            character_01: String::from("1"),
+            character_02: String::from("2"),
+            character_03: String::from("3"),
+            character_04: String::from("4"),
             debug_change: String::from("F3"),
             world_inspector_ui: String::from("F1"),
             cursor_lock_button: String::from("Escape"),
@@ -220,6 +238,8 @@ pub struct DummySaveData {
 
     /// The current area in the game world.
     pub current_area: usize,
+
+    pub current_char: Option<JSONCharacter>
 }
 
 impl Default for DummySaveData {
@@ -228,9 +248,22 @@ impl Default for DummySaveData {
     /// # Returns
     /// - `DummySaveData`: A default save data instance with `tutorial` for environment and `3` for area.
     fn default() -> Self {
-        Self {
-            current_environment: String::from("tutorial"),
-            current_area: 3,
+        match JSONCharacter::fetch("ignara") {
+            Ok(character) => {
+                Self {
+                    current_environment: String::from("tutorial"),
+                    current_area: 3,
+                    current_char: Some(character)
+                }
+            },
+            Err(err) => {
+                error!(err);
+                Self {
+                    current_environment: String::from("tutorial"),
+                    current_area: 3,
+                    current_char: None
+                }
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ use bevy::asset::Handle;
 use bevy::prelude::*;
 use bevy_mod_outline::{AsyncSceneInheritOutline, OutlineMode, OutlineVolume};
 use crate::battle_commons::BattleEnemy;
+use crate::data::JSONCharacter;
 
 /// The `AttackHitBox` component represents the hit_box for an attack, which is used to detect collisions during combat.
 ///
@@ -132,6 +133,12 @@ pub enum WorldPlayerState {
 pub struct Character {
     /// The character's name
     pub name: String,
+
+    pub lastname: String,
+
+    pub model_path: String,
+
+    pub world_attack_range: f32,
     /// The character's current stats
     pub current_stats: CharacterCurrentStats,
     /// The character's base attributes.
@@ -147,12 +154,28 @@ impl Default for Character {
     fn default() -> Self {
         Self {
             name: String::from("ignara"),
+            lastname: String::from("None"),
+            model_path: String::from("models/ignara"),
+            world_attack_range: 7.0,
             current_stats: CharacterCurrentStats::default(),
             base_attributes: CharacterBaseAttributes::default(),
             extra_attributes: CharacterExtraAttributes::default(),
             damage_attributes: CharacterDamageAttributes::default(),
         }
     }
+}
+
+impl Character {
+
+    pub fn load_from_json(json: JSONCharacter) -> Self {
+        Self {
+            name: json.name,
+            model_path: json.model,
+            world_attack_range: json.world_attack_range,
+            ..default()
+        }
+    }
+
 }
 
 #[derive(Component, Reflect, Debug, Clone)]
@@ -432,13 +455,19 @@ pub enum EnemyState {
     Attacking,
 }
 
+/// Represents an enemy entity in the game, including stats and attributes.
 #[derive(Component, Resource, Reflect, Debug, Clone)]
 #[reflect(Component)]
 pub struct Enemy {
+    /// The name of the enemy.
     pub name: String,
+    /// The family or category the enemy belongs to (e.g., "Goblin", "Undead").
     pub family: String,
+    /// The current stats of the enemy (e.g., HP, attack, speed).
     pub current_stats: EnemyCurrentStats,
+    /// The base stats of the enemy, used for scaling and reference.
     pub base_stats: EnemyBaseStats,
+    /// Special attributes that give unique properties to the enemy.
     pub special_attributes: EnemySpecialAttributes,
 }
 
@@ -454,14 +483,20 @@ impl Default for Enemy {
     }
 }
 
+/// Stores the **current** stats of an enemy, which may change during combat.
 #[derive(Component, Resource, Reflect, Debug, Clone)]
 #[reflect(Component)]
 pub struct EnemyCurrentStats {
+    /// Current health points (HP) of the enemy.
     pub hp: f64,
+    /// Current super armor value, which prevents stagger or knock-back.
     pub super_armor: f64,
+    /// Current attack power of the enemy.
     pub attack: f64,
+    /// Current defense value of the enemy.
     pub defense: f64,
-    pub speed: f64
+    /// Current speed, affecting turn order and movement.
+    pub speed: f64,
 }
 
 impl Default for EnemyCurrentStats {
@@ -471,19 +506,25 @@ impl Default for EnemyCurrentStats {
             super_armor: 75.0,
             attack: 12.0,
             defense: 20.0,
-            speed: 35.0
+            speed: 35.0,
         }
     }
 }
 
+/// Defines the **base** stats of an enemy, used as a reference for calculations.
 #[derive(Component, Resource, Reflect, Debug, Clone)]
 #[reflect(Component)]
 pub struct EnemyBaseStats {
+    /// Base health points (HP) of the enemy.
     pub hp: f64,
+    /// Maximum super armor value of the enemy.
     pub max_super_armor: f64,
+    /// Base attack power of the enemy.
     pub attack: f64,
+    /// Base defense value of the enemy.
     pub defense: f64,
-    pub speed: f64
+    /// Base speed value, affecting turn order and movement.
+    pub speed: f64,
 }
 
 impl Default for EnemyBaseStats {
@@ -493,22 +534,22 @@ impl Default for EnemyBaseStats {
             max_super_armor: 75.0,
             attack: 12.0,
             defense: 20.0,
-            speed: 35.0
+            speed: 35.0,
         }
     }
 }
 
+/// Holds special attributes of an enemy, such as resistances, weaknesses, or unique behaviors.
 #[derive(Component, Resource, Reflect, Debug, Clone)]
 #[reflect(Component)]
-pub struct EnemySpecialAttributes {
-
-}
+pub struct EnemySpecialAttributes {}
 
 impl Default for EnemySpecialAttributes {
     fn default() -> Self {
         Self {}
     }
 }
+
 
 /// Represents a collection of animations and their associated animation graph for an entity.
 ///
@@ -616,17 +657,23 @@ impl Default for OutlineTargetBundle {
     }
 }
 
+/// Stores the player's position before entering a battle scene.
 #[derive(Resource, Debug, Clone)]
 pub struct BeforeBattleLocation(pub Vec3);
 
+/// Marks an entity that should be removed after a battle ends.
 #[derive(Component)]
 pub struct ToRemoveAfterBattle;
 
+/// Manages the turn order in a turn-based battle system.
 #[derive(Resource, Debug, Clone)]
 pub struct TurnOrder {
+    /// List of entities participating in the turn order.
     pub order: Vec<Entity>,
+    /// Index of the currently active entity.
     pub current_index: usize,
-    pub next: bool
+    /// Flag indicating if the next turn should be processed.
+    pub next: bool,
 }
 
 impl Default for TurnOrder {
@@ -634,43 +681,62 @@ impl Default for TurnOrder {
         Self {
             order: Vec::new(),
             current_index: 0,
-            next: true
+            next: true,
         }
     }
 }
 
+/// Defines the selection type of ability (single-target, AOE, or expandable).
 #[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
 #[reflect(Component)]
 pub enum SelectionType {
+    /// Targets a single entity.
     Single,
+    /// Targets multiple entities in an area.
     Aoe,
-    Expansion(usize)
+    /// Expands the target range based on the given value.
+    Expansion(usize),
 }
 
+/// Defines the ability type (e.g., attack, skill, or ultimate).
 #[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
 #[reflect(Component)]
 pub enum AbilityType {
+    /// Basic attack ability.
     Attack,
+    /// Regular ability with cooldown or resource cost.
     Ability,
-    Ultimate
+    /// Ultimate ability with high impact.
+    Ultimate,
 }
 
+/// Specifies the possible targets of an ability.
 #[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
 #[reflect(Component)]
 pub enum TargetType {
+    /// Targets allies.
     Allay,
+    /// Targets enemies.
     Enemy,
-    All
+    /// Can target both allies and enemies.
+    All,
 }
 
+/// Determines how an ability scales its effectiveness.
 #[derive(Component, Reflect, Debug, Clone, PartialEq, Eq)]
 #[reflect(Component)]
 pub enum ScalingType {
+    /// Scales based on HP.
     Hp,
+    /// Scales based on defense.
     Defense,
+    /// Scales based on attack power.
     Attack,
-    Speed
+    /// Scales based on speed.
+    Speed,
 }
 
+/// Marks the primary camera entity in the game.
 #[derive(Component)]
 pub struct MainCamera;
+

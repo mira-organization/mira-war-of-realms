@@ -1,8 +1,10 @@
 pub mod attack_service;
 pub mod load_service;
+pub mod character_service;
 
 use bevy::prelude::*;
 use crate::service::attack_service::AttackService;
+use crate::service::character_service::CharacterService;
 use crate::service::load_service::LoadService;
 
 /// The `ServicePlugin` is responsible for managing and registering various game services.
@@ -18,6 +20,6 @@ impl Plugin for ServicePlugin {
     /// # Parameters
     /// - `app`: The Bevy application instance where the services are added.
     fn build(&self, app: &mut App) {
-        app.add_plugins((AttackService, LoadService));
+        app.add_plugins((AttackService, LoadService, CharacterService));
     }
 }

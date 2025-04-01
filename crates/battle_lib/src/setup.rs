@@ -185,7 +185,7 @@ fn generate_character(
 ) {
     commands.spawn((CharacterBundle {
         scene: SceneRoot(asset_server.load(GltfAssetLabel::Scene(0)
-            .from_asset(format!("entities/characters/{}.glb", character.name)))),
+            .from_asset(format!("entities/characters/model/{}.glb", character.name.to_lowercase())))),
         name: Name::new(character.name.to_string()),
         culling: NoFrustumCulling,
         transform: Transform {

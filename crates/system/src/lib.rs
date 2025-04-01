@@ -11,12 +11,15 @@ pub mod battle_commons;
 
 pub mod run_conditions;
 pub mod bundles;
+pub mod data;
 
 pub const PLAYER_VOID_THRESHOLD: f32 = -100.0;
 
 pub const LOG_ENV_FILTER: &str = "info,\
-wgpu_core=warn,wgpu_hal=warn,\
+wgpu_core=warn,wgpu_hal=error,\
 offset_allocator=error,\
+bevy_gltf=error, \
+system=debug,\
 naga=warn,\
 bevy_render=info,\
 symphonia_core=warn,\

@@ -2,14 +2,7 @@ mod input;
 mod animation;
 
 use bevy::prelude::*;
-use bevy::render::view::{RenderLayers};
-use bevy_atmosphere::prelude::AtmosphereCamera;
-use system::battle_commons::TurnCurrentMemberInfo;
-use system::bundles::WorldPlayerBundle;
-use system::characters::CharacterParty;
-use system::commons::{Animations, AttackBoxSettings, Character, MainCamera, WorldPlayer};
-use system::states::GameState;
-use crate::camera::{CameraController, GameCameraPlugin, PlayerWorldCamera};
+use crate::camera::{GameCameraPlugin, PlayerWorldCamera};
 use crate::player::animation::PlayerAnimationPlugin;
 use crate::player::input::PlayerInputPlugin;
 
@@ -26,92 +19,8 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(LastStableGround(Vec3::ZERO));
         app.add_plugins((GameCameraPlugin, PlayerInputPlugin, PlayerAnimationPlugin));
-        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_world_player);
-        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_player_camera.after(create_world_player));
     }
 }
 
 #[derive(Resource, Debug, Default)]
 pub struct LastStableGround(pub Vec3);
-
-/// Spawns the player entity in the game world with its associated components.
-///
-/// The player is initialized with animations, physics properties, and other game-relevant
-/// components. This function also creates and assigns an animation graph to the player.
-///
-/// # Parameters
-/// - `commands`: Provides access to entity creation and command buffers.
-/// - `graphs`: A mutable resource containing all loaded `AnimationGraph` assets.
-/// - `asset_server`: Used to load assets such as animations and 3D models.
-pub fn create_world_player(
-    mut commands: Commands,
-    mut graphs: ResMut<Assets<AnimationGraph>>,
-    asset_server: Res<AssetServer>,
-    mut character_party: ResMut<CharacterParty>
-) {
-    let character = WorldPlayer::default();
-    let mut graph = AnimationGraph::new();
-    let animations = graph
-        .add_clips(
-            [
-                GltfAssetLabel::Animation(0).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
-                GltfAssetLabel::Animation(1).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
-                GltfAssetLabel::Animation(2).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
-                GltfAssetLabel::Animation(3).from_asset(format!("entities/characters/{}.glb", character.displayed_character.name)),
-            ].into_iter().map(|path| asset_server.load(path)),
-        1.0, graph.root).collect();
-    let graph = graphs.add(graph);
-    commands.insert_resource(Animations {
-        animations,
-        graph: graph.clone()
-    });
-
-    commands.insert_resource(TurnCurrentMemberInfo {
-        character: Some(character.displayed_character.clone()),
-        pre_operation: None,
-        selected_operation: None,
-    });
-
-    character_party.members.insert(1, character.displayed_character.clone());
-    character_party.members.insert(2, Character {
-        name: String::from("placeholder"),
-        ..default()
-    });
-
-    commands.spawn((
-        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(
-            format!("entities/characters/{}.glb", character.displayed_character.name),
-        ))),
-        WorldPlayerBundle {
-            attack_box_settings: AttackBoxSettings {
-                max_range: 7.0
-            },
-            ..default()
-        },
-        Character::default(),
-    ));
-}
-
-/// Spawns a new player camera entity with the necessary components.
-///
-/// This function spawns a 3D camera that follows the player, along with a camera controller
-/// and additional components for world and atmosphere-related camera behavior.
-///
-/// # Parameters
-/// - `commands`: The `Commands` struct used to spawn the camera entity.
-fn create_player_camera(mut commands: Commands) {
-    commands.spawn((
-        Camera3d::default(),
-        Camera {
-            hdr: true,
-            order: 0,
-            clear_color: ClearColorConfig::None,
-            ..default()
-        },
-        MainCamera,
-        RenderLayers::from_layers(&[0, 1]),
-        CameraController::default(),
-        PlayerWorldCamera,
-        AtmosphereCamera::default()
-    ));
-}

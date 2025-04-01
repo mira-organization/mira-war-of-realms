@@ -1,8 +1,8 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use system::commons::{Animations, WorldPlayer, WorldPlayerState};
+use system::service::character_service::switch_character;
 use system::states::in_game_states;
-use crate::player::create_world_player;
 
 /// A plugin responsible for managing player animations.
 ///
@@ -14,7 +14,7 @@ impl Plugin for PlayerAnimationPlugin {
     /// Configures the application to add the setup and update systems
     /// for player animations, which are only active in the `GameState::InGame`.
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (setup, update).run_if(in_game_states).after(create_world_player));
+        app.add_systems(Update, (setup, update).run_if(in_game_states).after(switch_character));
     }
 }
 

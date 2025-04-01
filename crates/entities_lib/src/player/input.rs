@@ -275,6 +275,7 @@ fn fetch_battle_operation(
     family: AbilityType,
 ) {
     // Get the entity currently in turn
+    debug!("Op index: {:?}", turn_order.current_index);
     if let Some(current_entity) = turn_order.order.get(turn_order.current_index - 1) {
         info!("entity: {:?}", current_entity);
 
@@ -283,6 +284,7 @@ fn fetch_battle_operation(
             Ok((character, ability_set)) => (character, ability_set),
             Err(_) => {
                 warn!("This is not your turn!");
+                info!("===============================");
                 return;
             }
         };
