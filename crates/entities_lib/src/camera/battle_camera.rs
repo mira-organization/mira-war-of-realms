@@ -45,16 +45,23 @@ fn update_camera_movement(
 
     let enemy_center = enemy_positions.iter().sum::<Vec3>() / enemy_positions.len() as f32;
 
-    let camera_offset = Vec3::new(-1.2, -1.6, -2.5);
+    let camera_offset = Vec3::new(-2.0, -1.3, -1.5);
     let target_position = player_transform.translation - camera_offset;
 
-    let look_target = enemy_center + Vec3::new(0.0, 1.5, 0.0);
+    let look_target = enemy_center + Vec3::new(0.0, 1.4, 0.0);
     let mut direction = (look_target - target_position).normalize();
 
+    // Limit vertical camera tilt to avoid extreme angles
     direction.y = direction.y.clamp(-0.5, 0.5);
 
-    let target_rotation = Quat::from_rotation_arc(Vec3::NEG_Z, direction);
+    // Base rotation to look at the target
+    let mut target_rotation = Quat::from_rotation_arc(Vec3::NEG_Z, direction);
 
+    // Apply a slight 33° yaw rotation to the left
+    let yaw_offset = Quat::from_rotation_y(-15.5_f32.to_radians());
+    target_rotation = yaw_offset * target_rotation;
+
+    // Ensure the camera is not upside-down
     let up = target_rotation * Vec3::Y;
     let fixed_rotation = if up.y < 0.0 {
         target_rotation * Quat::from_rotation_y(std::f32::consts::PI)
@@ -62,9 +69,11 @@ fn update_camera_movement(
         target_rotation
     };
 
+    // Smooth interpolation for camera movement and rotation
     let interpolation_speed = 5.0 * time.delta_secs();
     camera_transform.translation = camera_transform.translation.lerp(target_position, interpolation_speed);
     camera_transform.rotation = camera_transform.rotation.slerp(fixed_rotation, interpolation_speed);
+
 
 
 /*    // Set the camera to a fixed position
