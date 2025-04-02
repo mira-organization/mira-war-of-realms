@@ -1,4 +1,6 @@
 use std::f32::consts::PI;
+use bevy::core_pipeline::bloom::Bloom;
+use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
@@ -22,7 +24,7 @@ impl Plugin for CameraLogicPlugin {
         app.add_systems(PreUpdate, camera_core_logic.run_if(cursor_lock_condition));
         app.add_systems(Update, zoom_mouse.run_if(cursor_lock_condition).after(camera_core_logic));
         app.add_systems(Update, toggle_cursor);
-        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_player_camera);
+        app.add_systems(OnEnter(GameState::EnvironmentPostLoad), create_camera);
     }
 }
 
@@ -33,7 +35,7 @@ impl Plugin for CameraLogicPlugin {
 ///
 /// # Parameters
 /// - `commands`: The `Commands` struct used to spawn the camera entity.
-fn create_player_camera(mut commands: Commands) {
+fn create_camera(mut commands: Commands) {
     commands.spawn((
         Camera3d::default(),
         Camera {
@@ -46,6 +48,8 @@ fn create_player_camera(mut commands: Commands) {
         RenderLayers::from_layers(&[0, 1]),
         CameraController::default(),
         PlayerWorldCamera,
+        Bloom::default(),
+        Tonemapping::TonyMcMapface,
         AtmosphereCamera::default()
     ));
 }
