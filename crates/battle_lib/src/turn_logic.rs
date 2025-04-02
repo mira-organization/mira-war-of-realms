@@ -18,8 +18,7 @@ impl Plugin for BattleTurnLogicPlugin {
         app.add_systems(
             Update,
             battle_order_system
-                .run_if(in_state(GameState::InGame(InGameState::Battle)))
-                .before(detect_current_character_operation),
+                .run_if(in_state(GameState::InGame(InGameState::Battle))).after(detect_current_character_operation)
         );
     }
 }
@@ -72,8 +71,8 @@ fn setup_battle_order(
 /// - If no valid entity remains, the function exits early.
 fn battle_order_system(
     mut turn_order: ResMut<TurnOrder>,
-    characters: Query<(&Character, &Name)>,
-    enemies: Query<(&Enemy, &Name)>,
+    characters: Query<(&Character, &Name), (With<Character>, Without<Enemy>)>,
+    enemies: Query<(&Enemy, &Name), (With<Enemy>, Without<Character>)>,
     mut turn_current_member_info: ResMut<TurnCurrentMemberInfo>,
     abilities_query: Query<&CharacterAbilitySet>,
 ) {
@@ -101,6 +100,7 @@ fn battle_order_system(
         if !is_alive {
             let index = turn_order.current_index;
             turn_order.order.remove(index);
+
             if turn_order.order.is_empty() {
                 return;
             }
@@ -115,7 +115,6 @@ fn battle_order_system(
 
     if let Ok((character, _)) = characters.get(current_entity) {
         turn_current_member_info.character = Some(character.clone());
-        info!("{}'s turn!", character.name);
 
         // Fetch the character's abilities
         let abilities = match abilities_query.get(current_entity) {
@@ -125,7 +124,6 @@ fn battle_order_system(
 
         turn_current_member_info.pre_operation = abilities.0.get(0).cloned();
     } else {
-        info!("{}'s turn!", entity_name);
         turn_order.next = true;
     }
 

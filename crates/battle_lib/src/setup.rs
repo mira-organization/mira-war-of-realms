@@ -160,7 +160,7 @@ pub fn spawn_entities(
     }
 
     let count: usize = 4;
-    let mut location = Transform::from_xyz(-10.0, 51.0, 15.0).translation;
+    let mut location = Transform::from_xyz(-10.0, 51.0, 18.0).translation;
 
     for index in 1..=count {
         generate_enemies(&mut commands, &asset_server, location, index);
