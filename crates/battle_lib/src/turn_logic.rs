@@ -98,15 +98,17 @@ fn battle_order_system(
         entity_name = name;
 
         if !is_alive {
+            if turn_order.order.len() == 1 {
+                turn_order.order.clear();
+                return;
+            }
             let index = turn_order.current_index;
             turn_order.order.remove(index);
 
-            if turn_order.order.is_empty() {
-                return;
+            if turn_order.current_index >= turn_order.order.len() {
+                turn_order.current_index = 0;
             }
-            if turn_order.current_index < turn_order.order.len() {
-                current_entity = turn_order.order[turn_order.current_index];
-            }
+            current_entity = turn_order.order[turn_order.current_index];
             continue;
         } else {
             break;
