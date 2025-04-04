@@ -1,7 +1,8 @@
-mod game_client_window;
+mod game_window;
 mod manager;
 mod languages;
 mod states;
+mod tests;
 
 use bevy::prelude::*;
 
@@ -21,5 +22,5 @@ fn main() -> AppExit {
     let mut app = App::new();
 
     // Set up the game client window with specified dimensions and run the app
-    game_client_window::create(&mut app, "Game Client", 1270.0, 720.0).run()
+    game_window::create(&mut app, "Game Client", 1270.0, 720.0).run()
 }

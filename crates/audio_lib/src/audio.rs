@@ -54,7 +54,7 @@ fn battle_music(asset_server: Res<AssetServer>,
 }
 
 /// This is only temporary, after finishing settings ui we can delete this code!
-fn change_volume(
+pub fn change_volume(
     mut config: ResMut<AudioOption>,
     input: Res<ButtonInput<KeyCode>>,
     mut audio: ResMut<DynamicAudioChannels>,

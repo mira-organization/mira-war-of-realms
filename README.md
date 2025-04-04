@@ -1,4 +1,6 @@
 # Mira Turn Base
+
+[![CI / CD](https://github.com/mira-organization/mira-war-of-realms/actions/workflows/ci.yml/badge.svg)](https://github.com/mira-organization/mira-war-of-realms/actions/workflows/ci.yml)
 ___
 **Mira Turn Base - A Strategic Adventure in the World of Elysthiel**
 

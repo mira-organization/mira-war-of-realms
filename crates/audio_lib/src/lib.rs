@@ -1,5 +1,5 @@
 pub mod audio;
-mod audio_control;
+pub mod audio_control;
 
 use std::time::Duration;
 use bevy::prelude::*;
@@ -240,6 +240,6 @@ impl AudioManager {
     }
 }
 
-fn load_up_audio_config(config: Res<ConfigService>, mut audio_option: ResMut<AudioOption>) {
+pub fn load_up_audio_config(config: Res<ConfigService>, mut audio_option: ResMut<AudioOption>) {
     audio_option.initialize(&config);
 }

@@ -61,7 +61,7 @@ impl Plugin for ManagerPlugin {
 /// * `debug_context` - A mutable reference to the debug rendering context.
 /// * `keyboard` - A resource representing the current state of keyboard inputs.
 /// * `general_config` - A resource containing the game's configuration settings.
-fn toggle_debug_system(
+pub fn toggle_debug_system(
     mut debug_context: ResMut<DebugRenderContext>,
     keyboard: ResMut<ButtonInput<KeyCode>>,
     general_config: Res<ConfigService>,
@@ -88,7 +88,7 @@ fn toggle_debug_system(
 /// # Panics
 ///
 /// This function will panic if the key from `ConfigService` cannot be converted into a valid `KeyCode`.
-fn toggle_world_inspector_interface_system(
+pub fn toggle_world_inspector_interface_system(
     keyboard: Res<ButtonInput<KeyCode>>,
     general_config: Res<ConfigService>,
     mut world_inspector_state: ResMut<WorldInspectorState>,
@@ -118,77 +118,4 @@ fn check_world_inspector_state(
     world_inspector_state: Res<WorldInspectorState>,
 ) -> bool {
     world_inspector_state.0
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // Test for the `toggle_debug_system` function
-    #[test]
-    fn test_toggle_debug_system() {
-        // Set up the application and resources
-        let mut app = App::new();
-        app.insert_resource(ConfigService::default())
-            .insert_resource(DebugRenderContext::default())
-            .insert_resource(WorldInspectorState::default())
-            .insert_resource(ButtonInput::<KeyCode>::default());
-
-        // Run the toggle_debug_system to change the state based on the key press
-        app.add_systems(Update, toggle_debug_system);
-        app.update();
-
-        // Check that the DebugRenderContext was toggled correctly
-        let debug_context = app.world().resource::<DebugRenderContext>();
-        assert_eq!(debug_context.enabled, true, "Debug context should be disabled after pressing F3");
-
-        // Now simulate pressing the key again to toggle it off
-        app.world_mut().get_resource_mut::<ButtonInput<KeyCode>>().unwrap().press(KeyCode::F3);
-        app.add_systems(Update, toggle_debug_system);
-        app.update();
-
-        // Assert that the DebugRenderContext was toggled off
-        let debug_context = app.world().resource::<DebugRenderContext>();
-        assert_eq!(!debug_context.enabled, false, "Debug context should be enabled after pressing F3 again");
-    }
-
-    // Test for the `toggle_world_inspector_interface_system` function
-    #[test]
-    fn test_toggle_world_inspector_interface_system() {
-        // Set up the application and resources
-        let mut app = App::new();
-        app.insert_resource(ConfigService::default())
-            .insert_resource(WorldInspectorState::default())
-            .insert_resource(ButtonInput::<KeyCode>::default());
-
-        // Simulate pressing the "world inspector toggle" key (F1)
-        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::F1);
-        app.update();
-
-        // Run the toggle_world_inspector_interface_system to change the state based on the key press
-        app
-            .add_systems(Update, toggle_world_inspector_interface_system);
-        app.update();
-
-        // Assert that the WorldInspectorState was toggled correctly
-        let world_inspector_state = app.world().resource::<WorldInspectorState>();
-        assert_eq!(world_inspector_state.0, true, "World inspector state should be visible after pressing F1");
-
-        app.world_mut()
-            .resource_mut::<ButtonInput<KeyCode>>()
-            .clear();
-        app.update();
-
-        // Simulate pressing the key again to toggle it off
-        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::F1);
-        app.update();
-
-        app
-            .add_systems(Update, toggle_world_inspector_interface_system);
-        app.update();
-
-        // Assert that the WorldInspectorState was toggled off
-        let world_inspector_state = app.world().resource::<WorldInspectorState>();
-        assert_eq!(!world_inspector_state.0, false, "World inspector state should be hidden after pressing F1 again");
-    }
 }
