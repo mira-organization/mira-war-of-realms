@@ -97,6 +97,7 @@ fn find_nearest_target_in_view(
                 })
                 .insert(OutlineMode::FloodFlat)
                 .insert(AsyncSceneInheritOutline::default());
+            debug!("highlighting");
         } else {
             entity
                 .remove::<OutlineVolume>()

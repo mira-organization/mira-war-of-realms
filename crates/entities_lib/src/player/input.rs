@@ -276,15 +276,19 @@ fn fetch_battle_operation(
 ) {
     // Get the entity currently in turn
     debug!("Op index: {:?}", turn_order.current_index);
-    if let Some(current_entity) = turn_order.order.get(turn_order.current_index - 1) {
-        info!("entity: {:?}", current_entity);
+    let mut offset = 0;
+    if turn_order.current_index > 0 {
+        offset = 1;
+    }
+
+    if let Some(current_entity) = turn_order.order.get(turn_order.current_index - offset) {
+        debug!("entity: {:?}", current_entity);
 
         // Attempt to fetch character and ability set for the entity
         let (character, ability_set) = match query.get(*current_entity) {
             Ok((character, ability_set)) => (character, ability_set),
             Err(_) => {
                 warn!("This is not your turn!");
-                info!("===============================");
                 return;
             }
         };
