@@ -1,9 +1,9 @@
-mod logic;
+pub mod logic;
 mod observes;
 mod setup;
-mod fight;
+pub mod fight;
 mod turn_logic;
-pub mod character_operations;
+mod character_operations;
 
 use bevy::prelude::*;
 use system::battle_commons::{TurnCurrentMemberInfo, BattleSelectedStatus, Slot};
