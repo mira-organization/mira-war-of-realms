@@ -34,8 +34,13 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
 
-      - name: Install coverage tool
-        run: cargo install cargo-llvm-cov
+      - name: Install coverage tool if not installed
+        run: |
+          if ! command -v cargo-llvm-cov &> /dev/null; then
+            cargo install cargo-llvm-cov
+          else
+            echo "cargo-llvm-cov is already installed"
+          fi
 
       - name: Run cargo test coverage
         run: cargo llvm-cov --workspace --lcov --output-path coverage.lcov
