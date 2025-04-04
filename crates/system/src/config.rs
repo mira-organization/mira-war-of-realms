@@ -200,6 +200,17 @@ pub struct ConfigService {
     pub audio_config: AudioConfig,
 }
 
+impl Default for ConfigService {
+    fn default() -> Self {
+        Self {
+            input_config: InputConfig::default(),
+            game_config: GameConfig::default(),
+            graphics_config: GraphicsConfig::default(),
+            audio_config: AudioConfig::default()
+        }
+    }
+}
+
 impl ConfigService {
     /// Loads a configuration file and deserializes it into the specified type.
     ///
