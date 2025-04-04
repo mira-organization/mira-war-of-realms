@@ -1,6 +1,7 @@
 # Mira Turn Base
 
 [![CI / CD](https://github.com/mira-organization/mira-war-of-realms/actions/workflows/ci.yml/badge.svg)](https://github.com/mira-organization/mira-war-of-realms/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/mira-organization/mira-war-of-realms/branch/test%2FMOD-79-Unit-test-creation/graph/badge.svg?token=J1Q3BKK3IS)](https://codecov.io/gh/mira-organization/mira-war-of-realms)
 ___
 **Mira Turn Base - A Strategic Adventure in the World of Elysthiel**
 

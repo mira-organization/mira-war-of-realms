@@ -1,6 +1,6 @@
 pub mod logic;
 mod observes;
-mod setup;
+pub mod setup;
 pub mod fight;
 mod turn_logic;
 mod character_operations;
