@@ -38,7 +38,7 @@ jobs:
         run: cargo install cargo-llvm-cov
 
       - name: Run cargo test coverage
-        run: cargo llvm-cov --workspace --lcov --output-path target/debug/coverage.lcov
+        run: cargo llvm-cov --workspace --lcov --output-path coverage.lcov
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
