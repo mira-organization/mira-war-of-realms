@@ -38,6 +38,7 @@ debug = true
 # Debug
 bevy-inspector-egui = {version = "0.30.0" }
 bevy_kira_audio = { version = "^0.22.0", features = ["ogg"] }
+bevy_mod_outline = {version = "0.9.1"}
 
 # Fluent
 bevy_fluent = {version = "0.11"}

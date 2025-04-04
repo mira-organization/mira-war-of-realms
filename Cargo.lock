@@ -3435,6 +3435,7 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy_fluent",
  "bevy_kira_audio",
+ "bevy_mod_outline",
  "bevy_rapier3d",
  "chrono",
  "entities_lib",

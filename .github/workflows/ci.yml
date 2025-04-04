@@ -33,5 +33,14 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
-      - name: Run cargo test
-        run: cargo test
+
+      - name: Install coverage tool
+        run: cargo install cargo-llvm-cov
+
+      - name: Run cargo test coverage
+        run: cargo llvm-cov --workspace --lcov --output-path target/debug/coverage.lcov
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
