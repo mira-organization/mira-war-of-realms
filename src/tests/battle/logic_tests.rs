@@ -106,4 +106,96 @@ mod tests {
             "Expected none because no entity is currently selected"
         );
     }
+
+    #[test]
+    fn test_detect_current_character_operation_with_expansion_target() {
+        let mut app = App::new();
+
+        // Setup world: selected operation is Single target
+        let enemy_entity = app.world_mut().spawn_empty().id();
+
+        let mut enemies = HashMap::new();
+        enemies.insert(1, enemy_entity);
+
+        app.world_mut().insert_resource(BattleCurrentEntities {
+            need_patch: false,
+            characters: HashMap::new(),
+            enemies,
+        });
+
+        app.world_mut().insert_resource(BattleSelectedStatus::default());
+
+        app.world_mut().insert_resource(TurnCurrentMemberInfo {
+            character: None,
+            selected_operation: None,
+            pre_operation: Some(CharacterAbility {
+                name: "Test".to_string(),
+                family: AbilityType::Ability,
+                selection_type: SelectionType::Expansion(3),
+                target_type: TargetType::Enemy,
+                scaling_type: ScalingType::Attack,
+                scaling: 1.0,
+                base_value: 5.0,
+            }),
+        });
+
+        app.update();
+
+        // Run system
+        app.add_systems(Update, detect_current_character_operation);
+        app.update();
+
+        // Check if the selected was modified
+        let selected = app.world().resource::<BattleSelectedStatus>();
+        assert!(
+            selected.selected.is_none(),
+            "Expected none because no entity is currently selected"
+        );
+    }
+
+    #[test]
+    fn test_detect_current_character_operation_with_aoe_target() {
+        let mut app = App::new();
+
+        // Setup world: selected operation is Single target
+        let enemy_entity = app.world_mut().spawn_empty().id();
+
+        let mut enemies = HashMap::new();
+        enemies.insert(1, enemy_entity);
+
+        app.world_mut().insert_resource(BattleCurrentEntities {
+            need_patch: false,
+            characters: HashMap::new(),
+            enemies,
+        });
+
+        app.world_mut().insert_resource(BattleSelectedStatus::default());
+
+        app.world_mut().insert_resource(TurnCurrentMemberInfo {
+            character: None,
+            selected_operation: None,
+            pre_operation: Some(CharacterAbility {
+                name: "Test".to_string(),
+                family: AbilityType::Ultimate,
+                selection_type: SelectionType::Aoe,
+                target_type: TargetType::Enemy,
+                scaling_type: ScalingType::Attack,
+                scaling: 2.0,
+                base_value: 7.0,
+            }),
+        });
+
+        app.update();
+
+        // Run system
+        app.add_systems(Update, detect_current_character_operation);
+        app.update();
+
+        // Check if the selected was modified
+        let selected = app.world().resource::<BattleSelectedStatus>();
+        assert!(
+            selected.selected.is_none(),
+            "Expected none because no entity is currently selected"
+        );
+    }
 }
