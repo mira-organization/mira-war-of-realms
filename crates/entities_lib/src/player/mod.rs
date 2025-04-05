@@ -1,4 +1,4 @@
-mod input;
+pub mod input;
 mod animation;
 
 use bevy::prelude::*;
