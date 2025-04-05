@@ -33,6 +33,9 @@ opt-level = 1
 opt-level = 3
 debug = true
 
+[package.metadata.llvm-cov]
+ignore-filename-regex = "src/(lib|observes)\\.rs$"
+
 [dependencies]
 
 # Debug

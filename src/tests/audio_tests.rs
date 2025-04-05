@@ -196,6 +196,21 @@ mod tests {
         manager.resume_channel("env", &mut kira_channels);
     }
 
+    #[test]
+    fn test_enum_sound_type_filled() {
+        let audio_type_env = AudioType::from_string("environment");
+        let audio_type_char = AudioType::from_string("character");
+        let audio_type_sfx = AudioType::from_string("sfx");
+        let audio_type_ui = AudioType::from_string("ui");
+        let audio_type_wrong = AudioType::from_string("not working");
+
+        assert_eq!(audio_type_env, AudioType::Environment);
+        assert_eq!(audio_type_char, AudioType::Character);
+        assert_eq!(audio_type_sfx, AudioType::Sfx);
+        assert_eq!(audio_type_ui, AudioType::Ui);
+        assert_eq!(audio_type_wrong, AudioType::Unknown);
+    }
+
     fn dummy_handle() -> Handle<AudioSource> {
         Handle::weak_from_u128(1234567890)
     }

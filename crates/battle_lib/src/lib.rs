@@ -1,5 +1,5 @@
 pub mod logic;
-mod observes;
+pub mod observes;
 pub mod setup;
 pub mod fight;
 pub mod turn_logic;
