@@ -2,9 +2,10 @@
 mod tests {
     use bevy::prelude::*;
     use bevy::utils::HashMap;
-    use battle_lib::setup::{setup_battle_entities, update_enemy_position};
-    use system::battle_commons::{BattleCurrentEntities, BattleMember};
-    use system::commons::Character;
+    use battle_lib::setup::{setup_battle_entities, spawn_entities, update_enemy_position};
+    use system::battle_commons::{BattleCurrentEntities, BattleMember, InBattle};
+    use system::characters::CharacterParty;
+    use system::commons::{Character, WorldPlayer};
 
     #[test]
     fn test_update_enemy_position() {
@@ -69,5 +70,68 @@ mod tests {
         // Verify that entities were added correctly
         assert_eq!(battle_entities.characters.contains_key(&1), true);
         assert_eq!(battle_entities.enemies.contains_key(&1), true);
+    }
+
+    #[test]
+    fn test_spawn_entities() {
+        // Setup minimal Bevy app
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()));
+        // Add required resources and components
+        let _ = app.world_mut().resource::<AssetServer>();
+        app.init_asset::<Scene>();
+
+        // Create dummy characters
+        let character_main = Character {
+            name: "Hero".to_string(),
+            ..Default::default()
+        };
+
+        let character_other = Character {
+            name: "Ally".to_string(),
+            ..Default::default()
+        };
+
+        let mut party = HashMap::new();
+        party.insert(0, character_main.clone());
+        party.insert(1, character_other.clone());
+
+        app.insert_resource(CharacterParty {
+            team_leader: character_main.clone(),
+            members: party
+        });
+
+        // Spawn the player entity
+        let player_entity = app.world_mut().spawn((
+            InBattle,
+            WorldPlayer {
+                displayed_character: character_main.clone(),
+                ..Default::default()
+            },
+            Transform::default(),
+        )).id();
+
+        app.add_systems(Startup, spawn_entities);
+        app.update();
+
+        // Assert the player now has the BattleMember component
+        let has_battle_member = app.world().get::<BattleMember>(player_entity).is_some();
+        assert!(has_battle_member, "Player should have BattleMember component");
+
+        // Assert party member was spawned
+        let party_members: Vec<_> = app.world_mut()
+            .query_filtered::<&Name, With<Transform>>()
+            .iter(&app.world())
+            .filter(|n| n.as_str() == "Ally")
+            .collect();
+        assert_eq!(party_members.len(), 1, "One additional party member should be spawned");
+
+        // Assert enemies were spawned
+        let enemies: Vec<_> = app.world_mut()
+            .query_filtered::<&Name, With<Transform>>()
+            .iter(&app.world())
+            .filter(|n| n.as_str().starts_with("Enemy"))
+            .collect();
+        assert_eq!(enemies.len(), 4, "Four enemies should be spawned");
     }
 }
