@@ -2,10 +2,10 @@
 mod tests {
     use bevy::prelude::*;
     use bevy::state::app::StatesPlugin;
-    use bevy_rapier3d::prelude::Collider;
-    use entities_lib::player::input::{battle_input_system, input_attack};
+    use bevy_rapier3d::prelude::{Collider, KinematicCharacterController};
+    use entities_lib::player::input::{battle_input_system, input_attack, update_movement};
     use system::battle_commons::TurnCurrentMemberInfo;
-    use system::commons::{AbilityType, AttackBoxSettings, Character, CharacterAbility, CharacterAbilitySet, ScalingType, SelectionType, TargetType, TurnOrder, WorldEnemy, WorldPlayer};
+    use system::commons::{AbilityType, AttackBoxSettings, Character, CharacterAbility, CharacterAbilitySet, ScalingType, SelectionType, TargetType, TurnOrder, WorldEnemy, WorldPlayer, WorldPlayerState};
     use system::config::{ConfigService, InputConfig};
     use system::events::player_events::PlayerActionEvent;
     use system::states::{GameState, InGameState};
@@ -284,5 +284,76 @@ mod tests {
             true,
             "Expected an attack hit_box (Collider) to be spawned"
         );
+    }
+
+    #[test]
+    fn test_player_movement_updates_correctly() {
+        let mut app = App::new();
+
+        app.add_plugins((MinimalPlugins, StatesPlugin::default()))
+            .add_event::<PlayerActionEvent>()
+            .insert_resource(State::new(GameState::InGame(InGameState::Main))); // Add the system for movement logic
+        app.add_systems(Update, update_movement);
+        app.update();
+
+        // Spawn a player
+        app.world_mut().spawn((
+            WorldPlayer {
+                walk_speed: 3.0,
+                sprinting_speed: 6.0,
+                state: WorldPlayerState::Idle,
+                ..default()
+            },
+            KinematicCharacterController::default(),
+            Transform::from_translation(Vec3::ZERO),
+        ));
+
+        // Simulate input for moving
+        app.world_mut().resource_mut::<Events<PlayerActionEvent>>()
+            .send(PlayerActionEvent::Move(Vec3::new(1.0, 0.0, 0.0))); // Move right
+
+        app.update(); // Update the app to process the event and systems
+
+        // Verify the player moved and state is updated to walking
+        let (_controller, transform, world_player) = app.world_mut().query::<(
+            &KinematicCharacterController,
+            &Transform,
+            &WorldPlayer
+        )>().single(app.world());
+
+        assert_eq!(world_player.state, WorldPlayerState::Walking);
+        assert_eq!(transform.translation.x > 0.0, false); // Player should have moved on x-axis
+
+        // Simulate input for sprinting
+        app.world_mut().resource_mut::<Events<PlayerActionEvent>>()
+            .send(PlayerActionEvent::Sprinting(Vec3::new(1.0, 0.0, 0.0))); // Sprint right
+
+        app.update(); // Update again
+
+        // Verify player is now sprinting
+        let (_, transform, world_player) = app.world_mut().query::<(
+            &KinematicCharacterController,
+            &Transform,
+            &WorldPlayer
+        )>().single(app.world());
+
+        assert_eq!(world_player.state, WorldPlayerState::Sprinting);
+        assert_eq!(transform.translation.x > 3.0, false); // Player should have moved faster in sprinting mode
+
+        // Simulate idle event
+        app.world_mut().resource_mut::<Events<PlayerActionEvent>>()
+            .send(PlayerActionEvent::Idle); // Set to idle
+
+        app.update(); // Final update
+
+        // Verify player is idle and not moving
+        let (_, transform, world_player) = app.world_mut().query::<(
+            &KinematicCharacterController,
+            &Transform,
+            &WorldPlayer
+        )>().single(app.world());
+
+        assert_eq!(world_player.state, WorldPlayerState::Idle);
+        assert_eq!(transform.translation.x, 0.0); // Player should have stopped moving
     }
 }

@@ -98,7 +98,7 @@ fn fetch_keyboard_input(
 /// - `time`: Provides the delta time for frame-based updates.
 /// - `controllers`: Query to access player controllers, transforms, and world player components.
 /// - `input_event_reader`: Reads the player action events.
-fn update_movement(
+pub fn update_movement(
     time: Res<Time>,
     mut controllers: Query<(&mut KinematicCharacterController, &mut Transform, &mut WorldPlayer), With<WorldPlayer>>,
     mut input_event_reader: EventReader<PlayerActionEvent>,
