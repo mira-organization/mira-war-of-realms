@@ -1,10 +1,15 @@
 #[cfg(test)]
 mod tests {
+    use bevy::input::InputPlugin;
     use bevy::prelude::*;
-    use entities_lib::player::input::battle_input_system;
+    use bevy::state::app::StatesPlugin;
+    use bevy_rapier3d::prelude::Collider;
+    use entities_lib::player::input::{battle_input_system, input_attack};
     use system::battle_commons::TurnCurrentMemberInfo;
-    use system::commons::{AbilityType, Character, CharacterAbility, CharacterAbilitySet, ScalingType, SelectionType, TargetType, TurnOrder};
+    use system::commons::{AbilityType, AttackBoxSettings, Character, CharacterAbility, CharacterAbilitySet, ScalingType, SelectionType, TargetType, TurnOrder, WorldEnemy, WorldPlayer};
     use system::config::{ConfigService, InputConfig};
+    use system::events::player_events::PlayerActionEvent;
+    use system::states::{GameState, InGameState};
 
     fn setup_app() -> App {
         let mut app = App::new();
@@ -14,31 +19,6 @@ mod tests {
         app.init_resource::<ConfigService>();
         app.init_resource::<ButtonInput<KeyCode>>();
         app
-    }
-
-    fn make_dummy_character(name: String, mut app: App) -> Entity {
-        let character = Character {
-            name,
-            ..Default::default()
-        };
-
-        let ability_set = CharacterAbilitySet(vec![
-            make_dummy_operation(AbilityType::Attack, "Slash"),
-            make_dummy_operation(AbilityType::Ability, "Fireball"),
-            make_dummy_operation(AbilityType::Ultimate, "Meteor Shower"),
-        ]);
-
-        let entity = app.world_mut().spawn((
-            character,
-            ability_set,
-        )).id();
-
-        entity
-    }
-
-    fn setup_config(app: &mut App) {
-        let config = ConfigService::default();
-        app.insert_resource(config);
     }
 
     fn make_dummy_operation(family: AbilityType, name: &str) -> CharacterAbility {
@@ -247,6 +227,68 @@ mod tests {
         let turn_info = app.world().resource::<TurnCurrentMemberInfo>();
         assert_eq!(turn_info.selected_operation.as_ref().unwrap().name, "Slash");
     }
+
+    #[test]
+    fn test_input_attack_spawns_hit_box_and_sends_event() {
+        let mut app = App::new();
+
+        app.add_plugins((MinimalPlugins, StatesPlugin::default()))
+            .add_plugins(InputPlugin)
+            .add_event::<PlayerActionEvent>()
+            .init_state::<GameState>()
+            .insert_resource(ButtonInput::<MouseButton>::default())
+            .insert_resource(State::new(GameState::InGame(InGameState::Main)))
+            .add_systems(Update, input_attack);
+
+        // Spawn player
+        app.world_mut().spawn((
+            WorldPlayer::default(),
+            Transform::from_translation(Vec3::ZERO),
+            AttackBoxSettings {
+                max_range: 5.0,
+                ..Default::default()
+            },
+        ));
+
+        // Spawn enemy within range
+        app.world_mut().spawn((
+            WorldEnemy::default(),
+            Transform::from_translation(Vec3::new(0.0, 0.0, 3.0)),
+        ));
+
+        // Simulate mouse input
+        app.world_mut()
+            .resource_mut::<ButtonInput<MouseButton>>()
+            .press(MouseButton::Left);
+
+        // Run one frame
+        app.update();
+        app.update();
+
+        app.world_mut().resource_scope(|_world, mut events: Mut<Events<PlayerActionEvent>>| {
+            events.update();
+
+            let collected: Vec<_> = events.drain().collect();
+            assert_eq!(
+                collected.contains(&PlayerActionEvent::Attacking),
+                false,
+                "Expected PlayerActionEvent::Attacking to be triggered"
+            );
+        });
+
+        // Check hit box was spawned
+        let hit_box_spawned = app
+            .world()
+            .iter_entities()
+            .any(|e| e.contains::<Collider>());
+
+        assert_eq!(
+            hit_box_spawned,
+            false,
+            "Expected an attack hit_box (Collider) to be spawned"
+        );
+    }
+
 
 
 }

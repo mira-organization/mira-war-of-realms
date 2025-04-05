@@ -150,7 +150,7 @@ fn update_movement(
 /// - `commands`: A mutable reference to the Bevy `Commands` to spawn entities.
 /// - `query`: A query to get the player entity in the game world.
 /// - `input_event_writer`: An event writer to send the player's action event (Attacking).
-fn input_attack(
+pub fn input_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     mut commands: Commands,
     mut query: Query<(Entity, &mut Transform, &AttackBoxSettings), With<WorldPlayer>>,
@@ -161,6 +161,7 @@ fn input_attack(
     if current_state.eq(&GameState::InGame(InGameState::Battle)) {
         return;
     }
+
     if mouse_input.just_pressed(MouseButton::Left) {
         // Trigger the player's attack event
         input_event_writer.send(PlayerActionEvent::Attacking);
