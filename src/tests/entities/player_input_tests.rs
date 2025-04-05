@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use bevy::input::InputPlugin;
     use bevy::prelude::*;
     use bevy::state::app::StatesPlugin;
     use bevy_rapier3d::prelude::Collider;
@@ -233,12 +232,10 @@ mod tests {
         let mut app = App::new();
 
         app.add_plugins((MinimalPlugins, StatesPlugin::default()))
-            .add_plugins(InputPlugin)
             .add_event::<PlayerActionEvent>()
             .init_state::<GameState>()
             .insert_resource(ButtonInput::<MouseButton>::default())
-            .insert_resource(State::new(GameState::InGame(InGameState::Main)))
-            .add_systems(Update, input_attack);
+            .insert_resource(State::new(GameState::InGame(InGameState::Main)));
 
         // Spawn player
         app.world_mut().spawn((
@@ -261,8 +258,8 @@ mod tests {
             .resource_mut::<ButtonInput<MouseButton>>()
             .press(MouseButton::Left);
 
-        // Run one frame
         app.update();
+        app.add_systems(Update, input_attack);
         app.update();
 
         app.world_mut().resource_scope(|_world, mut events: Mut<Events<PlayerActionEvent>>| {
@@ -271,7 +268,7 @@ mod tests {
             let collected: Vec<_> = events.drain().collect();
             assert_eq!(
                 collected.contains(&PlayerActionEvent::Attacking),
-                false,
+                true,
                 "Expected PlayerActionEvent::Attacking to be triggered"
             );
         });
@@ -284,11 +281,8 @@ mod tests {
 
         assert_eq!(
             hit_box_spawned,
-            false,
+            true,
             "Expected an attack hit_box (Collider) to be spawned"
         );
     }
-
-
-
 }
