@@ -20,6 +20,7 @@ impl Plugin for BattleLogicPlugin {
     /// - `set_observe_entities`: Sets up entities that can be observed.
     /// - `select_encounter_target`: Automatically selects an initial battle target.
     /// - `detect_current_character_operation`: Detects when a character's action changes and updates outlines accordingly.
+    #[cfg_attr(tarpaulin, skip)]
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), set_observe_entities.after(spawn_entities));
         app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)),

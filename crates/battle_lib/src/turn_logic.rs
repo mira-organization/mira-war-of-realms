@@ -10,6 +10,7 @@ pub struct BattleTurnLogicPlugin;
 
 impl Plugin for BattleTurnLogicPlugin {
     /// Builds the plugin by adding systems for setting up and managing battle turns.
+    #[cfg_attr(tarpaulin, skip)]
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(GameState::InGame(InGameState::Battle)),
