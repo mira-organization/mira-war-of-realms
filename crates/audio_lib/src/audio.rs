@@ -20,7 +20,7 @@ impl Plugin for AudioHandlerPlugin {
 
 /// The `setup` function is called when the game state switches to "InGame".
 /// Here, the audio for environmental sounds is added and played.
-fn setup(asset_server: Res<AssetServer>,
+pub fn setup(asset_server: Res<AssetServer>,
          mut audio: ResMut<DynamicAudioChannels>,
          mut audio_manager: ResMut<AudioManager>,
          option: Res<AudioOption>
@@ -37,7 +37,7 @@ fn setup(asset_server: Res<AssetServer>,
     }
 }
 
-fn battle_music(asset_server: Res<AssetServer>,
+pub fn battle_music(asset_server: Res<AssetServer>,
                 mut audio: ResMut<DynamicAudioChannels>,
                 mut audio_manager: ResMut<AudioManager>,
                 option: Res<AudioOption>

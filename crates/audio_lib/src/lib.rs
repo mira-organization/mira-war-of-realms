@@ -235,7 +235,7 @@ impl AudioManager {
     ///
     /// # Returns:
     /// `true` if the audio system contains the specified channel, `false` otherwise.
-    fn contains_channel(&self, channel_name: &str) -> bool {
+    pub fn contains_channel(&self, channel_name: &str) -> bool {
         self.audio.contains_key(channel_name)
     }
 }
