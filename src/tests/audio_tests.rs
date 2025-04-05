@@ -136,4 +136,67 @@ mod tests {
         // Check: battle_ch is added and playing
         assert!(audio_manager.contains_channel("battle_ch"));
     }
+
+    #[test]
+    fn test_remove_audio() {
+        let mut manager = AudioManager::new();
+        let mut kira_channels = DynamicAudioChannels::default();
+
+        manager.audio.insert("test_audio".into(), AudioType::Environment);
+        manager.audio_handle.insert("test_audio".into(), dummy_handle());
+        kira_channels.create_channel("test_audio");
+
+        manager.remove_audio("test_audio", &mut kira_channels);
+
+        assert!(!manager.audio.contains_key("test_audio"));
+        assert!(!manager.audio_handle.contains_key("test_audio"));
+        assert!(kira_channels.get_channel("test_audio").is_none());
+    }
+
+    #[test]
+    fn test_stop_channel_invalid() {
+        let mut manager = AudioManager::new();
+        let mut kira_channels = DynamicAudioChannels::default();
+
+        manager.stop_channel("not_existing", &mut kira_channels);
+    }
+
+    #[test]
+    fn test_resume_channel() {
+        let mut manager = AudioManager::new();
+        let mut kira_channels = DynamicAudioChannels::default();
+
+        manager.audio.insert("voice".into(), AudioType::Character);
+        manager.audio_handle.insert("voice".into(), dummy_handle());
+        kira_channels.create_channel("voice");
+
+        manager.resume_channel("voice", &mut kira_channels);
+    }
+
+    #[test]
+    fn test_play_and_resume_audio_channel() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+
+        let mut manager = AudioManager::new();
+        let mut kira_channels = DynamicAudioChannels::default();
+
+        manager.audio.insert("env".into(), AudioType::Environment);
+        manager.audio_handle.insert("env".into(), Handle::weak_from_u128(42)); // Dummy Handle
+
+        let option = AudioOption {
+            master_volume: 0.0,
+            volumes: Default::default(),
+        };
+
+        manager.play_channel("env", &mut kira_channels, &option);
+        assert!(kira_channels.get_channel("env").is_some());
+
+        // Simulate resume
+        manager.resume_channel("env", &mut kira_channels);
+    }
+
+    fn dummy_handle() -> Handle<AudioSource> {
+        Handle::weak_from_u128(1234567890)
+    }
 }
