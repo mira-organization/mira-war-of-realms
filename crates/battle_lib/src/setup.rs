@@ -22,7 +22,6 @@ impl Plugin for BattleSetupPlugin {
     /// 2. `setup_battle_entities`: A system that further configures the battle entities by organizing them into characters and enemies.
     ///
     /// Both systems are added to run when the `GameState::InGame(InGameState::Battle)` state is entered.
-    #[cfg(not(test))]
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), spawn_entities);
         app.add_systems(OnEnter(GameState::InGame(InGameState::Battle)), setup_battle_entities.after(spawn_entities));

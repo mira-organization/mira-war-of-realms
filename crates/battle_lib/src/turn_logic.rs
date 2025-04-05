@@ -10,7 +10,6 @@ pub struct BattleTurnLogicPlugin;
 
 impl Plugin for BattleTurnLogicPlugin {
     /// Builds the plugin by adding systems for setting up and managing battle turns.
-    #[cfg(not(test))]
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(GameState::InGame(InGameState::Battle)),
@@ -30,7 +29,7 @@ impl Plugin for BattleTurnLogicPlugin {
 /// - `turn_order`: A mutable resource that stores the turn order.
 /// - `characters`: Query for all player-controlled characters.
 /// - `enemies`: Query for all enemy-controlled characters.
-fn setup_battle_order(
+pub fn setup_battle_order(
     mut turn_order: ResMut<TurnOrder>,
     characters: Query<(Entity, &Character)>,
     enemies: Query<(Entity, &Enemy)>,

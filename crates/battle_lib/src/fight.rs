@@ -7,7 +7,6 @@ pub struct BattleFightPlugin;
 
 impl Plugin for BattleFightPlugin {
 
-    #[cfg(not(test))]
     fn build(&self, app: &mut App) {
         app.add_systems(Update, character_perform_attack.run_if(in_state(GameState::InGame(InGameState::Battle))));
     }

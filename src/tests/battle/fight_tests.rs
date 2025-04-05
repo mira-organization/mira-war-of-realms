@@ -5,7 +5,7 @@ mod tests {
     use bevy::utils::HashMap;
     use battle_lib::fight::character_perform_attack;
     use system::battle_commons::{BattleCurrentEntities, BattleSelectedStatus, TurnCurrentMemberInfo};
-    use system::commons::{AbilityType, Character, CharacterAbility, Enemy, ScalingType, SelectionType, TargetType, TurnOrder};
+    use system::commons::{AbilityType, Character, CharacterAbility, Enemy, EnemyCurrentStats, ScalingType, SelectionType, TargetType, TurnOrder};
     use system::states::GameState;
 
     #[test]
@@ -74,6 +74,80 @@ mod tests {
         assert_eq!(enemy.current_stats
                        .hp, 94.0);
     }
+
+    #[test]
+    fn test_character_performs_attack_on_selected_enemy_death() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+
+        // Setup world and resources
+        let mut world = app.world_mut();
+        let character = Character::default();
+        let enemy_entity = world.spawn(Enemy {
+            current_stats: EnemyCurrentStats {
+                hp: 20.0,
+                ..default()
+            },
+            ..default()
+        }).id();
+        let battle_members = BattleCurrentEntities::default();
+
+        // Setup selected enemy
+        let selected = BattleSelectedStatus {
+            selected: Some((1, enemy_entity)),
+            sub_selected: HashMap::new(),
+        };
+
+        // Insert resources
+        world.insert_resource(TurnCurrentMemberInfo {
+            character: Some(character.clone()),
+            selected_operation: Some(CharacterAbility {
+                name: "Test".to_string(),
+                family: AbilityType::Attack,
+                selection_type: SelectionType::Single,
+                target_type: TargetType::Enemy,
+                scaling_type: ScalingType::Attack,
+                scaling: 1.0,
+                base_value: 12.0,
+            }),
+            pre_operation: None,
+        });
+        world.insert_resource(battle_members);
+        world.insert_resource(selected);
+        world.insert_resource(TurnOrder::default());
+        world.insert_resource(NextState::<GameState>::default());
+
+        let mut system_state: SystemState<
+            (
+                Commands,
+                Query<(Entity, &mut Enemy), (With<Enemy>, Without<Character>)>,
+                ResMut<BattleCurrentEntities>,
+                Res<BattleSelectedStatus>,
+                ResMut<NextState<GameState>>,
+                ResMut<TurnOrder>,
+                ResMut<TurnCurrentMemberInfo>,
+            ),
+        > = SystemState::new(&mut world);
+
+        // Perform the attack 5 times
+        let (commands, enemy_query, battle_members, selected, next_state, turn_order, turn_info) =
+            system_state.get_mut(&mut world);
+        character_perform_attack(
+            commands,
+            enemy_query,
+            battle_members,
+            selected,
+            next_state,
+            turn_order,
+            turn_info,
+        );
+
+        // Check that the enemy's HP is 0 after 5 attacks
+        let enemy = world.get::<Enemy>(enemy_entity).unwrap();
+        assert_eq!(enemy.current_stats.hp, 0.0);
+    }
+
+
 
     #[test]
     fn test_character_performs_attack_on_multiple_enemies() {

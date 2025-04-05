@@ -21,9 +21,10 @@ mod tests {
         // Spawn mock enemies with positions
         let enemy1 = app.world_mut().spawn(Transform::from_xyz(0.0, 0.0, 0.0)).id();
         let enemy2 = app.world_mut().spawn(Transform::from_xyz(5.0, 0.0, 0.0)).id();
+        let character1 = app.world_mut().spawn(Transform::from_xyz(0.0, 0.0, 5.0)).id();
         app.world_mut().insert_resource(BattleCurrentEntities {
             need_patch: true,
-            characters: HashMap::new(),
+            characters: HashMap::from([(1, character1)]),
             enemies: HashMap::from([
                 (1, enemy1),
                 (2, enemy2),
@@ -40,8 +41,8 @@ mod tests {
         let transform1 = transforms.get(app.world(), enemy1).unwrap();
         let transform2 = transforms.get(app.world(), enemy2).unwrap();
 
-        assert_eq!(transform1.translation.x, 0.0);
-        assert_eq!(transform2.translation.x, 5.0); // Expecting it to be slightly offset
+        assert_eq!(transform1.translation.x, -10.0);
+        assert_eq!(transform2.translation.x, -7.5); // Expecting it to be slightly offset
     }
 
     #[test]

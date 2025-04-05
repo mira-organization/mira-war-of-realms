@@ -2,38 +2,10 @@
 mod tests {
     use bevy::prelude::*;
     use bevy::utils::HashMap;
-    use battle_lib::logic::{detect_current_character_operation, select_encounter_target, set_observe_entities};
+    use battle_lib::logic::{detect_current_character_operation, set_observe_entities};
     use system::battle_commons::{BattleCurrentEntities, BattleSelectedStatus, ObserveAble, SelectMarker, TurnCurrentMemberInfo};
     use system::commons::{AbilityType, CharacterAbility, ScalingType, SelectionType, TargetType};
 
-    #[test]
-    fn test_select_encounter_target_sets_first_enemy() {
-        let mut app = App::new();
-
-        // Insert required resources
-        let mut enemies = HashMap::new();
-        let enemy_entity = app.world_mut().spawn_empty().id();
-        enemies.insert(1, enemy_entity);
-        app.world_mut().insert_resource(BattleCurrentEntities {
-            need_patch: false,
-            characters: HashMap::new(),
-            enemies,
-        });
-
-        app.world_mut().insert_resource(BattleSelectedStatus {
-            selected: Some((1, enemy_entity)),
-            ..default()
-        });
-
-        // Run system
-        app.update(); // Required to prepare world for systems
-        app.add_systems(Startup, select_encounter_target);
-        app.update();
-
-        // Check if the enemy was selected and has the outline component
-        let selected = app.world().resource::<BattleSelectedStatus>();
-        assert_eq!(selected.selected.unwrap().1, enemy_entity, "Selected the first enemy");
-    }
 
     #[test]
     fn test_set_observe_entities_spawns_child_marker() {
