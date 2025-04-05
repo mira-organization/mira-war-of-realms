@@ -7,7 +7,8 @@ pub struct BattleFightPlugin;
 
 impl Plugin for BattleFightPlugin {
 
-    #[cfg(not(coverage))]
+    #[cfg_attr(coverage, exclude)]
+    #[inline(never)]
     fn build(&self, app: &mut App) {
         app.add_systems(Update, character_perform_attack.run_if(in_state(GameState::InGame(InGameState::Battle))));
     }
