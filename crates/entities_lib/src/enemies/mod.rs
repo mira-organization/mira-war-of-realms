@@ -1,4 +1,4 @@
-mod test_enemy;
+pub mod test_enemy;
 pub mod ai;
 
 use bevy::prelude::*;

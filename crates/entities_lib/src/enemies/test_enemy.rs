@@ -30,7 +30,7 @@ impl Plugin for TestEnemy {
 /// # Parameters
 /// - `commands`: Provides access to entity creation and command buffers.
 /// - `asset_server`: Used to load assets such as the enemy's 3D model.
-fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn setup_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         SceneRoot(
             asset_server.load(GltfAssetLabel::Scene(0).from_asset("entities/enemies/test_enemy/placeholder.glb"))
