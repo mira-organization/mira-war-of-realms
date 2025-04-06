@@ -330,7 +330,7 @@ fn fetch_battle_operation(
 /// # Arguments
 /// - `players`: A query to access the player’s position in the world.
 /// - `last_stable_ground`: A resource to store the last known stable ground position.
-fn track_stable_ground(mut players: Query<&Transform, With<WorldPlayer>>,
+pub fn track_stable_ground(mut players: Query<&Transform, With<WorldPlayer>>,
                        mut last_stable_ground: ResMut<LastStableGround>)
 {
     for transform in players.iter_mut() {
@@ -348,7 +348,7 @@ fn track_stable_ground(mut players: Query<&Transform, With<WorldPlayer>>,
 /// # Arguments
 /// - `players`: A query to access the player’s position in the world.
 /// - `last_stable_ground`: A resource containing the player’s last stable ground position.
-fn check_void_fall(mut players: Query<&mut Transform, With<WorldPlayer>>,
+pub fn check_void_fall(mut players: Query<&mut Transform, With<WorldPlayer>>,
                    last_stable_ground: ResMut<LastStableGround>)
 {
     for mut transform in players.iter_mut() {

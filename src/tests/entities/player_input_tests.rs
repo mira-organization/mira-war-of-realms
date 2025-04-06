@@ -4,11 +4,13 @@ mod tests {
     use bevy::state::app::StatesPlugin;
     use bevy_rapier3d::prelude::{Collider, KinematicCharacterController};
     use entities_lib::camera::PlayerWorldCamera;
-    use entities_lib::player::input::{battle_input_system, fetch_keyboard_input, input_attack, update_movement};
+    use entities_lib::player::input::{battle_input_system, check_void_fall, fetch_keyboard_input, input_attack, track_stable_ground, update_movement};
+    use entities_lib::player::LastStableGround;
     use system::battle_commons::TurnCurrentMemberInfo;
     use system::commons::{AbilityType, AttackBoxSettings, Character, CharacterAbility, CharacterAbilitySet, ScalingType, SelectionType, TargetType, TurnOrder, WorldEnemy, WorldPlayer, WorldPlayerState};
     use system::config::{ConfigService, InputConfig};
     use system::events::player_events::PlayerActionEvent;
+    use system::PLAYER_VOID_THRESHOLD;
     use system::states::{GameState, InGameState};
 
     fn setup_app() -> App {
@@ -421,5 +423,77 @@ mod tests {
                 }
             });
         }
+    }
+
+    #[test]
+    fn test_track_stable_ground() {
+        let mut app = App::new();
+
+        app.init_resource::<Time>();
+        app.insert_resource(LastStableGround(Vec3::ZERO));
+
+        let above_ground = Transform::from_xyz(1.0, 0.0, 2.0);
+        app.world_mut().spawn((above_ground, WorldPlayer::default()));
+
+        app.add_systems(Update, track_stable_ground);
+        app.update();
+
+        let updated_ground = app.world().resource::<LastStableGround>();
+        assert_eq!(updated_ground.0, above_ground.translation, "LastStableGround should be updated when player is on stable ground");
+
+        // Reset Entity & Resource
+        app.world_mut().clear_entities();
+        app.insert_resource(LastStableGround(Vec3::new(99.0, 99.0, 99.0)));
+
+        let below_ground = Transform::from_xyz(3.0, -5.0, 4.0);
+        app.world_mut().spawn((below_ground, WorldPlayer::default()));
+
+        app.update();
+
+        let updated_ground = app.world().resource::<LastStableGround>();
+        assert_eq!(
+            updated_ground.0,
+            Vec3::new(99.0, 99.0, 99.0),
+            "LastStableGround should NOT be updated when player is below stable ground"
+        );
+    }
+
+
+    #[test]
+    fn test_check_void_fall_behavior() {
+        let mut app = App::new();
+
+        let stable_pos = Vec3::new(1.0, 2.0, 3.0);
+        app.insert_resource(LastStableGround(stable_pos));
+        app.init_resource::<Time>();
+
+        let below_threshold = Transform::from_xyz(0.0, PLAYER_VOID_THRESHOLD - 10.0, 0.0);
+        let below_entity = app.world_mut().spawn((below_threshold, WorldPlayer::default())).id();
+
+        app.add_systems(Update, check_void_fall);
+        app.update();
+
+        let transform = app.world().entity(below_entity).get::<Transform>().unwrap();
+        assert_eq!(
+            transform.translation,
+            stable_pos,
+            "Player should be reset to last stable ground when falling below threshold"
+        );
+
+        // Reset World
+        app.world_mut().clear_entities();
+        app.insert_resource(LastStableGround(stable_pos));
+
+        let above_threshold = Transform::from_xyz(0.0, PLAYER_VOID_THRESHOLD + 10.0, 0.0);
+        let above_entity = app.world_mut().spawn((above_threshold, WorldPlayer::default())).id();
+
+        app.update();
+
+        let transform = app.world().entity(above_entity).get::<Transform>().unwrap();
+        assert_eq!(
+            transform.translation,
+            above_threshold.translation,
+            "Player should NOT be reset if above threshold"
+        );
     }
 }
