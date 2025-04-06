@@ -39,7 +39,7 @@ impl Plugin for PlayerInputPlugin {
 /// - `input_event_writer`: Used to emit player action events.
 /// - `keyboard`: Access to keyboard input states.
 /// - `camera_query`: Used to get the transform of the camera for directional movement.
-fn fetch_keyboard_input(
+pub fn fetch_keyboard_input(
     mut input_event_writer: EventWriter<PlayerActionEvent>,
     keyboard: Res<ButtonInput<KeyCode>>,
     camera_query: Query<&Transform, With<PlayerWorldCamera>>,

@@ -3,7 +3,8 @@ mod tests {
     use bevy::prelude::*;
     use bevy::state::app::StatesPlugin;
     use bevy_rapier3d::prelude::{Collider, KinematicCharacterController};
-    use entities_lib::player::input::{battle_input_system, input_attack, update_movement};
+    use entities_lib::camera::PlayerWorldCamera;
+    use entities_lib::player::input::{battle_input_system, fetch_keyboard_input, input_attack, update_movement};
     use system::battle_commons::TurnCurrentMemberInfo;
     use system::commons::{AbilityType, AttackBoxSettings, Character, CharacterAbility, CharacterAbilitySet, ScalingType, SelectionType, TargetType, TurnOrder, WorldEnemy, WorldPlayer, WorldPlayerState};
     use system::config::{ConfigService, InputConfig};
@@ -355,5 +356,70 @@ mod tests {
 
         assert_eq!(world_player.state, WorldPlayerState::Idle);
         assert_eq!(transform.translation.x, 0.0); // Player should have stopped moving
+    }
+
+
+    #[test]
+    fn test_keyboard_input_move_directions() {
+        let mut app = App::new();
+
+        app.add_plugins(MinimalPlugins).add_event::<PlayerActionEvent>();
+
+        app.world_mut().spawn((
+            PlayerWorldCamera,
+            Transform::from_xyz(0.0, 0.0, 0.0).looking_at(Vec3::Z, Vec3::Y),
+        ));
+
+        app.insert_resource(ConfigService::default());
+
+        let test_cases = vec![
+            (KeyCode::KeyW, Vec3::Z, "forward (W)"),
+            (KeyCode::KeyS, -Vec3::Z, "backward (S)"),
+            (KeyCode::KeyA, Vec3::X, "left (A)"),
+            (KeyCode::KeyD, -Vec3::X, "right (D)"),
+        ];
+
+        for (key, expected_direction, label) in test_cases {
+
+            // Reset Events
+            app.world_mut()
+                .insert_resource(Events::<PlayerActionEvent>::default());
+
+            let mut keyboard = ButtonInput::<KeyCode>::default();
+            keyboard.press(key);
+            app.insert_resource(keyboard);
+
+            app.add_systems(Update, fetch_keyboard_input);
+            app.update();
+
+            // Check Events
+            app.world_mut().resource_scope(|_world, mut events: Mut<Events<PlayerActionEvent>>| {
+                events.update();
+                let collected: Vec<_> = events.drain().collect();
+
+                let move_event = collected.iter().find_map(|event| {
+                    if let PlayerActionEvent::Move(dir) = event {
+                        Some(dir)
+                    } else {
+                        None
+                    }
+                });
+
+                assert!(
+                    move_event.is_some(),
+                    "Expected Move event for direction {label}"
+                );
+
+                if let Some(dir) = move_event {
+                    let diff = dir.normalize() - expected_direction.normalize();
+                    assert!(
+                        diff.length() < 0.01,
+                        "Expected direction {label} to be approximately {:?}, but got {:?}",
+                        expected_direction,
+                        dir
+                    );
+                }
+            });
+        }
     }
 }
