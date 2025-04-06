@@ -1,1 +1,2 @@
 mod player_input_tests;
+mod player_animation_tests;
