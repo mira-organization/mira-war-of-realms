@@ -34,7 +34,7 @@ impl Plugin for EnvSwapSystemPlugin {
 /// - `commands`: Used to insert battle state markers.
 /// - `world_player_query`: Checks if the attacker is a player.
 /// - `next_state`: Transitions the game state to `Battle` if conditions are met.
-fn pre_load_battle(
+pub fn pre_load_battle(
     mut hit_event: EventReader<WorldEntityHitEntityEvent>,
     area: Res<CurrentAreaScenes>,
     mut commands: Commands,
@@ -71,7 +71,7 @@ fn pre_load_battle(
 /// - `players`: Updates player positions in battle.
 ///
 /// The function spawns the battle scene, sets up collision, and positions the players.
-fn load_battle_scene(
+pub fn load_battle_scene(
     area: Res<CurrentAreaScenes>,
     mut commands: Commands
 ) {
@@ -97,7 +97,7 @@ fn load_battle_scene(
 ///
 /// # Parameters
 /// - `next_state`: Transitions the game state to `Main`.
-fn temp_swap_to_main(
+pub fn temp_swap_to_main(
     mut commands: Commands,
     mut next_state: ResMut<NextState<GameState>>,
     mut players: Query<(Entity, &mut Transform), With<InBattle>>,
