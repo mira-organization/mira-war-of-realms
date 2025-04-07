@@ -33,7 +33,7 @@ impl Plugin for ReadyUpHandles {
 /// * `environment` - The list of available environments.
 /// * `dummy_save_data` - Holds the current environment and area index.
 /// * `next_state` - Used to transition to the next game state.
-fn pre_load_environments(mut commands: Commands,
+pub fn pre_load_environments(mut commands: Commands,
                          environment: Res<EnvironmentListResource>,
                          dummy_save_data: Res<DummySaveData>,
                          mut next_state: ResMut<NextState<GameState>>
@@ -85,7 +85,7 @@ fn pre_load_environments(mut commands: Commands,
 ///
 /// Logging:
 /// - Outputs an informational log message indicating that the `.glb` file is being preloaded.
-fn pre_load_area(mut commands: Commands,
+pub fn pre_load_area(mut commands: Commands,
                  asset_server: Res<AssetServer>,
                  environment: Res<CurrentEnvironment>
 ) {
@@ -96,7 +96,7 @@ fn pre_load_area(mut commands: Commands,
     info!("Pre Loading glb [{:?}]", path);
 }
 
-fn pre_load_gltf_assets(mut commands: Commands, asset_server: Res<AssetServer>, environment: Res<CurrentEnvironment>) {
+pub fn pre_load_gltf_assets(mut commands: Commands, asset_server: Res<AssetServer>, environment: Res<CurrentEnvironment>) {
     let path = format!("environments/{}/{}", environment.environment.name, environment.area.name);
     let gltf_handle = asset_server.load::<Gltf>(path.as_str());
 
@@ -127,7 +127,7 @@ fn pre_load_gltf_assets(mut commands: Commands, asset_server: Res<AssetServer>, 
 /// - Outputs how many scenes were found.
 /// - Logs warnings if layers 1 or 2 are missing.
 /// - Signals when environment loading is complete.
-fn process_loaded_area(mut commands: Commands,
+pub fn process_loaded_area(mut commands: Commands,
                        gltf_assets: Res<Assets<Gltf>>,
                        mut next_state: ResMut<NextState<GameState>>,
                        waiting: Option<Res<WaitingForAreaAssets>>,

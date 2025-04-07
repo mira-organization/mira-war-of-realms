@@ -1,6 +1,6 @@
-mod logic;
-mod target_system;
-mod battle_camera;
+pub mod logic;
+pub mod target_system;
+pub mod battle_camera;
 
 use bevy::prelude::*;
 use crate::camera::battle_camera::BattleCameraPlugin;
