@@ -325,7 +325,7 @@ mod tests {
             is_animation_root: false,
             children: vec![],
             extras: Some(GltfExtras {
-                value: "{ \"name\": \"point\", \"intensity\": 150000.0, \"range\": 10.0, \"radius\": 3.5 , \"color\": [ 0.7, 0.0, 0.8 ], \"shadows\": true }".to_string(),
+                value: "bevy_value: { \"name\": \"point\", \"intensity\": 150000.0, \"range\": 10.0, \"radius\": 3.5 , \"color\": [ 0.7, 0.0, 0.8 ], \"shadows\": true }".to_string(),
             }),
         });
 
@@ -338,7 +338,7 @@ mod tests {
             is_animation_root: false,
             children: vec![],
             extras: Some(GltfExtras {
-                value: "{ \"name\": \"spot\", \"intensity\": 150000.0, \"range\": 10.0, \"radius\": 3.5 , \"color\": [ 0.7, 0.0, 0.8 ], \"shadows\": true, \"inner_cone\": 0.1, \"outer_cone\": 0.5 }".to_string(),
+                value: "bevy_value: { \"name\": \"spot\", \"intensity\": 150000.0, \"range\": 10.0, \"radius\": 3.5 , \"color\": [ 0.7, 0.0, 0.8 ], \"shadows\": true, \"inner_cone\": 0.1, \"outer_cone\": 0.5 }".to_string(),
             }),
         });
 
