@@ -3,6 +3,7 @@ mod tests {
     use bevy::asset::io::{AssetSource, AssetSourceId};
     use bevy::asset::io::memory::{Dir, MemoryAssetReader};
     use bevy::gltf::{GltfNode, GltfPlugin};
+    use bevy::log::LogPlugin;
     use bevy::prelude::*;
     use bevy::render::mesh::MeshPlugin;
     use bevy::scene::ScenePlugin;
@@ -297,7 +298,7 @@ mod tests {
     fn test_load_active_area_lights() {
         let mut app = App::new();
 
-        app.add_plugins(MinimalPlugins);
+        app.add_plugins((MinimalPlugins, LogPlugin::default(), AssetPlugin::default(), GltfPlugin::default()));
 
         // Add dummy game state resources
         app.insert_resource(NextState::<GameState>::default());
@@ -315,21 +316,9 @@ mod tests {
         let _light_entity = Entity::from_raw(42);
 
         // Add dummy GltfNode with a light
-        let node_handle = Handle::<GltfNode>::weak_from_u128(2222);
-        gltf_nodes.insert(node_handle.clone().id(), GltfNode {
-            index: 1,
-            name: "Test Light".to_string(),
-            mesh: None,
-            skin: None,
-            transform: Default::default(),
-            is_animation_root: false,
-            children: vec![],
-            extras: Some(GltfExtras {
-                value: "bevy_value: { \"name\": \"point\", \"intensity\": 150000.0, \"range\": 10.0, \"radius\": 3.5 , \"color\": [ 0.7, 0.0, 0.8 ], \"shadows\": true }".to_string(),
-            }),
-        });
-
-        gltf_nodes.insert(node_handle.clone().id(), GltfNode {
+        let node_handle_point = Handle::<GltfNode>::weak_from_u128(2222);
+        let node_handle_spot = Handle::<GltfNode>::weak_from_u128(3333);
+        gltf_nodes.insert(node_handle_point.clone().id(), GltfNode {
             index: 2,
             name: "Test Light 1".to_string(),
             mesh: None,
@@ -338,7 +327,22 @@ mod tests {
             is_animation_root: false,
             children: vec![],
             extras: Some(GltfExtras {
-                value: "bevy_value: { \"name\": \"spot\", \"intensity\": 150000.0, \"range\": 10.0, \"radius\": 3.5 , \"color\": [ 0.7, 0.0, 0.8 ], \"shadows\": true, \"inner_cone\": 0.1, \"outer_cone\": 0.5 }".to_string(),
+                value: "{\"bevy_value\":\"{ \\\"name\\\": \\\"point\\\", \\\"intensity\\\": 150000.0, \\\"range\\\": 10.0, \\\"radius\\\": 3.5 , \\\"color\\\": [ 0.7, 0.0, 0.8 ], \\\"shadows\\\": true }\"}"
+                    .to_string(),
+            }),
+        });
+
+        gltf_nodes.insert(node_handle_spot.clone().id(), GltfNode {
+            index: 3,
+            name: "Test Light 2".to_string(),
+            mesh: None,
+            skin: None,
+            transform: Default::default(),
+            is_animation_root: false,
+            children: vec![],
+            extras: Some(GltfExtras {
+                value: "{\"bevy_value\":\"{ \\\"name\\\": \\\"spot\\\", \\\"intensity\\\": 1500000.0, \\\"range\\\": 45.0, \\\"radius\\\": 12.5 , \\\"color\\\": [ 1.0, 1.0, 1.0 ], \\\"shadows\\\": true, \\\"inner_cone\\\": 0.2, \\\"outer_cone\\\": 0.8 }\"}"
+                    .to_string(),
             }),
         });
 
@@ -350,7 +354,7 @@ mod tests {
             named_meshes: Default::default(),
             materials: vec![],
             named_materials: Default::default(),
-            nodes: vec![node_handle],
+            nodes: vec![node_handle_point, node_handle_spot],
             named_nodes: Default::default(),
             skins: vec![],
             named_skins: Default::default(),

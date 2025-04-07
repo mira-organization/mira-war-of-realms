@@ -263,8 +263,10 @@ fn process_gltf_lights(
     for node_handle in &gltf.nodes {
         if let Some(node) = gltf_nodes.get(node_handle) {
                 if let Some(extras) = &node.extras {
+                    info!("Value: {:?}", &extras.value);
                     if let Ok(parsed) = serde_json::from_str::<Value>(&extras.value) {
                         if let Some(bevy_json) = parsed.get("bevy_value").and_then(|v| v.as_str()) {
+                            debug!("Json: {:?}", bevy_json);
                             if let Ok(light_data) = serde_json::from_str::<LightData>(bevy_json) {
                                 spawn_light(commands, node, light_data);
                             }
