@@ -1,4 +1,4 @@
-mod base_ai;
+pub mod base_ai;
 
 use bevy::prelude::*;
 use rand::Rng;

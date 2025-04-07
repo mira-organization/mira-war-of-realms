@@ -13,7 +13,7 @@ pub struct BaseAI;
 /// It adds the logic system that runs on each fixed update during the `InGame` state.
 impl Plugin for BaseAI {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, logic_system.run_if(in_state(GameState::InGame(InGameState::Main))));
+        app.add_systems(Update, logic_system.run_if(in_state(GameState::InGame(InGameState::Main))));
     }
 }
 
@@ -25,7 +25,7 @@ impl Plugin for BaseAI {
 /// - `commands`: A mutable reference to `Commands` to spawn entities like attack hit_boxes.
 /// - `query`: A set of queries to get enemy data (transform, setup, velocity) and player position.
 /// - `time`: A resource containing the delta time (used for timers and movement speed).
-fn logic_system(
+pub fn logic_system(
     mut commands: Commands,
     mut query: ParamSet<(
         Query<(Entity, &mut Transform, &mut AiSetup, &mut Velocity), With<WorldEnemy>>,
