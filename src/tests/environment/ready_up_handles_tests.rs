@@ -2,11 +2,15 @@
 mod tests {
     use bevy::asset::io::{AssetSource, AssetSourceId};
     use bevy::asset::io::memory::{Dir, MemoryAssetReader};
-    use bevy::gltf::GltfPlugin;
+    use bevy::gltf::{GltfNode, GltfPlugin};
     use bevy::prelude::*;
+    use bevy::render::mesh::MeshPlugin;
+    use bevy::scene::ScenePlugin;
     use bevy::utils::HashMap;
-    use environment_lib::environment::{Area, CurrentAreaScenes, CurrentEnvironment, EffectSceneAssets, Environment, EnvironmentListResource, EnvironmentState, WaitingForAreaAssets};
-    use environment_lib::environment::ready_up_handles::{pre_load_area, pre_load_environments, pre_load_gltf_assets, process_loaded_area};
+    use bevy_rapier3d::plugin::NoUserData;
+    use bevy_rapier3d::prelude::{AsyncSceneCollider, RapierPhysicsPlugin};
+    use environment_lib::environment::{Area, CurrentAreaScenes, CurrentEnvironment, EffectSceneAssets, Environment, EnvironmentListResource, EnvironmentScene, EnvironmentState, WaitingForAreaAssets};
+    use environment_lib::environment::ready_up_handles::{load_active_area, load_active_area_lights, pre_load_area, pre_load_environments, pre_load_gltf_assets, process_loaded_area};
     use system::config::DummySaveData;
     use system::states::GameState;
 
@@ -71,6 +75,47 @@ mod tests {
         let current_env = app.world().resource::<CurrentEnvironment>();
         assert_eq!(current_env.environment.name, "Environment 1");
         assert_eq!(current_env.area.name, "Area 1");
+    }
+
+    #[test]
+    fn test_pre_load_environments_empty() {
+        let mut app = App::new();
+
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()));
+        let _asset_server = app.world_mut().resource::<AssetServer>();
+        app.insert_resource(CurrentEnvironment {
+            environment: Environment {
+                loaded: false,
+                name: "Debug Empty".to_string(),
+                state: EnvironmentState::Exploring,
+                areas: HashMap::new()
+            },
+            area: Area {
+                index: 0,
+                name: "Debug Area".to_string(),
+                battle_scenes: HashMap::new(),
+                player_in_bound: false
+            }
+        });
+
+        app.insert_resource(EnvironmentListResource(HashMap::new()));
+
+        let dummy_save_data = DummySaveData {
+            current_environment: "env1".to_string(),
+            current_area: 0,
+            ..default()
+        };
+        app.insert_resource(dummy_save_data);
+
+        app.insert_resource(NextState::<GameState>::default());
+
+        app.add_systems(Startup, pre_load_environments);
+
+        app.update();
+
+        let current_env = app.world().resource::<CurrentEnvironment>();
+        assert_eq!(current_env.environment.name, "Debug Empty");
+        assert_eq!(current_env.area.name, "Debug Area");
     }
 
     #[test]
@@ -160,7 +205,7 @@ mod tests {
             AssetSource::build().with_reader(move || Box::new(reader.clone())),
         );
 
-        app.add_plugins((MinimalPlugins, AssetPlugin { file_path: "src/test/assets".to_string(), ..default() }, GltfPlugin::default()));
+        app.add_plugins((MinimalPlugins, AssetPlugin { file_path: "assets_test".to_string(), ..default() }, GltfPlugin::default()));
 
         app.insert_resource(CurrentAreaScenes(HashMap::new()));
         app.insert_resource(NextState::<GameState>::default());
@@ -183,5 +228,128 @@ mod tests {
         assert!(scenes.contains_key("layer_1"));
         assert!(scenes.contains_key("layer_2"));
         assert!(scenes.contains_key("battle_1"));*/
+    }
+
+    #[test]
+    fn test_load_active_area_spawns_entities() {
+        let mut app = App::new();
+
+        app.add_plugins((
+            MinimalPlugins,
+            AssetPlugin::default(),
+            GltfPlugin::default(),
+            MeshPlugin,
+            ScenePlugin::default(),
+            RapierPhysicsPlugin::<NoUserData>::default()));
+
+        // Dummy Handles
+        let handle_0 = Handle::weak_from_u128(111);
+        let handle_1 = Handle::weak_from_u128(222);
+        let handle_2 = Handle::weak_from_u128(333);
+
+        let mut scenes = HashMap::new();
+        scenes.insert("layer_0".to_string(), handle_0.clone());
+        scenes.insert("layer_1".to_string(), handle_1.clone());
+        scenes.insert("layer_2".to_string(), handle_2.clone());
+
+        app.insert_resource(CurrentAreaScenes(scenes));
+
+        app.add_systems(Update, load_active_area);
+        app.update();
+
+        let world = app.world_mut();
+
+        let mut layer_0_found = false;
+        let mut layer_1_found = false;
+        let mut layer_2_found = false;
+
+        let mut query = world.query::<(Entity, &SceneRoot, &Name, &EnvironmentScene)>();
+        for (entity, scene_root, name, _) in query.iter(world) {
+            match name.as_str() {
+                "Area First Layer" => {
+                    assert_eq!(scene_root.0, handle_0);
+                    layer_0_found = true;
+
+                    let collider = world.get::<AsyncSceneCollider>(entity);
+                    assert!(collider.is_some(), "Collider missing on Area First Layer");
+                },
+                "Area Second Layer" => {
+                    assert_eq!(scene_root.0, handle_1);
+                    layer_1_found = true;
+                },
+                "Area Last Layer" => {
+                    assert_eq!(scene_root.0, handle_2);
+                    layer_2_found = true;
+
+                    let collider = world.get::<AsyncSceneCollider>(entity);
+                    assert!(collider.is_some(), "Collider missing on Area Last Layer");
+                },
+                _ => {}
+            }
+        }
+
+        assert!(layer_0_found, "Layer 0 not spawned");
+        assert!(layer_1_found, "Layer 1 not spawned");
+        assert!(layer_2_found, "Layer 2 not spawned");
+    }
+
+    #[test]
+    fn test_load_active_area_lights() {
+        let mut app = App::new();
+
+        app.add_plugins(MinimalPlugins);
+
+        // Add dummy game state resources
+        app.insert_resource(NextState::<GameState>::default());
+
+        // Dummy GLTF handle
+        let gltf_handle = Handle::<Gltf>::weak_from_u128(1111);
+
+        // Insert EffectSceneAssets resource
+        app.insert_resource(EffectSceneAssets(gltf_handle.clone()));
+
+        // Create dummy Gltf with node pointing to a light
+        let mut gltf_assets = Assets::<Gltf>::default();
+        let mut gltf_nodes = Assets::<GltfNode>::default();
+
+        let _light_entity = Entity::from_raw(42);
+
+        // Add dummy GltfNode with a light
+        let node_handle = Handle::<GltfNode>::weak_from_u128(2222);
+        gltf_nodes.insert(node_handle.clone().id(), GltfNode {
+            index: 1,
+            name: "Test Light".to_string(),
+            mesh: None,
+            skin: None,
+            transform: Default::default(),
+            is_animation_root: false,
+            children: vec![],
+            extras: None,
+        });
+
+        // Add Gltf referencing this node
+        gltf_assets.insert(gltf_handle.clone().id(), Gltf {
+            scenes: vec![],
+            named_scenes: Default::default(),
+            meshes: vec![],
+            named_meshes: Default::default(),
+            materials: vec![],
+            named_materials: Default::default(),
+            nodes: vec![node_handle],
+            named_nodes: Default::default(),
+            skins: vec![],
+            named_skins: Default::default(),
+            default_scene: None,
+            animations: vec![],
+            named_animations: Default::default(),
+            source: None,
+        });
+
+        app.insert_resource(gltf_assets);
+        app.insert_resource(gltf_nodes);
+
+        // Add system and run
+        app.add_systems(Update, load_active_area_lights);
+        app.update();
     }
 }

@@ -186,7 +186,7 @@ pub fn process_loaded_area(mut commands: Commands,
 /// * `commands` - Used to spawn entities into the world.
 /// * `current_area_scenes` - Holds the loaded area scenes.
 /// * `next_state` - Used to transition to the next game state.
-fn load_active_area(mut commands: Commands,
+pub fn load_active_area(mut commands: Commands,
                     current_area_scenes: Res<CurrentAreaScenes>
 ) {
     let first_layer = current_area_scenes.0.get(&String::from("layer_0")).cloned();
@@ -234,7 +234,7 @@ fn load_active_area(mut commands: Commands,
 /// - `gltf_assets`: GLTF asset resources.
 /// - `gltf_nodes`: GLTF node resources containing extra metadata.
 /// - `extra_scene_assets`: Optional extra scene assets that may contain light data.
-fn load_active_area_lights(
+pub fn load_active_area_lights(
     mut commands: Commands,
     mut next_state: ResMut<NextState<GameState>>,
     gltf_assets: Res<Assets<Gltf>>,
