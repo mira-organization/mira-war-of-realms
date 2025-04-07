@@ -128,7 +128,12 @@ mod tests {
 
         {
             let ai = app.world().get::<AiSetup>(enemy_entity).unwrap();
-            assert_eq!(matches!(ai.state, AiState::Idle | AiState::Walking | AiState::Alert | AiState::Observing), true);
+            assert_eq!(matches!(ai.state, AiState::Idle |
+                AiState::Walking |
+                AiState::Alert |
+                AiState::Observing |
+                AiState::Aggressive |
+                AiState::Attacking), true);
         }
     }
 
