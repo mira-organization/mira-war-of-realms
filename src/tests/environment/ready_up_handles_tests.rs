@@ -324,7 +324,22 @@ mod tests {
             transform: Default::default(),
             is_animation_root: false,
             children: vec![],
-            extras: None,
+            extras: Some(GltfExtras {
+                value: "{ \"name\": \"point\", \"intensity\": 150000.0, \"range\": 10.0, \"radius\": 3.5 , \"color\": [ 0.7, 0.0, 0.8 ], \"shadows\": true }".to_string(),
+            }),
+        });
+
+        gltf_nodes.insert(node_handle.clone().id(), GltfNode {
+            index: 2,
+            name: "Test Light 1".to_string(),
+            mesh: None,
+            skin: None,
+            transform: Default::default(),
+            is_animation_root: false,
+            children: vec![],
+            extras: Some(GltfExtras {
+                value: "{ \"name\": \"spot\", \"intensity\": 150000.0, \"range\": 10.0, \"radius\": 3.5 , \"color\": [ 0.7, 0.0, 0.8 ], \"shadows\": true, \"inner_cone\": 0.1, \"outer_cone\": 0.5 }".to_string(),
+            }),
         });
 
         // Add Gltf referencing this node
