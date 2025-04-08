@@ -47,7 +47,7 @@ impl Plugin for BattleSetupPlugin {
 ///   assigning new positions starting from `(-10.0, 51.0, 15.0)` and incrementing the x-coordinate for each enemy.
 /// - The enemy entities are then assigned to new slots in the `battle_entities.enemies` map.
 /// - After the positions are updated, the `battle_entities.need_patch` flag is set to `false` to indicate no further patch is needed.
-fn update_enemy_position(
+pub fn update_enemy_position(
     mut battle_entities: ResMut<BattleCurrentEntities>,
     mut transforms: Query<&mut Transform>,
 ) {

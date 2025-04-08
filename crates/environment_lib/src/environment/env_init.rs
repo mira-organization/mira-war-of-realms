@@ -30,7 +30,7 @@ pub fn setup_environment_system(mut commands: Commands) {
 ///
 /// Returns:
 /// - `HashMap<String, Environment>`: A mapping of environment names to `Environment` structs.
-fn load_environments() -> HashMap<String, Environment> {
+pub fn load_environments() -> HashMap<String, Environment> {
     let mut environments = HashMap::new();
 
     if let Ok(entries) = fs::read_dir("assets/environments") {

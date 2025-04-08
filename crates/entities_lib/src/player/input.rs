@@ -39,7 +39,7 @@ impl Plugin for PlayerInputPlugin {
 /// - `input_event_writer`: Used to emit player action events.
 /// - `keyboard`: Access to keyboard input states.
 /// - `camera_query`: Used to get the transform of the camera for directional movement.
-fn fetch_keyboard_input(
+pub fn fetch_keyboard_input(
     mut input_event_writer: EventWriter<PlayerActionEvent>,
     keyboard: Res<ButtonInput<KeyCode>>,
     camera_query: Query<&Transform, With<PlayerWorldCamera>>,
@@ -98,7 +98,7 @@ fn fetch_keyboard_input(
 /// - `time`: Provides the delta time for frame-based updates.
 /// - `controllers`: Query to access player controllers, transforms, and world player components.
 /// - `input_event_reader`: Reads the player action events.
-fn update_movement(
+pub fn update_movement(
     time: Res<Time>,
     mut controllers: Query<(&mut KinematicCharacterController, &mut Transform, &mut WorldPlayer), With<WorldPlayer>>,
     mut input_event_reader: EventReader<PlayerActionEvent>,
@@ -150,7 +150,7 @@ fn update_movement(
 /// - `commands`: A mutable reference to the Bevy `Commands` to spawn entities.
 /// - `query`: A query to get the player entity in the game world.
 /// - `input_event_writer`: An event writer to send the player's action event (Attacking).
-fn input_attack(
+pub fn input_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     mut commands: Commands,
     mut query: Query<(Entity, &mut Transform, &AttackBoxSettings), With<WorldPlayer>>,
@@ -161,6 +161,7 @@ fn input_attack(
     if current_state.eq(&GameState::InGame(InGameState::Battle)) {
         return;
     }
+
     if mouse_input.just_pressed(MouseButton::Left) {
         // Trigger the player's attack event
         input_event_writer.send(PlayerActionEvent::Attacking);
@@ -329,7 +330,7 @@ fn fetch_battle_operation(
 /// # Arguments
 /// - `players`: A query to access the player’s position in the world.
 /// - `last_stable_ground`: A resource to store the last known stable ground position.
-fn track_stable_ground(mut players: Query<&Transform, With<WorldPlayer>>,
+pub fn track_stable_ground(mut players: Query<&Transform, With<WorldPlayer>>,
                        mut last_stable_ground: ResMut<LastStableGround>)
 {
     for transform in players.iter_mut() {
@@ -347,7 +348,7 @@ fn track_stable_ground(mut players: Query<&Transform, With<WorldPlayer>>,
 /// # Arguments
 /// - `players`: A query to access the player’s position in the world.
 /// - `last_stable_ground`: A resource containing the player’s last stable ground position.
-fn check_void_fall(mut players: Query<&mut Transform, With<WorldPlayer>>,
+pub fn check_void_fall(mut players: Query<&mut Transform, With<WorldPlayer>>,
                    last_stable_ground: ResMut<LastStableGround>)
 {
     for mut transform in players.iter_mut() {

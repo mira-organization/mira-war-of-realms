@@ -1,12 +1,10 @@
 pub mod player;
 pub mod enemies;
-mod camera;
+pub mod camera;
 
 use bevy::prelude::*;
 use bevy_atmosphere::prelude::AtmospherePlugin;
 use bevy_mod_outline::{AutoGenerateOutlineNormalsPlugin, OutlinePlugin};
-use bevy_rapier3d::plugin::PhysicsSet;
-use bevy_third_person_camera::{CameraSyncSet, ThirdPersonCameraPlugin};
 use system::characters::CharacterParty;
 use system::commons::{AccountPlayer, Character, Elements, Enemy, WorldPlayer};
 use crate::enemies::ai::AiPlugin;
@@ -35,10 +33,9 @@ impl Plugin for EntitiesPlugin {
         app.register_type::<Enemy>();
         app.register_type::<CharacterParty>();
         app.register_type::<Elements>();
-        app.add_plugins((ThirdPersonCameraPlugin, AtmospherePlugin, OutlinePlugin, AutoGenerateOutlineNormalsPlugin::default()));
+        app.add_plugins((AtmospherePlugin, OutlinePlugin, AutoGenerateOutlineNormalsPlugin::default()));
 
         // Adding additional plugins for player, enemies, and AI management
         app.add_plugins((PlayerPlugin, EnemiesPlugin, AiPlugin));
-        app.configure_sets(PostUpdate, CameraSyncSet.after(PhysicsSet::StepSimulation));
     }
 }

@@ -1,5 +1,5 @@
 pub mod audio;
-mod audio_control;
+pub mod audio_control;
 
 use std::time::Duration;
 use bevy::prelude::*;
@@ -235,11 +235,11 @@ impl AudioManager {
     ///
     /// # Returns:
     /// `true` if the audio system contains the specified channel, `false` otherwise.
-    fn contains_channel(&self, channel_name: &str) -> bool {
+    pub fn contains_channel(&self, channel_name: &str) -> bool {
         self.audio.contains_key(channel_name)
     }
 }
 
-fn load_up_audio_config(config: Res<ConfigService>, mut audio_option: ResMut<AudioOption>) {
+pub fn load_up_audio_config(config: Res<ConfigService>, mut audio_option: ResMut<AudioOption>) {
     audio_option.initialize(&config);
 }

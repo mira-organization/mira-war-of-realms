@@ -25,7 +25,7 @@ impl Plugin for BattleCameraPlugin {
 ///
 /// # Parameters
 /// - `camera_query`: Query for the `CameraController` component and its associated `Transform`.
-fn update_camera_movement(
+pub fn update_camera_movement(
     mut camera_query: Query<(&CameraController, &mut Transform), (With<CameraController>, Without<Character>)>,
     character_query: Query<(Entity, &Character, &Transform), Without<CameraController>>,
     enemy_query: Query<(Entity, &Transform), (With<Enemy>, Without<Character>, Without<CameraController>)>,

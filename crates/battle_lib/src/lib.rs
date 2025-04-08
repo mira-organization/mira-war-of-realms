@@ -1,8 +1,8 @@
-mod logic;
-mod observes;
-mod setup;
-mod fight;
-mod turn_logic;
+pub mod logic;
+pub mod observes;
+pub mod setup;
+pub mod fight;
+pub mod turn_logic;
 mod character_operations;
 
 use bevy::prelude::*;

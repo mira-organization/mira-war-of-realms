@@ -1,6 +1,6 @@
-mod env_init;
-mod env_handles;
-mod ready_up_handles;
+pub mod env_init;
+pub mod env_handles;
+pub mod ready_up_handles;
 
 use std::f32::consts::PI;
 use bevy::pbr::CascadeShadowConfigBuilder;

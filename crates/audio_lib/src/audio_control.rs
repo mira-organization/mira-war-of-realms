@@ -13,6 +13,12 @@ pub struct AudioOption {
     pub volumes: HashMap<String, f64>
 }
 
+impl Default for AudioOption {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AudioOption {
     /// Creates a new instance of `AudioOption` with default volume values.
     ///
@@ -48,7 +54,7 @@ impl AudioOption {
     /// - `audio_kira_handle`: A mutable reference to `DynamicAudioChannels` to manage dynamic audio channels.
     /// - `audio_manager`: A reference to the `AudioManager` that handles the audio channels.
     pub fn set_master_volume(&mut self, volume: f64, audio_kira_handle: &mut DynamicAudioChannels, audio_manager: &AudioManager) {
-        self.master_volume = volume.clamp(0.0, 1.0);
+        self.master_volume = (volume.clamp(0.0, 1.0) * 100.0).round() / 100.0;
         self.apply_volumes(audio_kira_handle, audio_manager);
     }
 
@@ -61,7 +67,7 @@ impl AudioOption {
     /// - `audio_manager`: A reference to the `AudioManager` that handles the audio channels.
     pub fn set_category_volume(&mut self, category: &str, volume: f64, audio_kira_handle: &mut DynamicAudioChannels, audio_manager: &AudioManager) {
         if let Some(ch) = self.volumes.get_mut(category) {
-            *ch = volume.clamp(0.0, 1.0);
+            *ch = (volume.clamp(0.0, 1.0) * 100.0).round() / 100.0;
             self.apply_volumes(audio_kira_handle, audio_manager);
         }
     }
@@ -78,7 +84,7 @@ impl AudioOption {
             for (channel, audio_type_enum) in audio_manager.audio.clone() {
                 if AudioType::from_string(audio_type) == audio_type_enum {
                     if let Some(audio) = audio_kira_handle.get_channel(channel.as_str()) {
-                        let insert = volume * self.master_volume;
+                        let insert = (volume * self.master_volume * 100.0).round() / 100.0;
 
                         info!("Value: {}, channel: {:?}", insert, channel);
 

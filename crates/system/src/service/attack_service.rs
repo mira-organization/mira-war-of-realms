@@ -18,7 +18,6 @@ impl Plugin for AttackService {
         app.add_systems(Update, (
             attack_timer_system,
             attack_collision_system,
-            debug_event_log
         ).run_if(in_state(GameState::InGame(InGameState::Main))));
     }
 }
@@ -122,17 +121,6 @@ fn attack_collision_system(
                 }
             }
         }
-    }
-}
-
-/// This system reads and logs events triggered when an entity is hit by an attack.
-/// It logs the sender (the attacking entity) and the receiver (the entity that was hit).
-///
-/// # Arguments
-/// * `event_reader` - The event reader to read the `WorldEntityHitEntityEvent` events.
-fn debug_event_log(mut event_reader: EventReader<WorldEntityHitEntityEvent>) {
-    for event in event_reader.read() {
-        info!("Entity [ {:?} ] has hit Entity [ {:?} ]", event.sender, event.entity);
     }
 }
 

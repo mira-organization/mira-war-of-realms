@@ -78,7 +78,7 @@ pub fn detect_current_character_operation(
 ///
 /// # Behavior
 /// - If no entity is selected, the first enemy (slot 1) is chosen and highlighted.
-fn select_encounter_target(
+pub fn select_encounter_target(
     mut commands: Commands,
     battle_members: Res<BattleCurrentEntities>,
     mut selected: ResMut<BattleSelectedStatus>,
@@ -104,7 +104,7 @@ fn select_encounter_target(
 /// # Behavior
 /// - Adds a 3D capsule mesh as a child.
 /// - Registers interaction handlers for mouse events.
-fn set_observe_entities(
+pub fn set_observe_entities(
     mut commands: Commands,
     query: Query<Entity, With<ObserveAble>>,
     mut meshes: ResMut<Assets<Mesh>>,

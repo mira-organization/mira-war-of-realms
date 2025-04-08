@@ -1,5 +1,5 @@
-mod input;
-mod animation;
+pub mod input;
+pub mod animation;
 
 use bevy::prelude::*;
 use crate::camera::{GameCameraPlugin, PlayerWorldCamera};

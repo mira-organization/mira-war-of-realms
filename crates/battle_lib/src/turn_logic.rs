@@ -29,7 +29,7 @@ impl Plugin for BattleTurnLogicPlugin {
 /// - `turn_order`: A mutable resource that stores the turn order.
 /// - `characters`: Query for all player-controlled characters.
 /// - `enemies`: Query for all enemy-controlled characters.
-fn setup_battle_order(
+pub fn setup_battle_order(
     mut turn_order: ResMut<TurnOrder>,
     characters: Query<(Entity, &Character)>,
     enemies: Query<(Entity, &Enemy)>,
@@ -69,7 +69,7 @@ fn setup_battle_order(
 /// - Moves to the next available entity in the order.
 /// - If the current entity is a character, their ability set is loaded.
 /// - If no valid entity remains, the function exits early.
-fn battle_order_system(
+pub fn battle_order_system(
     mut turn_order: ResMut<TurnOrder>,
     characters: Query<(&Character, &Name), (With<Character>, Without<Enemy>)>,
     enemies: Query<(&Enemy, &Name), (With<Enemy>, Without<Character>)>,

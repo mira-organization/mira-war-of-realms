@@ -28,7 +28,7 @@ impl Plugin for PlayerEvents {
 /// - `Move(Vec3)`: Represents the player moving in 3D space. The `Vec3` is the direction and distance of movement.
 /// - `Sprinting(Vec3)`: Represents the player sprinting. The `Vec3` is the direction and speed of sprinting.
 /// - `Attacking`: Represents the player performing an attack action.
-#[derive(Event)]
+#[derive(Event, Debug, PartialEq)]
 pub enum PlayerActionEvent {
     /// The player is idle and not performing any action.
     Idle,

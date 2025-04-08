@@ -26,7 +26,7 @@ impl Plugin for PlayerAnimationPlugin {
 /// - `commands`: Provides access to entity commands for adding components.
 /// - `animations`: The resource containing animation data and the graph.
 /// - `players`: Query to access entities with a newly added `AnimationPlayer`.
-fn setup(
+pub fn setup(
     mut commands: Commands,
     animations: Res<Animations>,
     mut players: Query<(Entity, &mut AnimationPlayer), Added<AnimationPlayer>>,
@@ -57,7 +57,7 @@ fn setup(
 /// - `players`: Query to access player entities and their states.
 /// - `animations`: The resource containing animation data.
 /// - `animation_players`: Query to access animation players and their transitions.
-fn update(
+pub fn update(
     time: Res<Time>,
     mut players: Query<&mut WorldPlayer>,
     animations: Res<Animations>,

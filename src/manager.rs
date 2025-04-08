@@ -61,7 +61,7 @@ impl Plugin for ManagerPlugin {
 /// * `debug_context` - A mutable reference to the debug rendering context.
 /// * `keyboard` - A resource representing the current state of keyboard inputs.
 /// * `general_config` - A resource containing the game's configuration settings.
-fn toggle_debug_system(
+pub fn toggle_debug_system(
     mut debug_context: ResMut<DebugRenderContext>,
     keyboard: ResMut<ButtonInput<KeyCode>>,
     general_config: Res<ConfigService>,
@@ -88,7 +88,7 @@ fn toggle_debug_system(
 /// # Panics
 ///
 /// This function will panic if the key from `ConfigService` cannot be converted into a valid `KeyCode`.
-fn toggle_world_inspector_interface_system(
+pub fn toggle_world_inspector_interface_system(
     keyboard: Res<ButtonInput<KeyCode>>,
     general_config: Res<ConfigService>,
     mut world_inspector_state: ResMut<WorldInspectorState>,

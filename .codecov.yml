@@ -1,0 +1,34 @@
+codecov:
+  require_ci_to_pass: true
+  notify:
+    after_n_builds: 1
+
+coverage:
+  status:
+    project:
+      default:
+        target: 75%
+        threshold: 5%
+    patch:
+      default:
+        target: 75%
+        threshold: 5%
+
+ignore:
+  - "crates/system/src/events/**"
+  - "crates/system/src/utils/**"
+  - "crates/system/src/lib.rs"
+  - "crates/system/src/states.rs"
+  - "crates/system/src/run_conditions.rs"
+  - "crates/system/src/characters.rs"
+  - "crates/system/src/bundles.rs"
+  - "crates/system/src/service/mod.rs"
+  - "crates/system/src/service/load_service.rs"
+  - "crates/entities_lib/src/camera/**"
+  - "crates/entities_lib/src/lib.rs"
+  - "crates/battle_lib/src/lib.rs"
+  - "crates/battle_lib/src/observes.rs"
+  - "crates/environment_lib/src/lib.rs"
+  - "crates/environment_lib/src/environment/mod.rs"
+  - "crates/ui_lib/**"
+  - "src/**"

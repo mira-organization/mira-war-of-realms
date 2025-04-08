@@ -32,7 +32,7 @@ impl Plugin for CharacterService {
 /// - `keyboard`: Handles keyboard input.
 /// - `general_config`: Stores key bindings for character selection.
 /// - `change_character`: A flag that determines if a character switch should occur.
-fn trigger_switch_character(
+pub fn trigger_switch_character(
     mut dummy_save_data: ResMut<DummySaveData>,
     keyboard: Res<ButtonInput<KeyCode>>,
     general_config: Res<ConfigService>,

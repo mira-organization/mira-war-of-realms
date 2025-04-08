@@ -33,7 +33,7 @@ impl Plugin for ReadyUpHandles {
 /// * `environment` - The list of available environments.
 /// * `dummy_save_data` - Holds the current environment and area index.
 /// * `next_state` - Used to transition to the next game state.
-fn pre_load_environments(mut commands: Commands,
+pub fn pre_load_environments(mut commands: Commands,
                          environment: Res<EnvironmentListResource>,
                          dummy_save_data: Res<DummySaveData>,
                          mut next_state: ResMut<NextState<GameState>>
@@ -85,7 +85,7 @@ fn pre_load_environments(mut commands: Commands,
 ///
 /// Logging:
 /// - Outputs an informational log message indicating that the `.glb` file is being preloaded.
-fn pre_load_area(mut commands: Commands,
+pub fn pre_load_area(mut commands: Commands,
                  asset_server: Res<AssetServer>,
                  environment: Res<CurrentEnvironment>
 ) {
@@ -96,7 +96,7 @@ fn pre_load_area(mut commands: Commands,
     info!("Pre Loading glb [{:?}]", path);
 }
 
-fn pre_load_gltf_assets(mut commands: Commands, asset_server: Res<AssetServer>, environment: Res<CurrentEnvironment>) {
+pub fn pre_load_gltf_assets(mut commands: Commands, asset_server: Res<AssetServer>, environment: Res<CurrentEnvironment>) {
     let path = format!("environments/{}/{}", environment.environment.name, environment.area.name);
     let gltf_handle = asset_server.load::<Gltf>(path.as_str());
 
@@ -127,7 +127,7 @@ fn pre_load_gltf_assets(mut commands: Commands, asset_server: Res<AssetServer>, 
 /// - Outputs how many scenes were found.
 /// - Logs warnings if layers 1 or 2 are missing.
 /// - Signals when environment loading is complete.
-fn process_loaded_area(mut commands: Commands,
+pub fn process_loaded_area(mut commands: Commands,
                        gltf_assets: Res<Assets<Gltf>>,
                        mut next_state: ResMut<NextState<GameState>>,
                        waiting: Option<Res<WaitingForAreaAssets>>,
@@ -186,7 +186,7 @@ fn process_loaded_area(mut commands: Commands,
 /// * `commands` - Used to spawn entities into the world.
 /// * `current_area_scenes` - Holds the loaded area scenes.
 /// * `next_state` - Used to transition to the next game state.
-fn load_active_area(mut commands: Commands,
+pub fn load_active_area(mut commands: Commands,
                     current_area_scenes: Res<CurrentAreaScenes>
 ) {
     let first_layer = current_area_scenes.0.get(&String::from("layer_0")).cloned();
@@ -234,7 +234,7 @@ fn load_active_area(mut commands: Commands,
 /// - `gltf_assets`: GLTF asset resources.
 /// - `gltf_nodes`: GLTF node resources containing extra metadata.
 /// - `extra_scene_assets`: Optional extra scene assets that may contain light data.
-fn load_active_area_lights(
+pub fn load_active_area_lights(
     mut commands: Commands,
     mut next_state: ResMut<NextState<GameState>>,
     gltf_assets: Res<Assets<Gltf>>,
@@ -263,8 +263,10 @@ fn process_gltf_lights(
     for node_handle in &gltf.nodes {
         if let Some(node) = gltf_nodes.get(node_handle) {
                 if let Some(extras) = &node.extras {
+                    info!("Value: {:?}", &extras.value);
                     if let Ok(parsed) = serde_json::from_str::<Value>(&extras.value) {
                         if let Some(bevy_json) = parsed.get("bevy_value").and_then(|v| v.as_str()) {
+                            debug!("Json: {:?}", bevy_json);
                             if let Ok(light_data) = serde_json::from_str::<LightData>(bevy_json) {
                                 spawn_light(commands, node, light_data);
                             }

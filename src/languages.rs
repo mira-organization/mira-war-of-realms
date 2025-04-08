@@ -26,6 +26,12 @@ pub struct LocalManager {
     pub locales: HashMap<String, Handle<BundleAsset>>,
 }
 
+impl Default for LocalManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[allow(dead_code)]
 impl LocalManager {
     /// Creates a new instance of `LocalManager` with a default locale (`"en-US"`)
@@ -113,7 +119,7 @@ impl LocalManager {
 /// # Arguments
 /// - `asset_server`: The `AssetServer` used to load localization assets.
 /// - `locale_manager`: A mutable reference to the `LocalManager` that will hold the loaded assets.
-fn pre_load_localizations(asset_server: Res<AssetServer>,
+pub fn pre_load_localizations(asset_server: Res<AssetServer>,
                           mut locale_manager: ResMut<LocalManager>) {
     info!("Loading localizations [ {} ]", locale_manager.current_locale);
     let locales = ["en-US", "de-DE"];
