@@ -262,17 +262,17 @@ fn process_gltf_lights(
 ) {
     for node_handle in &gltf.nodes {
         if let Some(node) = gltf_nodes.get(node_handle) {
-                if let Some(extras) = &node.extras {
-                    info!("Value: {:?}", &extras.value);
-                    if let Ok(parsed) = serde_json::from_str::<Value>(&extras.value) {
-                        if let Some(bevy_json) = parsed.get("bevy_value").and_then(|v| v.as_str()) {
-                            debug!("Json: {:?}", bevy_json);
-                            if let Ok(light_data) = serde_json::from_str::<LightData>(bevy_json) {
-                                spawn_light(commands, node, light_data);
-                            }
+            if let Some(extras) = &node.extras {
+                info!("Value: {:?}", &extras.value);
+                if let Ok(parsed) = serde_json::from_str::<Value>(&extras.value) {
+                    if let Some(bevy_json) = parsed.get("bevy_value").and_then(|v| v.as_str()) {
+                        debug!("Json: {:?}", bevy_json);
+                        if let Ok(light_data) = serde_json::from_str::<LightData>(bevy_json) {
+                            spawn_light(commands, node, light_data);
                         }
                     }
                 }
+            }
         }
     }
 }
@@ -306,7 +306,11 @@ fn spawn_light(commands: &mut Commands, node: &GltfNode, light_data: LightData) 
         _ => return,
     };
 
-    let transform = Transform::from_translation(node.transform.translation);
+    let transform = Transform {
+        translation: node.transform.translation,
+        rotation: node.transform.rotation,
+        scale: node.transform.scale,
+    };
     match light {
         LightType::Point(point_light) => commands.spawn((point_light, transform)),
         LightType::Spot(spot_light) => commands.spawn((spot_light, transform)),
