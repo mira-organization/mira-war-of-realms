@@ -18,6 +18,7 @@ ignore:
   - "crates/system/src/events/**"
   - "crates/system/src/utils/**"
   - "crates/system/src/lib.rs"
+  - "crates/system/src/language_tests.rs" # currently disabled because not test ready
   - "crates/system/src/states.rs"
   - "crates/system/src/run_conditions.rs"
   - "crates/system/src/characters.rs"
