@@ -18,7 +18,8 @@ impl Plugin for CharacterService {
     /// - `switch_character`: Handles the actual process of changing the in-game character.
     fn build(&self, app: &mut App) {
         app.add_systems(Update, trigger_switch_character.run_if(in_state(GameState::InGame(InGameState::Main))));
-        app.add_systems(Update, switch_character.run_if(resource_changed::<ChangeCharacter>));
+        app.add_systems(Update, switch_character
+            .run_if(resource_changed::<ChangeCharacter>));
     }
 }
 
@@ -112,7 +113,7 @@ pub fn switch_character(
         let mut graph = AnimationGraph::new();
 
         if let Some(data) = dummy_save_data.current_char.clone() {
-            let mut transform = Transform::from_xyz(40.0, 14.0, 40.0);
+            let mut transform = Transform::from_xyz(40.0, 13.0, 40.0);
             if let Some((entity, current_character)) = current_world_character.0.clone() {
                 // Prevents unnecessary character switch if it's already the active one
                 if current_character.name == data.name {

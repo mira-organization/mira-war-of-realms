@@ -6,19 +6,19 @@
   "animations": [
     {
       "key": "idle",
-      "index": 0
-    },
-    {
-      "key": "walk",
       "index": 1
     },
     {
-      "key": "sprint",
+      "key": "walk",
       "index": 2
     },
     {
-      "key": "idle-02",
+      "key": "sprint",
       "index": 3
+    },
+    {
+      "key": "idle-02",
+      "index": 4
     }
   ],
   "abilities": [

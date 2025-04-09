@@ -12,7 +12,7 @@ use environment_lib::environment::EnvironmentPlugin;
 use system::battle_commons::{BattleCurrentEntities};
 use system::characters::CharacterParty;
 use system::commons::Character;
-use system::data::{ChangeCharacter, CurrentWorldCharacter};
+use system::data::{AssetsToLoad, ChangeCharacter, CurrentWorldCharacter};
 use system::events::EventManagerPlugin;
 use system::service::ServicePlugin;
 use crate::languages::LanguagesPlugin;
@@ -29,16 +29,17 @@ impl Plugin for ManagerPlugin {
         app.init_state::<GameState>();
 
         // Insert global configuration resource
+        app.init_resource::<AssetsToLoad>();
         app.insert_resource(ConfigService::new());
         app.insert_resource(WorldInspectorState::default());
         app.insert_resource(DummySaveData::default());
         app.insert_resource(CurrentWorldCharacter::default());
-        app.insert_resource(ChangeCharacter(true));
         app.insert_resource(BattleCurrentEntities::default());
         app.insert_resource(CharacterParty {
             team_leader: Character::default(),
             members: HashMap::new()
         });
+        app.insert_resource(ChangeCharacter(false));
 
         // Add various game-related plugins
         app.add_plugins(LanguagesPlugin);

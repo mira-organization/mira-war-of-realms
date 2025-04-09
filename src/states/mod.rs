@@ -2,9 +2,11 @@ mod pre_load_state;
 mod splash_screen_state;
 mod title_screen_state;
 mod account_screen_state;
+mod fix_asset_waiting;
 
 use bevy::prelude::*;
 use crate::states::account_screen_state::AccountScreenState;
+use crate::states::fix_asset_waiting::FixAssetWaitingState;
 use crate::states::pre_load_state::PreLoadState;
 use crate::states::splash_screen_state::SplashScreenState;
 use crate::states::title_screen_state::TitleScreenState;
@@ -34,6 +36,7 @@ impl Plugin for StatesPlugin {
             SplashScreenState,
             TitleScreenState,
             AccountScreenState,
+            FixAssetWaitingState,
         ));
     }
 }
