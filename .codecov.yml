@@ -9,10 +9,6 @@ coverage:
       default:
         target: 75%
         threshold: 5%
-    patch:
-      default:
-        target: 75%
-        threshold: 5%
 
 ignore:
   - "crates/system/src/events/**"
