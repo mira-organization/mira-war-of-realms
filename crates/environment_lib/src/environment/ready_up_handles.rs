@@ -5,7 +5,8 @@ use bevy::utils::HashMap;
 use bevy_rapier3d::prelude::{AsyncSceneCollider, ComputedColliderShape, RigidBody, TriMeshFlags};
 use serde_json::Value;
 use system::config::DummySaveData;
-use system::states::{GameState, InGameState};
+use system::data::AssetsToLoad;
+use system::states::GameState;
 use crate::environment::*;
 
 pub struct ReadyUpHandles;
@@ -87,12 +88,12 @@ pub fn pre_load_environments(mut commands: Commands,
 /// - Outputs an informational log message indicating that the `.glb` file is being preloaded.
 pub fn pre_load_area(mut commands: Commands,
                  asset_server: Res<AssetServer>,
-                 environment: Res<CurrentEnvironment>
+                 environment: Res<CurrentEnvironment>, mut assets_to_load: ResMut<AssetsToLoad>
 ) {
     let path = format!("environments/{}/{}", environment.environment.name, environment.area.name);
     let glb_handle = asset_server.load::<Gltf>(path.as_str());
     commands.insert_resource(WaitingForAreaAssets(glb_handle.clone()));
-
+    assets_to_load.0.push(glb_handle.untyped().id());
     info!("Pre Loading glb [{:?}]", path);
 }
 
@@ -236,7 +237,6 @@ pub fn load_active_area(mut commands: Commands,
 /// - `extra_scene_assets`: Optional extra scene assets that may contain light data.
 pub fn load_active_area_lights(
     mut commands: Commands,
-    mut next_state: ResMut<NextState<GameState>>,
     gltf_assets: Res<Assets<Gltf>>,
     gltf_nodes: Res<Assets<GltfNode>>,
     extra_scene_assets: Option<Res<EffectSceneAssets>>,
@@ -245,7 +245,6 @@ pub fn load_active_area_lights(
         if let Some(gltf) = gltf_assets.get(&layer_lights.0) {
             process_gltf_lights(&mut commands, &gltf, &gltf_nodes);
         }
-        next_state.set(GameState::InGame(InGameState::Main));
     }
 }
 

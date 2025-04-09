@@ -1,4 +1,5 @@
 use std::fs;
+use bevy::asset::UntypedAssetId;
 use bevy::prelude::{Entity, Resource};
 use serde::Deserialize;
 use crate::commons::Character;
@@ -112,3 +113,6 @@ pub struct ChangeCharacter(pub bool);
 /// A resource storing the currently active world character.
 #[derive(Resource, Default, Clone, Debug)]
 pub struct CurrentWorldCharacter(pub Option<(Entity, Character)>);
+
+#[derive(Resource, Default, Clone, Debug)]
+pub struct AssetsToLoad(pub Vec<UntypedAssetId>);

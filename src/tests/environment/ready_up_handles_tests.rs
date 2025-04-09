@@ -13,6 +13,7 @@ mod tests {
     use environment_lib::environment::{Area, CurrentAreaScenes, CurrentEnvironment, EffectSceneAssets, Environment, EnvironmentListResource, EnvironmentScene, EnvironmentState, WaitingForAreaAssets};
     use environment_lib::environment::ready_up_handles::{load_active_area, load_active_area_lights, pre_load_area, pre_load_environments, pre_load_gltf_assets, process_loaded_area};
     use system::config::DummySaveData;
+    use system::data::AssetsToLoad;
     use system::states::GameState;
 
     #[test]
@@ -126,6 +127,7 @@ mod tests {
         app.add_plugins((MinimalPlugins, AssetPlugin::default(), GltfPlugin::default()));
         let asset_server = app.world_mut().resource::<AssetServer>().clone();
         app.insert_resource(WaitingForAreaAssets(Handle::weak_from_u128(999)));
+        app.insert_resource(AssetsToLoad::default());
 
         let area = Area {
             index: 0,
