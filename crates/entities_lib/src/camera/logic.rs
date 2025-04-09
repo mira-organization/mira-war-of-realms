@@ -11,6 +11,7 @@ use bevy_rapier3d::plugin::DefaultRapierContext;
 use bevy_rapier3d::prelude::{RapierContextColliders, RapierQueryPipeline, RapierRigidBodySet};
 use system::commons::{MainCamera, WorldPlayer};
 use system::config::ConfigService;
+use system::shader::ToonShaderMainCamera;
 use system::states::{GameState, InGameState};
 use system::utils::key_code::convert;
 use crate::camera::{CameraController, PlayerWorldCamera};
@@ -50,7 +51,8 @@ fn create_camera(mut commands: Commands) {
         PlayerWorldCamera,
         Bloom::default(),
         Tonemapping::TonyMcMapface,
-        AtmosphereCamera::default()
+        AtmosphereCamera::default(),
+        ToonShaderMainCamera,
     ));
 }
 

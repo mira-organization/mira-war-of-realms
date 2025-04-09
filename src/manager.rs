@@ -15,6 +15,7 @@ use system::commons::Character;
 use system::data::{AssetsToLoad, ChangeCharacter, CurrentWorldCharacter};
 use system::events::EventManagerPlugin;
 use system::service::ServicePlugin;
+use system::shader::ToonShaderPlugin;
 use crate::languages::LanguagesPlugin;
 use crate::states::StatesPlugin;
 use system::utils::key_code::convert;
@@ -48,6 +49,7 @@ impl Plugin for ManagerPlugin {
             enabled: false,
             ..default()
         });
+        app.add_plugins(ToonShaderPlugin);
         app.add_plugins(WorldInspectorPlugin::default().run_if(check_world_inspector_state));
         app.add_plugins((AudioStorePlugin, AudioHandlerPlugin));
         app.add_plugins((StatesPlugin, EventManagerPlugin, EntitiesPlugin,
