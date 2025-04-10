@@ -6,6 +6,7 @@ use bevy_rapier3d::prelude::{AsyncSceneCollider, ComputedColliderShape, RigidBod
 use serde_json::Value;
 use system::config::DummySaveData;
 use system::data::AssetsToLoad;
+use system::shader::ToonShaderMarker;
 use system::states::GameState;
 use crate::environment::*;
 
@@ -18,6 +19,9 @@ impl Plugin for ReadyUpHandles {
         app.add_systems(Update, process_loaded_area.run_if(in_state(GameState::EnvironmentLoad)));
         app.add_systems(Update, load_active_area_lights.run_if(in_state(GameState::EnvironmentPostLoad)));
         app.add_systems(OnEnter(GameState::EnvironmentPostLoad), load_active_area);
+        app.add_systems(Update, apply_toon_shader_to_scene_meshes
+            .run_if(in_state(GameState::EnvironmentPostLoad))
+            .after(load_active_area));
     }
 }
 
@@ -200,6 +204,7 @@ pub fn load_active_area(mut commands: Commands,
             .insert(EnvironmentScene)
             .insert(NoFrustumCulling)
             .insert(RigidBody::Fixed)
+            .insert(ToonShaderMarker)
             .insert(AsyncSceneCollider {
                 shape: Some(ComputedColliderShape::TriMesh(TriMeshFlags::MERGE_DUPLICATE_VERTICES)),
                 ..default()
@@ -210,6 +215,7 @@ pub fn load_active_area(mut commands: Commands,
         commands.spawn(SceneRoot(second_layer.clone()))
             .insert(Name::new("Area Second Layer"))
             .insert(NoFrustumCulling)
+            .insert(ToonShaderMarker)
             .insert(EnvironmentScene);
     }
 
@@ -219,6 +225,7 @@ pub fn load_active_area(mut commands: Commands,
             .insert(EnvironmentScene)
             .insert(RigidBody::Fixed)
             .insert(NoFrustumCulling)
+            .insert(ToonShaderMarker)
             .insert(AsyncSceneCollider {
                 shape: Some(ComputedColliderShape::TriMesh(TriMeshFlags::MERGE_DUPLICATE_VERTICES)),
                 ..default()
@@ -314,4 +321,54 @@ fn spawn_light(commands: &mut Commands, node: &GltfNode, light_data: LightData) 
         LightType::Point(point_light) => commands.spawn((point_light, transform)),
         LightType::Spot(spot_light) => commands.spawn((spot_light, transform)),
     };
+}
+
+pub fn apply_toon_shader_to_scene_meshes(
+    mut commands: Commands,
+    mut toon_materials: ResMut<Assets<ToonShaderMaterial>>,
+    standard_materials: Res<Assets<StandardMaterial>>,
+    mut mesh_standard: Query<(Entity, &MeshMaterial3d<StandardMaterial>)>,
+    scene_roots: Query<(Entity, &Children), With<ToonShaderMarker>>,
+    children_query: Query<&Children>,
+) {
+    fn traverse(
+        entity: Entity,
+        children_query: &Query<&Children>,
+        mesh_standard: &mut Query<(Entity, &MeshMaterial3d<StandardMaterial>)>,
+        standard_materials: &Res<Assets<StandardMaterial>>,
+        toon_materials: &mut ResMut<Assets<ToonShaderMaterial>>,
+        commands: &mut Commands,
+    ) {
+        if let Ok((entity, mesh_mat)) = mesh_standard.get_mut(entity) {
+            if let Some(std_mat) = standard_materials.get(&mesh_mat.0) {
+                let toon_handle = toon_materials.add(ToonShaderMaterial {
+                    base_color_texture: std_mat.base_color_texture.clone(),
+                    color: std_mat.base_color.darker(0.1),
+                    sun_dir: Vec3::Y,
+                    sun_color: Color::srgba(0.1, 0.1, 0.1, 1.0),
+                    camera_pos: Vec3::ZERO,
+                    ambient_color: Color::srgba(0.02, 0.02, 0.02, 1.0),
+                });
+
+                commands
+                    .entity(entity)
+                    .remove::<MeshMaterial3d<StandardMaterial>>()
+                    .insert(MeshMaterial3d::<ToonShaderMaterial>(toon_handle));
+            }
+        }
+
+        if let Ok(children) = children_query.get(entity) {
+            for &child in children {
+                traverse(child, children_query, mesh_standard, standard_materials, toon_materials, commands);
+            }
+        }
+    }
+
+    for (root_entity, children) in &scene_roots {
+        for &child in children {
+            traverse(child, &children_query, &mut mesh_standard, &standard_materials, &mut toon_materials, &mut commands);
+        }
+
+        commands.entity(root_entity).remove::<ToonShaderMarker>();
+    }
 }

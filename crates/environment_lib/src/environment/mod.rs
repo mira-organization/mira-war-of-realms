@@ -191,7 +191,7 @@ fn create_light(mut commands: Commands, mut toon_materials: ResMut<Assets<ToonSh
     // Spawn the directional light entity
     commands.spawn((
         DirectionalLight {
-            illuminance: light_consts::lux::OVERCAST_DAY,  // Set light intensity to an overcast day level
+            illuminance: light_consts::lux::DARK_OVERCAST_DAY,  // Set light intensity to an overcast day level
             shadows_enabled: true,  // Enable shadows for the light
             ..default()
         },
@@ -217,7 +217,7 @@ fn create_light(mut commands: Commands, mut toon_materials: ResMut<Assets<ToonSh
     });
 
     commands.spawn((
-        Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
+        Mesh3d(meshes.add(Torus::new(1.0, 1.5))),
         MeshMaterial3d(toon_material),
         Transform::from_translation(Vec3::new(0.0, 16.0, 0.0)),
     ));

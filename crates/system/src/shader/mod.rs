@@ -84,6 +84,9 @@ pub struct ToonShaderMainCamera;
 #[derive(Component)]
 pub struct ToonShaderSun;
 
+#[derive(Component)]
+pub struct ToonShaderMarker;
+
 pub fn update_toon_shader(
     main_cam: Query<&Transform, With<ToonShaderMainCamera>>,
     sun: Query<(&Transform, &DirectionalLight), With<ToonShaderSun>>,
