@@ -107,6 +107,7 @@ fn splash_screen_update(
     root_query: Query<Entity, With<SplashRoot>>,
     asset_server: Res<AssetServer>,
     mut children: Query<&mut Children>,
+    fade_drop: Query<Entity, With<FadeOverlay>>
 ) {
     match current_fade_phase.get() {
         SplashFadePhase::FadeInStudio => {
@@ -133,6 +134,12 @@ fn splash_screen_update(
         }
 
         SplashFadePhase::FadeInPowered => {
+
+            fade_timer.timer.reset();
+            fade_timer.from = 1.0;
+            fade_timer.to = 0.0;
+            fade_phase.set(SplashFadePhase::PoweredDisplay);
+
             if let Ok(root) = root_query.get_single() {
                 if let Ok(child_list) = children.get_mut(root) {
                     for &child in child_list.iter() {
@@ -181,11 +188,18 @@ fn splash_screen_update(
         }
 
         SplashFadePhase::FadeOutPowered => {
-            if let Ok(root) = root_query.get_single() {
-                commands.entity(root).despawn_recursive();
-            }
+            if fade_timer
+                .timer.finished() {
+                if let Ok(root) = root_query.get_single() {
+                    commands.entity(root).despawn_recursive();
+                }
 
-            next_game_state.set(GameState::TitleScreen);
+                if let Ok(fade_entity) = fade_drop.get_single() {
+                    commands.entity(fade_entity).despawn_recursive();
+                }
+
+                next_game_state.set(GameState::TitleScreen);
+            }
         }
     }
 }
