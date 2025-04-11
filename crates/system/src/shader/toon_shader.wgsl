@@ -1,56 +1,67 @@
-struct ToonShaderMaterial {
-    color: vec4<f32>,
-    sun_dir: vec3<f32>,
-    sun_color: vec4<f32>,
-    camera_pos: vec3<f32>,
-    ambient_color: vec4<f32>,
-};
-
-@group(2) @binding(0)
-var<uniform> material: ToonShaderMaterial;
-@group(2) @binding(1)
-var base_color_texture: texture_2d<f32>;
-@group(2) @binding(2)
-var base_color_sampler: sampler;
-
 #import bevy_pbr::forward_io::VertexOutput
 
+struct ToonMaterial {
+    base_color: vec4<f32>,
+    light_direction: vec3<f32>,
+    light_color: vec4<f32>,
+    camera_position: vec3<f32>,
+    ambient_color: vec4<f32>,
+    rim_amount: f32,
+    rim_color: vec4<f32>,
+    rim_threshold: f32,
+    band_count: u32
+};
+
+@group(2) @binding(0) var<uniform> material: ToonMaterial;
+@group(2) @binding(1) var texture: texture_2d<f32>;
+@group(2) @binding(2) var sample: sampler;
+
 @fragment
-fn fragment (in: VertexOutput) -> @location(0) vec4<f32> {
-    // if model doesn't have uvs, this lets it still render.
+fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
+
     #ifdef VERTEX_UVS_A
-        let uv = in.uv;
+        let uv = input.uv;
     #else
         let uv = vec2(1.0, 1.0);
     #endif
 
-    let base_color = material.color * textureSample(base_color_texture, base_color_sampler, uv);
-    let normal = normalize(in.world_normal);
-    let n_dot_l = dot(material.sun_dir, normal);
+    let base_color = material.base_color * textureSample(texture, sample, uv);
+
+    // shading the object
+    let normal = normalize(input.world_normal); // make the world_normal of the input mesh have a length of one
+    let n_dot_l = dot(material.light_direction, normal) ;
     var light_intensity = 0.0;
 
-    if n_dot_l > 0.0 {
-        let bands = 3.0;
-        var x = n_dot_l * bands;
-
-        x = round(x);
-
-        light_intensity = x / bands;
+    // if we want bands, create bands, otherwise use smooth lighting
+    if material.band_count > 0 {
+        if n_dot_l > 0.0 {
+            var x = round(n_dot_l * f32(material.band_count));
+            light_intensity = x / f32(material.band_count);
+        } else {
+            light_intensity = 0.0;
+        }
     } else {
-        light_intensity = 0.0;
+        light_intensity = smoothstep(0.0, 0.01, n_dot_l);
     }
 
-    let light = light_intensity * material.sun_color;
 
-    let view_dir: vec3<f32> = normalize(material.camera_pos - in.world_position.xyz);
+    let light = (light_intensity * material.light_color);
 
-    let half_vector = normalize(material.sun_dir + view_dir);
+    // specular
+    let view_direction = normalize(material.camera_position - input.world_position.xyz);
+    let half_vector = normalize(material.light_direction + view_direction);
     let n_dot_h = dot(normal, half_vector);
+    let spec_color = vec4<f32>(0.9, 0.9, 0.9, 1.0);
     let glossiness = 32.0;
-    let specular_intensity = pow(n_dot_h, glossiness * glossiness);
+    let spec_intensity = pow(n_dot_h * light_intensity, glossiness * glossiness);
+    let spec_intensity_smooth = smoothstep(0.005, 0.01, spec_intensity);
+    let specular = spec_intensity_smooth * spec_color;
 
-    let specular_intensity_smooth = smoothstep(0.005, 0.01, specular_intensity);
-    let specular = specular_intensity_smooth * vec4<f32>(0.9, 0.9 ,0.9 ,1.0);
+    // rim lighting
+    let rim_dot = 1 - dot(view_direction, normal);
+    var rim_intensity = rim_dot * pow(n_dot_l, material.rim_threshold);
+    rim_intensity = smoothstep(material.rim_amount - 0.01, material.rim_amount + 0.01, rim_intensity);
+    let rim = rim_intensity * material.rim_color;
 
-    return base_color * (light + material.ambient_color + specular);
+    return base_color * (material.ambient_color + light + specular + rim);
 }

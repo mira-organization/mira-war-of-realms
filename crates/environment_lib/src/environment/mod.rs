@@ -8,7 +8,7 @@ use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use serde::Deserialize;
-use system::shader::{ToonShaderMaterial, ToonShaderSun};
+use system::shader::{ToonLight, ToonMaterial};
 use system::states::GameState;
 use crate::environment::env_handles::EnvSwapSystemPlugin;
 use crate::environment::env_init::EnvInitPlugin;
@@ -187,11 +187,11 @@ pub enum LightType {
 }
 
 
-fn create_light(mut commands: Commands, mut toon_materials: ResMut<Assets<ToonShaderMaterial>>, mut meshes: ResMut<Assets<Mesh>>, mut images: ResMut<Assets<Image>>,) {
+fn create_light(mut commands: Commands, mut toon_materials: ResMut<Assets<ToonMaterial>>, mut meshes: ResMut<Assets<Mesh>>, mut images: ResMut<Assets<Image>>,) {
     // Spawn the directional light entity
     commands.spawn((
         DirectionalLight {
-            illuminance: light_consts::lux::DARK_OVERCAST_DAY,  // Set light intensity to an overcast day level
+            illuminance: light_consts::lux::OVERCAST_DAY,  // Set light intensity to an overcast day level
             shadows_enabled: true,  // Enable shadows for the light
             ..default()
         },
@@ -208,11 +208,11 @@ fn create_light(mut commands: Commands, mut toon_materials: ResMut<Assets<ToonSh
             overlap_proportion: 0.2  // Set the overlap proportion for shadow cascades
         }
             .build(),
-        ToonShaderSun,
+        ToonLight,
     ));
 
-    let toon_material = toon_materials.add(ToonShaderMaterial {
-        base_color_texture: Some(images.add(uv_debug_texture())),
+    let toon_material = toon_materials.add(ToonMaterial {
+        texture: Some(images.add(uv_debug_texture())),
         ..default()
     });
 

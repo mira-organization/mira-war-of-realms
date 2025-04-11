@@ -6,8 +6,8 @@ use bevy_rapier3d::prelude::{AsyncSceneCollider, ComputedColliderShape, RigidBod
 use serde_json::Value;
 use system::config::DummySaveData;
 use system::data::AssetsToLoad;
-use system::shader::ToonShaderMarker;
-use system::states::GameState;
+use system::shader::ToonMarker;
+use system::states::{GameState, InGameState};
 use crate::environment::*;
 
 pub struct ReadyUpHandles;
@@ -20,7 +20,7 @@ impl Plugin for ReadyUpHandles {
         app.add_systems(Update, load_active_area_lights.run_if(in_state(GameState::EnvironmentPostLoad)));
         app.add_systems(OnEnter(GameState::EnvironmentPostLoad), load_active_area);
         app.add_systems(Update, apply_toon_shader_to_scene_meshes
-            .run_if(in_state(GameState::EnvironmentPostLoad))
+            .run_if(in_state(GameState::InGame(InGameState::Main)))
             .after(load_active_area));
     }
 }
@@ -204,7 +204,7 @@ pub fn load_active_area(mut commands: Commands,
             .insert(EnvironmentScene)
             .insert(NoFrustumCulling)
             .insert(RigidBody::Fixed)
-            .insert(ToonShaderMarker)
+            .insert(ToonMarker)
             .insert(AsyncSceneCollider {
                 shape: Some(ComputedColliderShape::TriMesh(TriMeshFlags::MERGE_DUPLICATE_VERTICES)),
                 ..default()
@@ -215,7 +215,7 @@ pub fn load_active_area(mut commands: Commands,
         commands.spawn(SceneRoot(second_layer.clone()))
             .insert(Name::new("Area Second Layer"))
             .insert(NoFrustumCulling)
-            .insert(ToonShaderMarker)
+            .insert(ToonMarker)
             .insert(EnvironmentScene);
     }
 
@@ -225,7 +225,7 @@ pub fn load_active_area(mut commands: Commands,
             .insert(EnvironmentScene)
             .insert(RigidBody::Fixed)
             .insert(NoFrustumCulling)
-            .insert(ToonShaderMarker)
+            .insert(ToonMarker)
             .insert(AsyncSceneCollider {
                 shape: Some(ComputedColliderShape::TriMesh(TriMeshFlags::MERGE_DUPLICATE_VERTICES)),
                 ..default()
@@ -325,10 +325,10 @@ fn spawn_light(commands: &mut Commands, node: &GltfNode, light_data: LightData) 
 
 pub fn apply_toon_shader_to_scene_meshes(
     mut commands: Commands,
-    mut toon_materials: ResMut<Assets<ToonShaderMaterial>>,
+    mut toon_materials: ResMut<Assets<ToonMaterial>>,
     standard_materials: Res<Assets<StandardMaterial>>,
     mut mesh_standard: Query<(Entity, &MeshMaterial3d<StandardMaterial>)>,
-    scene_roots: Query<(Entity, &Children), With<ToonShaderMarker>>,
+    scene_roots: Query<(Entity, &Children), With<ToonMarker>>,
     children_query: Query<&Children>,
 ) {
     fn traverse(
@@ -336,24 +336,28 @@ pub fn apply_toon_shader_to_scene_meshes(
         children_query: &Query<&Children>,
         mesh_standard: &mut Query<(Entity, &MeshMaterial3d<StandardMaterial>)>,
         standard_materials: &Res<Assets<StandardMaterial>>,
-        toon_materials: &mut ResMut<Assets<ToonShaderMaterial>>,
+        toon_materials: &mut ResMut<Assets<ToonMaterial>>,
         commands: &mut Commands,
     ) {
         if let Ok((entity, mesh_mat)) = mesh_standard.get_mut(entity) {
             if let Some(std_mat) = standard_materials.get(&mesh_mat.0) {
-                let toon_handle = toon_materials.add(ToonShaderMaterial {
-                    base_color_texture: std_mat.base_color_texture.clone(),
-                    color: std_mat.base_color.darker(0.1),
-                    sun_dir: Vec3::Y,
-                    sun_color: Color::srgba(0.1, 0.1, 0.1, 1.0),
-                    camera_pos: Vec3::ZERO,
-                    ambient_color: Color::srgba(0.02, 0.02, 0.02, 1.0),
+                let toon_handle = toon_materials.add(ToonMaterial {
+                    texture: std_mat.base_color_texture.clone(),
+                    base_color: std_mat.base_color.to_linear(),
+                    light_direction: Vec3::new(-0.3, -1.0, -0.3).normalize(),
+                    light_color: Color::srgba(1.0, 0.9, 0.85, 1.0).to_linear(),
+                    ambient_color: Color::srgba(0.02, 0.02, 0.02, 1.0).to_linear(),
+                    rim_amount: 1.2,
+                    rim_color: Color::srgba(1.0, 0.9, 0.85, 1.0).to_linear(),
+                    rim_threshold: 0.01,
+                    band_count: 6,
+                    ..default()
                 });
 
                 commands
                     .entity(entity)
                     .remove::<MeshMaterial3d<StandardMaterial>>()
-                    .insert(MeshMaterial3d::<ToonShaderMaterial>(toon_handle));
+                    .insert(MeshMaterial3d::<ToonMaterial>(toon_handle));
             }
         }
 
@@ -369,6 +373,6 @@ pub fn apply_toon_shader_to_scene_meshes(
             traverse(child, &children_query, &mut mesh_standard, &standard_materials, &mut toon_materials, &mut commands);
         }
 
-        commands.entity(root_entity).remove::<ToonShaderMarker>();
+        commands.entity(root_entity).remove::<ToonMarker>();
     }
 }

@@ -5,6 +5,7 @@ use crate::characters::CharacterParty;
 use crate::commons::{Animations, AttackBoxSettings, Character, WorldPlayer};
 use crate::config::{ConfigService, DummySaveData};
 use crate::data::{ChangeCharacter, CurrentWorldCharacter, JSONCharacter};
+use crate::shader::ToonMarker;
 use crate::states::{GameState, InGameState};
 use crate::utils::key_code::convert;
 
@@ -181,7 +182,8 @@ pub fn switch_character(
                     transform,
                     ..default()
                 },
-                character.clone()
+                character.clone(),
+                ToonMarker
             )).id();
 
             // Set the active character reference
