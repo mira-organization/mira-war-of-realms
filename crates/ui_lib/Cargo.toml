@@ -9,8 +9,6 @@ name = "ui_lib"
 path = "src/lib.rs"
 
 [dependencies]
-bevy_lunex = { version = "0.3.2", features = ["default"] }
-bevy_rapier3d = {version = "0.29.0", features = ["simd-nightly", "debug-render-3d", "default"]}
 
 system = { path = "../system" }
 

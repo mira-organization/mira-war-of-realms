@@ -10,5 +10,5 @@ impl Plugin for SplashScreenState {
 }
 
 fn not_implemented_yet(mut next_state: ResMut<NextState<GameState>>) {
-    next_state.set(GameState::TitleScreen);
+    //next_state.set(GameState::TitleScreen);
 }
