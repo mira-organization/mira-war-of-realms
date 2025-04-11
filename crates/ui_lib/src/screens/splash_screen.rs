@@ -204,8 +204,6 @@ fn splash_screen_update(
     }
 }
 
-
-
 fn fade_overlay_system(
     time: Res<Time>,
     mut overlay_query: Query<&mut BackgroundColor, With<FadeOverlay>>,
