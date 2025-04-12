@@ -1,5 +1,6 @@
 mod splash_screen;
 mod title_screen;
+mod main_menu;
 
 use bevy::prelude::*;
 use crate::screens::splash_screen::UISplashScreen;

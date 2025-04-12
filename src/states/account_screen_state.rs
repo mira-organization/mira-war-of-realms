@@ -12,5 +12,5 @@ impl Plugin for AccountScreenState {
 fn not_implemented_yet(
     mut next_state: ResMut<NextState<GameState>>,
 ) {
-    next_state.set(GameState::EnvironmentPreLoad);
+    next_state.set(GameState::MainMenu);
 }

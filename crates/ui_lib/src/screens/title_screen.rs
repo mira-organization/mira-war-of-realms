@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 use bevy::ui::widget::NodeImageMode;
 use system::states::GameState;
-use crate::colors::{BLACK, WHITE};
+use crate::colors::Colored;
 
 #[derive(Component)]
 struct TitleScreenRoot;
@@ -41,7 +41,7 @@ fn spawn_title_screen_ui(
             position_type: PositionType::Absolute,
             ..default()
         },
-        BackgroundColor(BLACK),
+        BackgroundColor(Colored::main_gray()),
         ZIndex(1),
         RenderLayers::layer(1),
         TitleScreenRoot,
@@ -70,7 +70,7 @@ fn spawn_title_screen_ui(
             align_items: AlignItems::Center,
             ..default()
         },
-        BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.945)),
+        BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.985)),
         ZIndex(3),
         RenderLayers::layer(1),
         FadeOverlay,
@@ -92,7 +92,7 @@ fn spawn_title_screen_ui(
             // Title Text
             center.spawn((
                 Text::new("Mira Title"),
-                TextColor(WHITE),
+                TextColor(Colored::white()),
                 TextFont {
                     font_size: 56.0,
                     ..default()
@@ -103,7 +103,7 @@ fn spawn_title_screen_ui(
             // Press Any Key Text
             center.spawn((
                 Text::new("Press any key to start"),
-                TextColor(WHITE),
+                TextColor(Colored::white()),
                 TextFont {
                     font_size: 22.0,
                     ..default()

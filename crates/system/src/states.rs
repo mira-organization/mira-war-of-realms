@@ -20,6 +20,9 @@ pub enum GameState {
     /// The account screen where the player manages their account.
     AccountScreen,
 
+    /// The main menu before start the game loop
+    MainMenu,
+
     /// The environment is being preloaded (before it's fully loaded).
     EnvironmentPreLoad,
 
