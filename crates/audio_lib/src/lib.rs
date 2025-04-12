@@ -1,5 +1,6 @@
 pub mod audio;
 pub mod audio_control;
+pub mod music;
 
 use std::time::Duration;
 use bevy::prelude::*;
@@ -7,6 +8,7 @@ use bevy::utils::HashMap;
 use bevy_kira_audio::*;
 use system::config::ConfigService;
 use crate::audio_control::AudioOption;
+use crate::music::MusicPlugin;
 
 pub struct AudioStorePlugin;
 
@@ -17,6 +19,7 @@ impl Plugin for AudioStorePlugin {
         app.insert_resource(AudioOption::new());
         app.insert_resource(AudioManager::new());
         app.add_plugins(AudioPlugin);
+        app.add_plugins(MusicPlugin);
         app.add_systems(Startup, load_up_audio_config);
         info!("Crate audio was loaded successfully!");
     }

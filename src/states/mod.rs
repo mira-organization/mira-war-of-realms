@@ -1,5 +1,4 @@
 mod pre_load_state;
-mod title_screen_state;
 mod account_screen_state;
 mod fix_asset_waiting;
 
@@ -7,7 +6,6 @@ use bevy::prelude::*;
 use crate::states::account_screen_state::AccountScreenState;
 use crate::states::fix_asset_waiting::FixAssetWaitingState;
 use crate::states::pre_load_state::PreLoadState;
-use crate::states::title_screen_state::TitleScreenState;
 
 /// A plugin that adds different game states related to the main flow of the game.
 ///
@@ -31,7 +29,6 @@ impl Plugin for StatesPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             PreLoadState,
-            TitleScreenState,
             AccountScreenState,
             FixAssetWaitingState,
         ));
