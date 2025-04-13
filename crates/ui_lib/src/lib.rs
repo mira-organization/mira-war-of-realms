@@ -5,7 +5,27 @@ pub mod colors;
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 use system::states::GameState;
+use crate::elements::ElementPlugin;
 use crate::screens::UIScreenPlugin;
+
+#[derive(Reflect, Default, Clone, PartialEq, Debug)]
+pub struct Radius {
+    pub top_left: Val,
+    pub top_right: Val,
+    pub bottom_left: Val,
+    pub bottom_right: Val,
+}
+
+impl Radius {
+    pub fn all(val: Val) -> Self {
+        Self {
+            top_left: val,
+            top_right: val,
+            bottom_left: val,
+            bottom_right: val
+        }
+    }
+}
 
 /// The `UiPlugin` struct implements the `Plugin` trait and is responsible for
 /// setting up the UI-related components in the game.
@@ -21,7 +41,7 @@ impl Plugin for UiPlugin {
     /// # Parameters
     /// - `app`: Mutable reference to the `App` where systems and plugins are added.
     fn build(&self, app: &mut App) {
-        app.add_plugins(UIScreenPlugin);
+        app.add_plugins((ElementPlugin, UIScreenPlugin));
 
         app.add_systems(
             OnEnter(GameState::PreLoad),

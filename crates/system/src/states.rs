@@ -14,12 +14,6 @@ pub enum GameState {
     /// The splash screen is displayed at the start of the game.
     SplashScreen,
 
-    /// The title screen where the player can start the game or load a saved game.
-    TitleScreen,
-
-    /// The account screen where the player manages their account.
-    AccountScreen,
-
     /// The main menu before start the game loop
     MainMenu,
 

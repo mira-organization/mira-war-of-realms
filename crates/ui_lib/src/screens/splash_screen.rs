@@ -198,7 +198,7 @@ fn splash_screen_update(
                     commands.entity(fade_entity).despawn_recursive();
                 }
 
-                next_game_state.set(GameState::TitleScreen);
+                next_game_state.set(GameState::MainMenu);
             }
         }
     }

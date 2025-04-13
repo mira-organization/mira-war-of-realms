@@ -5336,6 +5336,7 @@ name = "ui_lib"
 version = "0.0.1"
 dependencies = [
  "bevy",
+ "log",
  "system",
 ]
 

@@ -11,6 +11,7 @@ path = "src/lib.rs"
 [dependencies]
 
 system = { path = "../system" }
+log = "0.4.26"
 
 [dependencies.bevy]
 version = "0.15.3"
@@ -27,5 +28,5 @@ features = [
     "png",
     "jpeg",
     "bevy_mesh_picking_backend",
-    "bevy_picking"
+    "bevy_picking",
 ]

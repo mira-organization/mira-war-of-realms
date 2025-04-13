@@ -8,7 +8,7 @@ pub struct TitleMusic;
 
 impl Plugin for TitleMusic {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::TitleScreen), play_title_music);
+        app.add_systems(OnEnter(GameState::MainMenu), play_title_music);
         app.add_systems(OnEnter(GameState::EnvironmentLoad), stop_title_music);
     }
 }
