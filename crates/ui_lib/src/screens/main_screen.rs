@@ -5,6 +5,7 @@ use system::states::GameState;
 use crate::colors::Colored;
 use crate::elements::button::{ButtonStyle, UiButton};
 use crate::elements::input::{InputStyle, InputType, TextField};
+use crate::Radius;
 
 #[derive(Component)]
 struct MainRoot;
@@ -135,82 +136,187 @@ fn setup_title_menu(
 fn setup_account_screen(
     mut commands: Commands,
     root_query: Query<Entity, With<MainContent>>,
-    asset_server: Res<AssetServer>,
 ) {
     let root = root_query.single();
     commands.entity(root).with_children(|ui| {
         ui.spawn((
             Node {
-                width: Val::Px(800.0),
-                height: Val::Px(550.0),
+                width: Val::Px(550.0),
+                height: Val::Px(700.0),
                 display: Display::Flex,
                 justify_content: JustifyContent::FlexStart,
-                align_items: AlignItems::Center,
+                align_items: AlignItems::FlexStart,
                 flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(20.0),
-                border: UiRect::all(Val::Px(2.5)),
-                padding: UiRect::all(Val::Px(10.)),
+                row_gap: Val::Px(5.0),
+                border: UiRect::all(Val::Px(0.0)),
+                padding: UiRect::axes(Val::Px(40.), Val::Px(50.)),
                 ..default()
             },
-            BackgroundColor(Colored::blue_white()),
+            BackgroundColor(Colored::white()),
             BorderRadius::all(Val::Px(10.0)),
             BorderColor(Colored::main_accent()),
             BoxShadow {
                 color: Colored::black(),
                 blur_radius: Val::Px(10.0),
-                spread_radius: Val::Px(5.0),
-                x_offset: Val::Px(4.0),
-                y_offset: Val::Px(6.0),
+                spread_radius: Val::Px(10.0),
+                x_offset: Val::Px(0.0),
+                y_offset: Val::Px(0.0),
                 ..default()
             },
             RenderLayers::layer(1),
         )).with_children(|ui| {
             ui.spawn((
-                Text::new("Sign In"),
+                Text::new("Login to Vogeez"),
                 TextFont {
                     font_size: 32.0,
                     font_smoothing: FontSmoothing::AntiAliased,
                     ..default()
                 },
-                TextColor(Colored::font_black_100()),
+                TextColor(Colored::main_gray()),
                 RenderLayers::layer(1),
             ));
 
+            // Text Field
             ui.spawn((
-                TextField::new("Username", true),
-                InputStyle {
-                    width: Val::Px(450.),
-                    height: Val::Px(50.),
-                    font_size: 18.0,
+                Name::new("Account User"),
+                Node {
+                    width: Val::Percent(100.),
+                    margin: UiRect::top(Val::Px(40.)),
+                    display: Display::Flex,
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(8.0),
                     ..default()
                 },
-                //InputType::Text,
                 RenderLayers::layer(1),
-            ));
+            )).with_children(|inner| {
+                inner.spawn((
+                    Text::new("Email / Username"),
+                    TextFont {
+                        font_size: 14.0,
+                        font_smoothing: FontSmoothing::AntiAliased,
+                        ..default()
+                    },
+                    TextColor(Color::srgba_u8(100, 100, 100, 255)),
+                    RenderLayers::layer(1),
+                ));
 
-            ui.spawn((
-                TextField::new("Password", true),
-                InputStyle {
-                    width: Val::Px(450.),
-                    height: Val::Px(50.),
-                    font_size: 18.0,
-                    ..default()
-                },
-                InputType::Password,
-                RenderLayers::layer(1),
-            ));
+                inner.spawn((
+                    TextField::new("Username", true),
+                    InputStyle {
+                        width: Val::Percent(100.),
+                        height: Val::Px(55.),
+                        font_size: 16.0,
+                        border_radius: Radius::all(Val::Px(8.)),
+                        background_color: Colored::blue_white(),
+                        color: Color::srgba_u8(68, 70, 71, 255),
+                        border_color: Color::srgba_u8(211, 218, 224, 255),
+                        ..default()
+                    },
+                    RenderLayers::layer(1),
+                ));
+            });
 
+            // Password Field
             ui.spawn((
-                UiButton::default(),
-                ButtonStyle {
-                    width: Val::Px(450.),
-                    height: Val::Px(50.),
-                    font_size: 16.0,
-                    image: Some(asset_server.load("images/icons/login.png")),
+                Name::new("Account Pass"),
+                Node {
+                    width: Val::Percent(100.),
+                    margin: UiRect::top(Val::Px(30.)),
+                    display: Display::Flex,
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(8.0),
                     ..default()
                 },
                 RenderLayers::layer(1),
-            ));
+            )).with_children(|inner| {
+                inner.spawn((
+                    Text::new("Password"),
+                    TextFont {
+                        font_size: 14.0,
+                        font_smoothing: FontSmoothing::AntiAliased,
+                        ..default()
+                    },
+                    TextColor(Color::srgba_u8(100, 100, 100, 255)),
+                    RenderLayers::layer(1),
+                ));
+
+                inner.spawn((
+                    TextField::new("Password", true),
+                    InputStyle {
+                        width: Val::Percent(100.),
+                        height: Val::Px(55.),
+                        font_size: 16.0,
+                        border_radius: Radius::all(Val::Px(8.)),
+                        background_color: Colored::blue_white(),
+                        color: Color::srgba_u8(68, 70, 71, 255),
+                        border_color: Color::srgba_u8(211, 218, 224, 255),
+                        ..default()
+                    },
+                    InputType::Password,
+                    RenderLayers::layer(1),
+                ));
+            });
+
+            // Account Login Button
+            ui.spawn((
+                Name::new("Account Login"),
+                Node {
+                    width: Val::Percent(100.),
+                    margin: UiRect::top(Val::Px(30.)),
+                    display: Display::Flex,
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(5.0),
+                    ..default()
+                },
+                RenderLayers::layer(1),
+            )).with_children(|inner| {
+                inner.spawn((
+                    UiButton("Login".to_string()),
+                    ButtonStyle {
+                        width: Val::Percent(100.),
+                        height: Val::Px(55.),
+                        border_radius: Radius::all(Val::Px(8.)),
+                        color: Colored::blue_white(),
+                        background_color: Colored::main_accent(),
+                        border_color: Colored::main_accent(),
+                        font_size: 16.0,
+                        ..default()
+                    },
+                    RenderLayers::layer(1),));
+            });
+
+            // Debug Login Button
+            ui.spawn((
+                Name::new("Debug Mode"),
+                Node {
+                    width: Val::Percent(100.),
+                    margin: UiRect::top(Val::Px(30.)),
+                    display: Display::Flex,
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(5.0),
+                    ..default()
+                },
+                RenderLayers::layer(1),
+            )).observe(|event: Trigger<Pointer<Click>>, mut next_state: ResMut<NextState<GameState>>| {
+
+            })
+                .with_children(|inner| {
+                inner.spawn((
+                    UiButton("Test Login".to_string()),
+                    ButtonStyle {
+                        width: Val::Percent(100.),
+                        height: Val::Px(55.),
+                        border_radius: Radius::all(Val::Px(8.)),
+                        color: Colored::blue_white(),
+                        background_color: Color::srgba_u8(140, 128, 15, 255),
+                        border_color: Color::srgba_u8(140, 128, 15, 255),
+                        hover_color: Color::srgba_u8(150, 138, 25, 255),
+                        font_size: 16.0,
+                        ..default()
+                    },
+                    RenderLayers::layer(1),));
+            });
+
         });
     });
 }

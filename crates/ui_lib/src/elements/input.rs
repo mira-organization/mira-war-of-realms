@@ -186,6 +186,10 @@ fn build_detect_input(
                         font_size: input_style.font_size,
                         ..default()
                     },
+                    TextLayout {
+                        linebreak: LineBreak::NoWrap,
+                        ..default()
+                    },
                     PickingBehavior::IGNORE,
                     TextColor(input_style.placeholder_color),
                     RenderLayers::layer(1),
