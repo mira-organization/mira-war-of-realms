@@ -1,5 +1,4 @@
-use std::sync::atomic::AtomicUsize;
-use std::sync::atomic::Ordering::Relaxed;
+use crate::UiGenID;
 use std::time::Duration;
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
@@ -7,20 +6,14 @@ use bevy::utils::HashMap;
 use bevy::winit::cursor::CursorIcon;
 use system::data::CursorIcons;
 use crate::colors::Colored;
-use crate::Radius;
-
-static TEXT_FIELD_COUNTER: AtomicUsize = AtomicUsize::new(0);
+use crate::{Radius, UiElementState};
 
 #[derive(Component, Reflect, Debug, Clone)]
 #[reflect(Component)]
-#[require(InputStyle, InputType)]
+#[require(InputStyle, InputType, UiElementState, UiGenID)]
 pub struct TextField {
-    pub id: usize,
     pub text: String,
     pub placeholder: String,
-    pub is_enabled: bool,
-    pub is_focused: bool,
-    pub is_hovered: bool,
     pub is_delete_after_enter: bool,
     pub cursor_position: usize,
     pub max_length: usize,
@@ -29,11 +22,7 @@ pub struct TextField {
 impl Default for TextField {
     fn default() -> Self {
         Self {
-            id: TEXT_FIELD_COUNTER.fetch_add(1, Relaxed),
             text: String::from(""),
-            is_enabled: true,
-            is_focused: false,
-            is_hovered: false,
             is_delete_after_enter: false,
             placeholder: String::from("Text"),
             cursor_position: 0,
@@ -134,7 +123,6 @@ impl Plugin for InputUiPlugin {
         app.register_type::<InputType>();
         app.add_systems(Update, (
             build_detect_input,
-            handle_input_focus,
             handle_typing,
             update_cursor_position,
             update_cursor_visibility
@@ -183,6 +171,7 @@ fn build_detect_input(
                     BackgroundColor(input_style.color),
                     RenderLayers::layer(1),
                     Visibility::Hidden,
+                    PickingBehavior::IGNORE,
                     TextCursor
                 ));
 
@@ -209,34 +198,34 @@ fn build_detect_input(
 fn on_hover_enter(
     event: Trigger<Pointer<Over>>,
     mut commands: Commands,
-    mut query: Query<(&mut TextField, &mut InputStyle, &mut BorderColor, Entity)>,
+    mut query: Query<(&mut UiElementState, &mut InputStyle, &mut BorderColor, Entity), With<TextField>>,
     window: Single<Entity, With<Window>>,
     cursor_icons: Res<CursorIcons>
 ) {
     let target = event.target;
 
-    if let Ok((mut text_field, input_style, mut border_color, _)) = query.get_mut(target) {
-        if !text_field.is_focused {
+    if let Ok((mut state, input_style, mut border_color, _)) = query.get_mut(target) {
+        if !state.selected {
             border_color.0 = input_style.hover_color;
         }
-        text_field.is_hovered = true;
+        state.hovered = true;
         commands.entity(*window).insert(cursor_icons.0[3].clone());
     }
 }
 
 fn on_hover_leave(
     event: Trigger<Pointer<Out>>,
-    mut query: Query<(&mut TextField, &mut InputStyle, &mut BorderColor, Entity)>,
+    mut query: Query<(&mut UiElementState, &mut InputStyle, &mut BorderColor, Entity), With<TextField>>,
     mut cursor_query: Query<&mut CursorIcon>,
     cursor_icons: Res<CursorIcons>
 ) {
     let target = event.target;
 
-    if let Ok((mut text_field, input_style, mut border_color, _)) = query.get_mut(target) {
-        if !text_field.is_focused {
+    if let Ok((mut state, input_style, mut border_color, _)) = query.get_mut(target) {
+        if !state.selected {
             border_color.0 = input_style.border_color;
         }
-        text_field.is_hovered = false;
+        state.hovered = false;
 
         let Ok(mut cursor_icon) = cursor_query.get_single_mut() else {
             return;
@@ -247,15 +236,15 @@ fn on_hover_leave(
 }
 
 fn on_click(event: Trigger<Pointer<Click>>,
-            mut query: Query<(&mut TextField, &mut InputStyle, &mut BorderColor, Entity)>,
+            mut query: Query<(&mut UiElementState, &mut InputStyle, &mut BorderColor, Entity), With<TextField>>,
             mut cursor_query: Query<(&mut Visibility, &TextCursor)>
 ) {
     let target = event.target;
 
-    for (mut text_field, style, mut border_color, entity) in query.iter_mut() {
+    for (mut state, style, mut border_color, entity) in query.iter_mut() {
         if target.eq(&entity) {
             border_color.0 = style.focus_color;
-            text_field.is_focused = true;
+            state.selected = true;
 
             if let Ok((mut visibility, _)) = cursor_query.get_mut(entity) {
                 *visibility = Visibility::Visible;
@@ -265,7 +254,7 @@ fn on_click(event: Trigger<Pointer<Click>>,
         }
 
         border_color.0 = style.border_color;
-        text_field.is_focused = false;
+        state.selected = false;
     }
 }
 
@@ -273,15 +262,15 @@ fn update_cursor_visibility(
     time: Res<Time>,
     mut cursor_blink_timer: ResMut<CursorBlinkTimer>,
     mut cursor_query: Query<(&mut Visibility, &mut BackgroundColor, &Parent), With<TextCursor>>,
-    mut input_field_query: Query<(&TextField, &mut InputStyle, &InputType, &mut BorderColor, &Children), With<TextFieldRoot>>, // Assuming Focus component indicates if field is focused
+    mut input_field_query: Query<(&TextField, &mut UiElementState, &mut InputStyle, &InputType, &mut BorderColor, &Children), With<TextFieldRoot>>, // Assuming Focus component indicates if field is focused
     mut text_query: Query<(&mut Text, &mut TextColor), With<TextFieldText>>,
 ) {
     cursor_blink_timer.timer.tick(time.delta());
 
     for (mut visibility, mut background, parent) in cursor_query.iter_mut() {
-        if let Ok((focus, style, in_type, mut border_color, children)) = input_field_query.get_mut(parent.get()) {
+        if let Ok((text_field, state, style, in_type, mut border_color, children)) = input_field_query.get_mut(parent.get()) {
             // Show the cursor if the input field is focused
-            if focus.is_focused {
+            if state.selected {
                 let alpha = (cursor_blink_timer.timer.elapsed_secs() * 2.0 * std::f32::consts::PI).sin() * 0.5 + 0.5;
                 background.0.set_alpha(alpha);
 
@@ -292,10 +281,10 @@ fn update_cursor_visibility(
                     for child in children.iter() {
                         if let Ok((mut text, _)) = text_query.get_mut(*child) {
                             if in_type.eq(&InputType::Password) {
-                                let masked_text: String = "*".repeat(focus.text.chars().count());
+                                let masked_text: String = "*".repeat(text_field.text.chars().count());
                                 text.0 = masked_text;
                             } else {
-                                text.0 = focus.text.clone();
+                                text.0 = text_field.text.clone();
                             }
                         }
                     }
@@ -306,8 +295,8 @@ fn update_cursor_visibility(
                     *visibility = Visibility::Hidden;
                     for child in children.iter() {
                         if let Ok((mut text, mut color)) = text_query.get_mut(*child) {
-                            if focus.text.is_empty() {
-                                text.0 = focus.placeholder.clone();
+                            if text_field.text.is_empty() {
+                                text.0 = text_field.placeholder.clone();
                                 color.0 = style.placeholder_color;
                             }
                         }
@@ -369,7 +358,7 @@ fn calculate_text_width(text: &str, style: &InputStyle) -> f32 {
 fn handle_typing(
     time: Res<Time>,
     mut key_repeat: ResMut<KeyRepeatTimers>,
-    mut query: Query<(&mut TextField, &InputStyle, &InputType, &Children)>,
+    mut query: Query<(&mut TextField, &mut UiElementState, &InputStyle, &InputType, &Children)>,
     keyboard: Res<ButtonInput<KeyCode>>,
     mut text_query: Query<(&mut Text, &mut TextColor), With<TextFieldText>>,
 ) {
@@ -379,13 +368,13 @@ fn handle_typing(
     let initial_delay = 0.3;
     let repeat_rate = 0.07;
 
-    for (mut text_field, style, in_type, children) in query.iter_mut() {
-        if text_field.is_focused {
+    for (mut text_field, mut state, style, in_type, children) in query.iter_mut() {
+        if state.selected {
             for child in children.iter() {
                 if let Ok((mut text, mut text_color)) = text_query.get_mut(*child) {
                     // ENTER
                     if keyboard.just_pressed(KeyCode::Enter) {
-                        text_field.is_focused = false;
+                        state.selected = false;
                         if text_field.is_delete_after_enter {
                             text_field.text.clear();
                             text.0 = text_field.text.clone();
@@ -485,46 +474,6 @@ fn handle_typing(
     }
 
     key_repeat.timers.retain(|key, _| keyboard.pressed(*key));
-}
-
-
-fn handle_input_focus(
-    mut query: Query<(&mut TextField, Entity)>,
-    keyboard: Res<ButtonInput<KeyCode>>,
-) {
-    let mut sorted_fields: Vec<_> = query.iter_mut().collect();
-    sorted_fields.sort_by_key(|(field, _)| field.id);
-
-    let mut any_focused = false;
-
-    // TAB Focus
-    if keyboard.just_pressed(KeyCode::Tab) {
-        let len = sorted_fields.len();
-        if len == 0 {
-            return;
-        }
-
-        // Find the currently focused field and move the focus to the next one
-        for i in 0..len {
-            if sorted_fields[i].0.is_focused {
-                sorted_fields[i].0.is_focused = false;
-
-                let next = (i + 1) % len;  // Get the next field in the list
-
-                if let Some(&mut (_, _)) = sorted_fields.get_mut(next) { // Set the focused color
-                    sorted_fields[next].0.is_focused = true; // Set focus to the next field
-                    any_focused = true;
-                }
-
-                break;  // Exit the loop after setting the next focus
-            }
-        }
-
-        // If no focus was found, set the first field as focused
-        if !any_focused && len > 0 {
-            sorted_fields[0].0.is_focused = true;
-        }
-    }
 }
 
 fn keycode_to_char(key: KeyCode, shift: bool, alt: bool) -> Option<char> {

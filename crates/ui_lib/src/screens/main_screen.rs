@@ -3,6 +3,7 @@ use bevy::render::view::RenderLayers;
 use bevy::text::FontSmoothing;
 use system::states::GameState;
 use crate::colors::Colored;
+use crate::elements::button::{ButtonStyle, UiButton};
 use crate::elements::input::{InputStyle, InputType, TextField};
 
 #[derive(Component)]
@@ -133,7 +134,8 @@ fn setup_title_menu(
 
 fn setup_account_screen(
     mut commands: Commands,
-    root_query: Query<Entity, With<MainContent>>
+    root_query: Query<Entity, With<MainContent>>,
+    asset_server: Res<AssetServer>,
 ) {
     let root = root_query.single();
     commands.entity(root).with_children(|ui| {
@@ -177,7 +179,7 @@ fn setup_account_screen(
             ui.spawn((
                 TextField::new("Username", true),
                 InputStyle {
-                    width: Val::Px(300.),
+                    width: Val::Px(450.),
                     height: Val::Px(50.),
                     font_size: 18.0,
                     ..default()
@@ -189,12 +191,24 @@ fn setup_account_screen(
             ui.spawn((
                 TextField::new("Password", true),
                 InputStyle {
-                    width: Val::Px(300.),
+                    width: Val::Px(450.),
                     height: Val::Px(50.),
                     font_size: 18.0,
                     ..default()
                 },
                 InputType::Password,
+                RenderLayers::layer(1),
+            ));
+
+            ui.spawn((
+                UiButton::default(),
+                ButtonStyle {
+                    width: Val::Px(450.),
+                    height: Val::Px(50.),
+                    font_size: 16.0,
+                    image: Some(asset_server.load("images/icons/login.png")),
+                    ..default()
+                },
                 RenderLayers::layer(1),
             ));
         });
