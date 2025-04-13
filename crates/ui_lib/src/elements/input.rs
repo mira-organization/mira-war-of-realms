@@ -11,6 +11,7 @@ static TEXT_FIELD_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Component, Reflect, Debug, Clone)]
 #[reflect(Component)]
+#[require(InputStyle, InputType)]
 pub struct TextField {
     pub id: usize,
     pub text: String,
@@ -45,6 +46,13 @@ impl TextField {
             ..default()
         }
     }
+}
+
+#[derive(Component, Default, Debug, Eq, Clone, PartialEq)]
+pub enum InputType {
+    #[default]
+    Text,
+    Password,
 }
 
 #[derive(Component, Reflect, Debug, Clone)]
@@ -198,8 +206,8 @@ fn on_hover_enter(event: Trigger<Pointer<Over>>, mut query: Query<(&mut TextFiel
     if let Ok((mut text_field, input_style, mut border_color, _)) = query.get_mut(target) {
         if !text_field.is_focused {
             border_color.0 = input_style.hover_color;
-            text_field.is_hovered = true;
         }
+        text_field.is_hovered = true;
     }
 }
 
@@ -209,8 +217,8 @@ fn on_hover_leave(event: Trigger<Pointer<Out>>, mut query: Query<(&mut TextField
     if let Ok((mut text_field, input_style, mut border_color, _)) = query.get_mut(target) {
         if !text_field.is_focused {
             border_color.0 = input_style.border_color;
-            text_field.is_hovered = false;
         }
+        text_field.is_hovered = false;
     }
 }
 
@@ -241,19 +249,21 @@ fn update_cursor_visibility(
     time: Res<Time>,
     mut cursor_blink_timer: ResMut<CursorBlinkTimer>,
     mut cursor_query: Query<(&mut Visibility, &mut BackgroundColor, &Parent), With<TextCursor>>,
-    input_field_query: Query<(&TextField, &Children), With<TextFieldRoot>>, // Assuming Focus component indicates if field is focused
+    mut input_field_query: Query<(&TextField, &mut InputStyle, &mut BorderColor, &Children), With<TextFieldRoot>>, // Assuming Focus component indicates if field is focused
     mut text_query: Query<&mut Text, With<TextFieldText>>,
 ) {
     cursor_blink_timer.timer.tick(time.delta());
 
     for (mut visibility, mut background, parent) in cursor_query.iter_mut() {
-        if let Ok((focus, children)) = input_field_query.get(parent.get()) {
+        if let Ok((focus, style, mut border_color, children)) = input_field_query.get_mut(parent.get()) {
             // Show the cursor if the input field is focused
             if focus.is_focused {
                 let alpha = (cursor_blink_timer.timer.elapsed_secs() * 2.0 * std::f32::consts::PI).sin() * 0.5 + 0.5;
                 background.0.set_alpha(alpha);
 
                 if !visibility.eq(&Visibility::Visible) {
+                    border_color.0 = style.focus_color;
+
                     *visibility = Visibility::Visible;
                     for child in children.iter() {
                         if let Ok(mut text) = text_query.get_mut(*child) {
@@ -263,15 +273,16 @@ fn update_cursor_visibility(
                 }
             } else {
                 if !visibility.eq(&Visibility::Hidden) {
-                *visibility = Visibility::Hidden;
-                for child in children.iter() {
-                    if let Ok(mut text) = text_query.get_mut(*child) {
-                        if focus.text.is_empty() {
-                            text.0 = focus.placeholder.clone();
+                    border_color.0 = style.border_color;
+                    *visibility = Visibility::Hidden;
+                    for child in children.iter() {
+                        if let Ok(mut text) = text_query.get_mut(*child) {
+                            if focus.text.is_empty() {
+                                text.0 = focus.placeholder.clone();
+                            }
                         }
                     }
                 }
-                    }
             }
         }
     }
@@ -328,23 +339,23 @@ fn calculate_text_width(text: &str, style: &InputStyle) -> f32 {
 fn handle_typing(
     time: Res<Time>,
     mut key_repeat: ResMut<KeyRepeatTimers>,
-    mut query: Query<(&mut TextField, &InputStyle, &mut BorderColor, &Children)>,
+    mut query: Query<(&mut TextField, &InputStyle, &InputType, &Children)>,
     keyboard: Res<ButtonInput<KeyCode>>,
     mut text_query: Query<(&mut Text, &mut TextColor), With<TextFieldText>>,
 ) {
     let shift = keyboard.pressed(KeyCode::ShiftLeft) || keyboard.pressed(KeyCode::ShiftRight);
+    let alt = keyboard.pressed(KeyCode::AltLeft) || keyboard.pressed(KeyCode::AltRight);
 
     let initial_delay = 0.3;
     let repeat_rate = 0.07;
 
-    for (mut text_field, style, mut border_color, children) in query.iter_mut() {
+    for (mut text_field, style, in_type, children) in query.iter_mut() {
         if text_field.is_focused {
             for child in children.iter() {
                 if let Ok((mut text, mut text_color)) = text_query.get_mut(*child) {
                     // ENTER
                     if keyboard.just_pressed(KeyCode::Enter) {
                         text_field.is_focused = false;
-                        border_color.0 = style.border_color;
                         if text_field.is_delete_after_enter {
                             text_field.text.clear();
                             text.0 = text_field.text.clone();
@@ -358,7 +369,11 @@ fn handle_typing(
                             let pos = text_field.cursor_position - 1;
                             text_field.cursor_position = pos;
                             text_field.text.remove(pos);
-                            text.0 = text_field.text.clone();
+                            if in_type.eq(&InputType::Password) {
+                                text.0.remove(pos);
+                            } else {
+                                text.0 = text_field.text.clone();
+                            }
                         }
                         if text.0.is_empty() {
                             text_color.0 = style.placeholder_color;
@@ -371,12 +386,19 @@ fn handle_typing(
                     }
 
                     for key in keyboard.get_pressed() {
-                        if let Some(char) = keycode_to_char(*key, shift) {
+                        if let Some(char) = keycode_to_char(*key, shift, alt) {
                             if keyboard.just_pressed(*key) {
                                 let pos = text_field.cursor_position;
-                                text_field.text.insert(pos, char);
-                                text_field.cursor_position += 1;
-                                text.0 = text_field.text.clone();
+
+                                if in_type.eq(&InputType::Password) {
+                                    text_field.text.insert(pos, char);
+                                    text_field.cursor_position += 1;
+                                    text.0.insert(pos, '*');
+                                } else {
+                                    text_field.text.insert(pos, char);
+                                    text_field.cursor_position += 1;
+                                    text.0 = text_field.text.clone();
+                                }
                                 text_color.0 = style.color;
                                 key_repeat.timers.insert(
                                     *key,
@@ -390,7 +412,11 @@ fn handle_typing(
                                 if timer.finished() {
                                     text_field.text.push(char);
                                     text_field.cursor_position += 1;
-                                    text.0 = text_field.text.clone();
+                                    if in_type.eq(&InputType::Password) {
+                                        text.0.push('*');
+                                    } else {
+                                        text.0 = text_field.text.clone();
+                                    }
                                     timer.set_duration(Duration::from_secs_f32(repeat_rate));
                                     timer.reset();
                                 }
@@ -405,7 +431,11 @@ fn handle_typing(
                                 if text_field.cursor_position > 0 && !text_field.text.is_empty() {
                                     text_field.text.pop();
                                     text_field.cursor_position -= 1;
-                                    text.0 = text_field.text.clone();
+                                    if in_type.eq(&InputType::Password) {
+                                        text.0.pop();
+                                    } else {
+                                        text.0 = text_field.text.clone();
+                                    }
                                     timer.set_duration(Duration::from_secs_f32(repeat_rate));
                                     timer.reset();
                                 }
@@ -424,11 +454,11 @@ fn handle_typing(
 
 
 fn handle_input_focus(
-    mut query: Query<(&mut TextField, &mut InputStyle, &mut BorderColor, Entity)>,
+    mut query: Query<(&mut TextField, Entity)>,
     keyboard: Res<ButtonInput<KeyCode>>,
 ) {
     let mut sorted_fields: Vec<_> = query.iter_mut().collect();
-    sorted_fields.sort_by_key(|(field, _, _, _)| field.id);
+    sorted_fields.sort_by_key(|(field, _)| field.id);
 
     let mut any_focused = false;
 
@@ -446,11 +476,9 @@ fn handle_input_focus(
 
                 let next = (i + 1) % len;  // Get the next field in the list
 
-                if let Some(&mut (_, ref mut style, ref mut border_color, _)) = sorted_fields.get_mut(next) {
-                    border_color.0 = style.focus_color;  // Set the focused color
+                if let Some(&mut (_, _)) = sorted_fields.get_mut(next) { // Set the focused color
                     sorted_fields[next].0.is_focused = true; // Set focus to the next field
                     any_focused = true;
-                    info!("TAB Focus : {:?}", sorted_fields[next].0.id);
                 }
 
                 break;  // Exit the loop after setting the next focus
@@ -460,28 +488,17 @@ fn handle_input_focus(
         // If no focus was found, set the first field as focused
         if !any_focused && len > 0 {
             sorted_fields[0].0.is_focused = true;
-            if let Some(&mut (_, ref mut style, ref mut border_color, _)) = sorted_fields.get_mut(0) {
-                border_color.0 = style.focus_color;  // Set the focused color
-            }
-            info!("First Focus : {:?}", sorted_fields[0].0.id);
-        }
-
-        // Reset the border color for all non-focused fields
-        for (field, style, border_color, _) in sorted_fields.iter_mut() {
-            if !field.is_focused {
-                border_color.0 = style.border_color;  // Reset the border color to default
-            }
         }
     }
 }
 
-fn keycode_to_char(key: KeyCode, shift: bool) -> Option<char> {
+fn keycode_to_char(key: KeyCode, shift: bool, alt: bool) -> Option<char> {
     match key {
         KeyCode::KeyA => Some(if shift { 'A' } else { 'a' }),
         KeyCode::KeyB => Some(if shift { 'B' } else { 'b' }),
         KeyCode::KeyC => Some(if shift { 'C' } else { 'c' }),
         KeyCode::KeyD => Some(if shift { 'D' } else { 'd' }),
-        KeyCode::KeyE => Some(if shift { 'E' } else { 'e' }),
+        KeyCode::KeyE => Some(if shift { 'E' } else if alt { 'E' } else { 'e' }),
         KeyCode::KeyF => Some(if shift { 'F' } else { 'f' }),
         KeyCode::KeyG => Some(if shift { 'G' } else { 'g' }),
         KeyCode::KeyH => Some(if shift { 'H' } else { 'h' }),
@@ -493,7 +510,7 @@ fn keycode_to_char(key: KeyCode, shift: bool) -> Option<char> {
         KeyCode::KeyN => Some(if shift { 'N' } else { 'n' }),
         KeyCode::KeyO => Some(if shift { 'O' } else { 'o' }),
         KeyCode::KeyP => Some(if shift { 'P' } else { 'p' }),
-        KeyCode::KeyQ => Some(if shift { 'Q' } else { 'q' }),
+        KeyCode::KeyQ => Some(if shift { 'Q' } else if alt { '@' } else { 'q' }),
         KeyCode::KeyR => Some(if shift { 'R' } else { 'r' }),
         KeyCode::KeyS => Some(if shift { 'S' } else { 's' }),
         KeyCode::KeyT => Some(if shift { 'T' } else { 't' }),
@@ -503,6 +520,17 @@ fn keycode_to_char(key: KeyCode, shift: bool) -> Option<char> {
         KeyCode::KeyX => Some(if shift { 'X' } else { 'x' }),
         KeyCode::KeyY => Some(if shift { 'Y' } else { 'y' }),
         KeyCode::KeyZ => Some(if shift { 'Z' } else { 'z' }),
+        KeyCode::Digit0 => Some(if shift { '=' } else if alt { '}' } else { '0' }),
+        KeyCode::Digit1 => Some(if shift { '!' } else if alt { '1' } else { '1' }),
+        KeyCode::Digit2 => Some(if shift { '"' } else if alt { '2' } else { '2' }),
+        KeyCode::Digit3 => Some(if shift { '3' } else if alt { '3' } else { '3' }),
+        KeyCode::Digit4 => Some(if shift { '$' } else if alt { '4' } else { '4' }),
+        KeyCode::Digit5 => Some(if shift { '%' } else if alt { '5' } else { '5' }),
+        KeyCode::Digit6 => Some(if shift { '&' } else if alt { '6' } else { '6' }),
+        KeyCode::Digit7 => Some(if shift { '/' } else if alt { '{' } else { '7' }),
+        KeyCode::Digit8 => Some(if shift { '(' } else if alt { '[' } else { '8' }),
+        KeyCode::Digit9 => Some(if shift { ')' } else if alt { ']' } else { '9' }),
+        KeyCode::NumpadMultiply => Some('*'),
         KeyCode::Space => Some(' '),
         _ => None,
     }

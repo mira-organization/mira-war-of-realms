@@ -3,7 +3,7 @@ use bevy::render::view::RenderLayers;
 use bevy::text::FontSmoothing;
 use system::states::GameState;
 use crate::colors::Colored;
-use crate::elements::input::{InputStyle, TextField};
+use crate::elements::input::{InputStyle, InputType, TextField};
 
 #[derive(Component)]
 struct MainRoot;
@@ -182,12 +182,19 @@ fn setup_account_screen(
                     font_size: 18.0,
                     ..default()
                 },
+                //InputType::Text,
                 RenderLayers::layer(1),
             ));
 
             ui.spawn((
                 TextField::new("Password", true),
-                InputStyle::default(),
+                InputStyle {
+                    width: Val::Px(300.),
+                    height: Val::Px(50.),
+                    font_size: 18.0,
+                    ..default()
+                },
+                InputType::Password,
                 RenderLayers::layer(1),
             ));
         });
