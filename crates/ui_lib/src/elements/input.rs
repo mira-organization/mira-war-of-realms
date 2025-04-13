@@ -4,6 +4,8 @@ use std::time::Duration;
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 use bevy::utils::HashMap;
+use bevy::winit::cursor::CursorIcon;
+use system::data::CursorIcons;
 use crate::colors::Colored;
 use crate::Radius;
 
@@ -21,6 +23,7 @@ pub struct TextField {
     pub is_hovered: bool,
     pub is_delete_after_enter: bool,
     pub cursor_position: usize,
+    pub max_length: usize,
 }
 
 impl Default for TextField {
@@ -34,6 +37,7 @@ impl Default for TextField {
             is_delete_after_enter: false,
             placeholder: String::from("Text"),
             cursor_position: 0,
+            max_length: 20,
         }
     }
 }
@@ -48,7 +52,8 @@ impl TextField {
     }
 }
 
-#[derive(Component, Default, Debug, Eq, Clone, PartialEq)]
+#[derive(Component, Reflect, Default, Debug, Eq, Clone, PartialEq)]
+#[reflect(Component)]
 pub enum InputType {
     #[default]
     Text,
@@ -84,7 +89,7 @@ impl Default for InputStyle {
             placeholder_color: Colored::placeholder_ui_color(),
             border_color: Colored::black(),
             focus_color: Colored::main_accent(),
-            hover_color: Colored::green(),
+            hover_color: Colored::main_accent_lighter(),
             border: UiRect::all(Val::Px(2.)),
             border_radius: Radius::all(Val::Px(5.)),
         }
@@ -126,6 +131,7 @@ impl Plugin for InputUiPlugin {
         app.insert_resource(CursorBlinkTimer::default());
         app.register_type::<TextField>();
         app.register_type::<InputStyle>();
+        app.register_type::<InputType>();
         app.add_systems(Update, (
             build_detect_input,
             handle_input_focus,
@@ -200,7 +206,13 @@ fn build_detect_input(
     }
 }
 
-fn on_hover_enter(event: Trigger<Pointer<Over>>, mut query: Query<(&mut TextField, &mut InputStyle, &mut BorderColor, Entity)>) {
+fn on_hover_enter(
+    event: Trigger<Pointer<Over>>,
+    mut commands: Commands,
+    mut query: Query<(&mut TextField, &mut InputStyle, &mut BorderColor, Entity)>,
+    window: Single<Entity, With<Window>>,
+    cursor_icons: Res<CursorIcons>
+) {
     let target = event.target;
 
     if let Ok((mut text_field, input_style, mut border_color, _)) = query.get_mut(target) {
@@ -208,10 +220,16 @@ fn on_hover_enter(event: Trigger<Pointer<Over>>, mut query: Query<(&mut TextFiel
             border_color.0 = input_style.hover_color;
         }
         text_field.is_hovered = true;
+        commands.entity(*window).insert(cursor_icons.0[3].clone());
     }
 }
 
-fn on_hover_leave(event: Trigger<Pointer<Out>>, mut query: Query<(&mut TextField, &mut InputStyle, &mut BorderColor, Entity)>) {
+fn on_hover_leave(
+    event: Trigger<Pointer<Out>>,
+    mut query: Query<(&mut TextField, &mut InputStyle, &mut BorderColor, Entity)>,
+    mut cursor_query: Query<&mut CursorIcon>,
+    cursor_icons: Res<CursorIcons>
+) {
     let target = event.target;
 
     if let Ok((mut text_field, input_style, mut border_color, _)) = query.get_mut(target) {
@@ -219,6 +237,12 @@ fn on_hover_leave(event: Trigger<Pointer<Out>>, mut query: Query<(&mut TextField
             border_color.0 = input_style.border_color;
         }
         text_field.is_hovered = false;
+
+        let Ok(mut cursor_icon) = cursor_query.get_single_mut() else {
+            return;
+        };
+
+        *cursor_icon = cursor_icons.0[0].clone();
     }
 }
 
@@ -242,6 +266,21 @@ fn on_click(event: Trigger<Pointer<Click>>,
 
         border_color.0 = style.border_color;
         text_field.is_focused = false;
+    }
+}
+
+fn update_window_cursor(
+    mut commands: Commands,
+    window: Single<Entity, With<Window>>,
+    cursor_icons: Res<CursorIcons>,
+    query: Query<(&TextField, Entity)>,
+) {
+    for (text_field, entity) in query.iter() {
+        if text_field.is_hovered {
+            commands.entity(*window).insert(cursor_icons.0[3].clone());
+        } else {
+            commands.entity(*window).insert(cursor_icons.0[0].clone());
+        }
     }
 }
 
@@ -390,6 +429,11 @@ fn handle_typing(
                             if keyboard.just_pressed(*key) {
                                 let pos = text_field.cursor_position;
 
+                                if pos >= text_field.max_length {
+                                    debug!("(Max Length {} / Current {}) was reached", text_field.max_length, pos);
+                                    return;
+                                }
+
                                 if in_type.eq(&InputType::Password) {
                                     text_field.text.insert(pos, char);
                                     text_field.cursor_position += 1;
@@ -518,8 +562,8 @@ fn keycode_to_char(key: KeyCode, shift: bool, alt: bool) -> Option<char> {
         KeyCode::KeyV => Some(if shift { 'V' } else { 'v' }),
         KeyCode::KeyW => Some(if shift { 'W' } else { 'w' }),
         KeyCode::KeyX => Some(if shift { 'X' } else { 'x' }),
-        KeyCode::KeyY => Some(if shift { 'Y' } else { 'y' }),
-        KeyCode::KeyZ => Some(if shift { 'Z' } else { 'z' }),
+        KeyCode::KeyY => Some(if shift { 'Z' } else { 'z' }),
+        KeyCode::KeyZ => Some(if shift { 'Y' } else { 'y' }),
         KeyCode::Digit0 => Some(if shift { '=' } else if alt { '}' } else { '0' }),
         KeyCode::Digit1 => Some(if shift { '!' } else if alt { '1' } else { '1' }),
         KeyCode::Digit2 => Some(if shift { '"' } else if alt { '2' } else { '2' }),
@@ -531,6 +575,28 @@ fn keycode_to_char(key: KeyCode, shift: bool, alt: bool) -> Option<char> {
         KeyCode::Digit8 => Some(if shift { '(' } else if alt { '[' } else { '8' }),
         KeyCode::Digit9 => Some(if shift { ')' } else if alt { ']' } else { '9' }),
         KeyCode::NumpadMultiply => Some('*'),
+        KeyCode::NumpadAdd => Some('+'),
+        KeyCode::NumpadSubtract => Some('-'),
+        KeyCode::NumpadDivide => Some('/'),
+        KeyCode::NumpadDecimal => Some(','),
+        KeyCode::Numpad0 => Some('0'),
+        KeyCode::Numpad1 => Some('1'),
+        KeyCode::Numpad2 => Some('2'),
+        KeyCode::Numpad3 => Some('3'),
+        KeyCode::Numpad4 => Some('4'),
+        KeyCode::Numpad5 => Some('5'),
+        KeyCode::Numpad6 => Some('6'),
+        KeyCode::Numpad7 => Some('7'),
+        KeyCode::Numpad8 => Some('8'),
+        KeyCode::Numpad9 => Some('9'),
+        KeyCode::Comma => Some(if shift {';'} else {','}),
+        KeyCode::Period => Some(if shift {':'} else {'.'}),
+        KeyCode::Slash => Some(if shift {'_'} else {'-'}),
+        KeyCode::IntlBackslash => Some(if shift {'>'} else if alt {'|'} else {'<'}),
+        KeyCode::Backquote => Some(if shift {'?'} else {'^'}),
+        KeyCode::Minus => Some(if shift {'?'} else if alt {'\\'} else {'?'}),
+        KeyCode::BracketRight => Some(if shift {'*'} else if alt {'~'} else {'+'}),
+        KeyCode::Backslash => Some(if shift {'\''} else {'#'}),
         KeyCode::Space => Some(' '),
         _ => None,
     }

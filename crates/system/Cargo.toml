@@ -26,5 +26,5 @@ features = [
     "multi_threaded",
     "bevy_core_pipeline",
     "bevy_asset",
-    "bevy_pbr",
+    "bevy_pbr"
 ]

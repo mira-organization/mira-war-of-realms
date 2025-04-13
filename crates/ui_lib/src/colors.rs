@@ -32,7 +32,11 @@ impl Colored {
     }
 
     pub fn main_accent() -> Color {
-        Color::srgba_u8(181, 76, 137, 255)
+        Color::srgba_u8(89, 76, 181, 255)
+    }
+
+    pub fn main_accent_lighter() -> Color {
+        Color::srgba_u8(132, 122, 216, 255)
     }
 
     pub fn transparent() -> Color {
