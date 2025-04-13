@@ -269,32 +269,17 @@ fn on_click(event: Trigger<Pointer<Click>>,
     }
 }
 
-fn update_window_cursor(
-    mut commands: Commands,
-    window: Single<Entity, With<Window>>,
-    cursor_icons: Res<CursorIcons>,
-    query: Query<(&TextField, Entity)>,
-) {
-    for (text_field, entity) in query.iter() {
-        if text_field.is_hovered {
-            commands.entity(*window).insert(cursor_icons.0[3].clone());
-        } else {
-            commands.entity(*window).insert(cursor_icons.0[0].clone());
-        }
-    }
-}
-
 fn update_cursor_visibility(
     time: Res<Time>,
     mut cursor_blink_timer: ResMut<CursorBlinkTimer>,
     mut cursor_query: Query<(&mut Visibility, &mut BackgroundColor, &Parent), With<TextCursor>>,
-    mut input_field_query: Query<(&TextField, &mut InputStyle, &mut BorderColor, &Children), With<TextFieldRoot>>, // Assuming Focus component indicates if field is focused
-    mut text_query: Query<&mut Text, With<TextFieldText>>,
+    mut input_field_query: Query<(&TextField, &mut InputStyle, &InputType, &mut BorderColor, &Children), With<TextFieldRoot>>, // Assuming Focus component indicates if field is focused
+    mut text_query: Query<(&mut Text, &mut TextColor), With<TextFieldText>>,
 ) {
     cursor_blink_timer.timer.tick(time.delta());
 
     for (mut visibility, mut background, parent) in cursor_query.iter_mut() {
-        if let Ok((focus, style, mut border_color, children)) = input_field_query.get_mut(parent.get()) {
+        if let Ok((focus, style, in_type, mut border_color, children)) = input_field_query.get_mut(parent.get()) {
             // Show the cursor if the input field is focused
             if focus.is_focused {
                 let alpha = (cursor_blink_timer.timer.elapsed_secs() * 2.0 * std::f32::consts::PI).sin() * 0.5 + 0.5;
@@ -305,8 +290,13 @@ fn update_cursor_visibility(
 
                     *visibility = Visibility::Visible;
                     for child in children.iter() {
-                        if let Ok(mut text) = text_query.get_mut(*child) {
-                            text.0 = focus.text.clone();
+                        if let Ok((mut text, _)) = text_query.get_mut(*child) {
+                            if in_type.eq(&InputType::Password) {
+                                let masked_text: String = "*".repeat(focus.text.chars().count());
+                                text.0 = masked_text;
+                            } else {
+                                text.0 = focus.text.clone();
+                            }
                         }
                     }
                 }
@@ -315,9 +305,10 @@ fn update_cursor_visibility(
                     border_color.0 = style.border_color;
                     *visibility = Visibility::Hidden;
                     for child in children.iter() {
-                        if let Ok(mut text) = text_query.get_mut(*child) {
+                        if let Ok((mut text, mut color)) = text_query.get_mut(*child) {
                             if focus.text.is_empty() {
                                 text.0 = focus.placeholder.clone();
+                                color.0 = style.placeholder_color;
                             }
                         }
                     }
