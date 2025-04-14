@@ -40,7 +40,7 @@ impl Colored {
     }
 
     pub fn transparent() -> Color {
-        Color::srgba(0.0, 0.0, 0.0, 1.0)
+        Color::srgba(0.0, 0.0, 0.0, 0.0)
     }
 
     pub fn green() -> Color {

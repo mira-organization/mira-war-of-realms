@@ -28,7 +28,5 @@ features = [
     "jpeg",
     "bevy_mesh_picking_backend",
     "bevy_picking",
-    "x11",
-    "wayland",
     "bevy_winit"
 ]

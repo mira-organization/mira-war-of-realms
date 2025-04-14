@@ -4,6 +4,7 @@ use bevy::text::FontSmoothing;
 use system::states::GameState;
 use crate::colors::Colored;
 use crate::elements::button::{ButtonStyle, UiButton};
+use crate::elements::check_box::CheckBox;
 use crate::elements::input::{InputStyle, InputType, TextField};
 use crate::Radius;
 
@@ -142,7 +143,7 @@ fn setup_account_screen(
         ui.spawn((
             Node {
                 width: Val::Px(550.0),
-                height: Val::Px(700.0),
+                min_height: Val::Px(450.0),
                 display: Display::Flex,
                 justify_content: JustifyContent::FlexStart,
                 align_items: AlignItems::FlexStart,
@@ -256,6 +257,11 @@ fn setup_account_screen(
                     RenderLayers::layer(1),
                 ));
             });
+
+            ui.spawn((
+                CheckBox::default(),
+                RenderLayers::layer(1),
+            ));
 
             // Account Login Button
             ui.spawn((
