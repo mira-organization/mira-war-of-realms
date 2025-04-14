@@ -132,7 +132,6 @@ fn build_detect_checkbox(
             RenderLayers::layer(1),
             CheckBoxRoot
         ))
-            .observe(on_click)
             .with_children(|builder| {
 
             builder.spawn((
@@ -154,8 +153,8 @@ fn build_detect_checkbox(
                 },
                 BorderColor(style.check_border_color),
                 CheckBoxMark,
-                PickingBehavior::IGNORE
             ))
+                .observe(on_click)
                 .with_children(|child| {
                 child.spawn((
                     Node {
@@ -188,22 +187,25 @@ fn build_detect_checkbox(
 
 fn on_click(
     event: Trigger<Pointer<Click>>,
-    mut query: Query<(&mut UiElementState, &mut CheckBox, &CheckBoxStyle, &mut BorderColor, Entity), With<CheckBox>>,
-    mut inner_query: Query<&mut BackgroundColor, With<DirectMark>>,
+    mut query: Query<(&mut UiElementState, &mut CheckBox, &CheckBoxStyle, &mut BorderColor, &Children), With<CheckBox>>,
+    mut inner_query: Query<(&mut BackgroundColor, &Parent), With<DirectMark>>,
 ) {
     let target = event.target;
-    for (mut state, mut checkbox, style, mut border_color, entity) in query.iter_mut() {
-        if target.eq(&entity) {
-            border_color.0 = style.focus_color;
-            state.selected = true;
-            checkbox.checked = !checkbox.checked;
-            info!("Checkbox clicked: {:?}", checkbox.checked);
+    for (mut state, mut checkbox, style, mut border_color, children) in query.iter_mut() {
+        for child in children.iter() {
+            if target.eq(child) {
+                border_color.0 = style.focus_color;
+                state.selected = true;
+                checkbox.checked = !checkbox.checked;
 
-            for mut background_color in inner_query.iter_mut() {
-                if checkbox.checked {
-                    background_color.0 = style.check_color;
-                } else {
-                    background_color.0 = Colored::transparent();
+                for (mut background_color, parent) in inner_query.iter_mut() {
+                    if parent.get().eq(child) {
+                        if checkbox.checked {
+                            background_color.0 = style.check_color;
+                        } else {
+                            background_color.0 = Colored::transparent();
+                        }
+                    }
                 }
             }
         }

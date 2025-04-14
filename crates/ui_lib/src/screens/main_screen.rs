@@ -6,6 +6,7 @@ use crate::colors::Colored;
 use crate::elements::button::{ButtonStyle, UiButton};
 use crate::elements::check_box::CheckBox;
 use crate::elements::input::{InputStyle, InputType, TextField};
+use crate::elements::slider::Slider;
 use crate::Radius;
 
 #[derive(Component)]
@@ -258,8 +259,12 @@ fn setup_account_screen(
                 ));
             });
 
+            // Remember me
             ui.spawn((
-                CheckBox::default(),
+                CheckBox {
+                    label: String::from("Remember me"),
+                    ..default()
+                },
                 RenderLayers::layer(1),
             ));
 
@@ -322,6 +327,9 @@ fn setup_account_screen(
                     },
                     RenderLayers::layer(1),));
             });
+
+            // Test Slider
+            ui.spawn((Slider::default(), RenderLayers::layer(1)));
 
         });
     });
