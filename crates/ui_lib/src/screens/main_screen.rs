@@ -22,6 +22,9 @@ struct MainOverlay;
 struct MainContent;
 
 #[derive(Component)]
+struct AccountScreen;
+
+#[derive(Component)]
 struct FadeText {
     timer: Timer,
     fading_out: bool,
@@ -47,6 +50,7 @@ impl Plugin for MainScreen {
         app.add_systems(OnEnter(GameState::MainMenu), (create_main_screen, setup_title_menu).chain());
         app.add_systems(Update, (fade_in_overlay, fade_title_text).run_if(in_state(GameState::MainMenu)));
         app.add_systems(OnEnter(MainMenuState::AccountScreen), setup_account_screen);
+        app.add_systems(OnEnter(MainMenuState::MainMenu), setup_main_menu);
     }
 }
 
@@ -166,6 +170,7 @@ fn setup_account_screen(
                 ..default()
             },
             RenderLayers::layer(1),
+            AccountScreen
         )).with_children(|ui| {
             ui.spawn((
                 Text::new("Login to Vogeez"),
@@ -308,9 +313,11 @@ fn setup_account_screen(
                     ..default()
                 },
                 RenderLayers::layer(1),
-            )).observe(|_event: Trigger<Pointer<Click>>| {
-                debug!("Click detected")
-            })
+            ))
+                .observe(|_event: Trigger<Pointer<Click>>, mut next_state: ResMut<NextState<MainMenuState>>| {
+                    debug!("Click detected");
+                    next_state.set(MainMenuState::MainMenu);
+                })
                 .with_children(|inner| {
                 inner.spawn((
                     UiButton("Test Login".to_string()),
@@ -333,6 +340,22 @@ fn setup_account_screen(
 
         });
     });
+}
+
+fn setup_main_menu(
+    mut commands: Commands,
+    query: Query<Entity, With<AccountScreen>>,
+    root_query: Query<Entity, With<MainContent>>,
+) {
+    let root = root_query.single();
+    for entity in query.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    commands.entity(root).insert((
+        UiButton("Game Start".to_string()),
+        RenderLayers::layer(1)
+    ));
 }
 
 fn fade_title_text(

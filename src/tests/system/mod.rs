@@ -1,1 +1,2 @@
 mod character_service_tests;
+mod cursor_service_tests;
