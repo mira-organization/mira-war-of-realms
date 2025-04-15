@@ -92,6 +92,9 @@ pub struct ChoiceRoot;
 pub struct ChoiceOptionRoot;
 
 #[derive(Component)]
+pub struct SelectedOptionRoot;
+
+#[derive(Component)]
 pub struct ChoiceLayoutBoxRoot;
 
 pub struct ChoiceBoxUiPlugin;
@@ -141,83 +144,12 @@ fn build_detect_choice_box(
             },
             RenderLayers::layer(1),
             ChoiceRoot
-        )).with_children(|builder| {
+        ))
+            .observe(on_click_main_root)
+            .with_children(|builder| {
 
             // Choice Option Field
-            builder.spawn((
-                Node {
-                    width: Val::Px(style.width.resolve(0.0, view_port).unwrap_or(50.0) - 50.),
-                    height: Val::Percent(100.),
-                    display: Display::Flex,
-                    justify_content: JustifyContent::FlexStart,
-                    flex_direction: FlexDirection::Row,
-                    column_gap: Val::Px(10.),
-                    align_items: AlignItems::Center,
-                    padding: UiRect::all(Val::Percent(8.)),
-                    ..default()
-                },
-                BorderRadius {
-                    top_right: Val::Px(0.),
-                    bottom_right: Val::Px(0.),
-                    top_left: style.border_radius.top_left,
-                    bottom_left: style.border_radius.bottom_left,
-                },
-                BackgroundColor(style.background_color),
-                RenderLayers::layer(1),
-            )).with_children(|builder| {
-
-                if let Some(icon) = choice_box.value.icon.clone() {
-                    builder.spawn((
-                        ImageNode {
-                            image: icon,
-                            ..default()
-                        },
-                        RenderLayers::layer(1),
-                    ));
-                }
-
-                builder.spawn((
-                    Text::new(choice_box.value.label.clone()),
-                    TextColor(Colored::font_black_100()),
-                    TextFont {
-                        font_size: 16.,
-                        ..default()
-                    },
-                    RenderLayers::layer(1),
-                ));
-
-            });
-
-            // Icon for drop down
-            builder.spawn((
-                Node {
-                    width: Val::Px(50.),
-                    height: Val::Percent(100.),
-                    display: Display::Flex,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                BackgroundColor(Colored::blue_white()),
-                BorderRadius {
-                    top_right: style.border_radius.top_right,
-                    bottom_right: style.border_radius.bottom_right,
-                    top_left: Val::Px(0.),
-                    bottom_left: Val::Px(0.),
-                },
-                RenderLayers::layer(1),
-            )).with_children(|builder| {
-                if let Some(icon) = style.drop_icon.clone() {
-                    builder.spawn((
-                        ImageNode {
-                            image: icon,
-                            ..default()
-                        },
-                        RenderLayers::layer(1),
-                        PickingBehavior::IGNORE
-                    ));
-                }
-            });
+            generate_child_selected_option(builder, &style, view_port, &choice_box);
 
             // Option Layout Content
             builder.spawn((
@@ -247,8 +179,10 @@ fn build_detect_choice_box(
                     ..default()
                 },
                 RenderLayers::layer(1),
+                Visibility::Hidden,
                 ChoiceLayoutBoxRoot
-            )).with_children(|builder| {
+            ))
+                .with_children(|builder| {
 
                 for option in choice_box.options.iter() {
                     builder.spawn((
@@ -265,8 +199,13 @@ fn build_detect_choice_box(
                         },
                         BackgroundColor(if option.selected { Colored::main_accent() } else { Colored::white() }),
                         RenderLayers::layer(1),
-                        ChoiceOptionRoot
-                    )).with_children(|builder| {
+                        option.clone(),
+                        ChoiceOptionRoot,
+                    ))
+                        .observe(on_click_option)
+                        .observe(on_enter_option)
+                        .observe(on_leave_option)
+                        .with_children(|builder| {
                         if let Some(icon) = option.icon.clone() {
                             builder.spawn((
                                 ImageNode {
@@ -274,6 +213,7 @@ fn build_detect_choice_box(
                                     ..default()
                                 },
                                 RenderLayers::layer(1),
+                                PickingBehavior::IGNORE
                             ));
                         }
 
@@ -285,6 +225,7 @@ fn build_detect_choice_box(
                                 ..default()
                             },
                             RenderLayers::layer(1),
+                            PickingBehavior::IGNORE
                         ));
                     });
                 }
@@ -293,4 +234,211 @@ fn build_detect_choice_box(
 
         });
     }
+}
+
+fn on_click_main_root(
+    event: Trigger<Pointer<Click>>,
+    mut query: Query<(&mut Visibility, &Parent), With<ChoiceLayoutBoxRoot>>,
+) {
+    let target = event.target;
+
+    for (mut visibility, parent) in query.iter_mut() {
+        if target.eq(&parent.get()) {
+            if *visibility == Visibility::Hidden {
+                *visibility = Visibility::Visible;
+            } else {
+                *visibility = Visibility::Hidden;
+            }
+        }
+    }
+}
+
+fn on_click_option(
+    event: Trigger<Pointer<Click>>,
+    mut commands: Commands,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    mut param_set: ParamSet<(
+        Query<(Entity, &ChoiceOption, &Parent), With<ChoiceOptionRoot>>,
+        Query<(&mut ChoiceOption, &mut BackgroundColor, &Children), With<ChoiceOptionRoot>>,
+    )>,
+    mut query_text: Query<&mut TextColor>,
+    mut layout_query: Query<(&Children, &Parent, &mut Visibility), With<ChoiceLayoutBoxRoot>>,
+    mut choice_box_query: Query<(&mut ChoiceBox, &ChoiceBoxStyle, &Children, Entity), With<ChoiceRoot>>,
+    selected_query: Query<&SelectedOptionRoot>
+) {
+    let window = window_query.single();
+    let view_port = Vec2::new(window.resolution.width(), window.resolution.height());
+
+    let (clicked_entity, clicked_option_clone, layout_entity) = {
+        let query = param_set.p0();
+        match query.get(event.target) {
+            Ok((entity, option, parent)) => (entity, option.clone(), parent.get()),
+            Err(_) => return,
+        }
+    };
+
+    let mut layout_parent = None;
+
+    if let Ok((option_children, parent, mut visibility)) = layout_query.get_mut(layout_entity) {
+        let option_entities: Vec<Entity> = option_children.iter().cloned().collect();
+        layout_parent = Some(parent);
+
+        for option_entity in option_entities {
+            if let Ok((mut option, mut bg_color, children)) = param_set.p1().get_mut(option_entity) {
+                let is_selected = option_entity == clicked_entity;
+
+                option.selected = is_selected;
+                bg_color.0 = if is_selected { Colored::main_accent() } else { Colored::white() };
+
+                for child in children.iter() {
+                    if let Ok(mut text_color) = query_text.get_mut(*child) {
+                        text_color.0 = if is_selected { Colored::white() } else { Colored::font_black_100() };
+                    }
+                }
+
+                *visibility = Visibility::Hidden;
+            }
+        }
+    }
+
+    if let Some(parent) = layout_parent {
+        if let Ok((mut choice_box, style, children, entity)) = choice_box_query.get_mut(parent.get()) {
+            choice_box.value = clicked_option_clone;
+            for child in children.iter() {
+                if selected_query.get(*child).is_ok() {
+                    commands.entity(*child).despawn_recursive();
+                }
+            }
+
+            commands.entity(entity).with_children(|builder| {
+                generate_child_selected_option(builder, style, view_port, &choice_box);
+            });
+        }
+    }
+}
+
+
+fn on_enter_option(
+    event: Trigger<Pointer<Over>>,
+    mut option_query: Query<(&mut BackgroundColor, &ChoiceOption, &Children), With<ChoiceOptionRoot>>,
+    mut query_text_base: Query<&mut TextColor>,
+) {
+    if let Ok((mut background, option, children)) = option_query.get_mut(event.target) {
+        if option.selected {
+            background.0 = Colored::main_accent();
+        } else {
+            background.0 = Colored::main_accent_lighter();
+        }
+        for child in children.iter() {
+            if let Ok(mut text_color) = query_text_base.get_mut(*child) {
+                text_color.0 = Colored::white();
+            }
+        }
+    }
+}
+
+fn on_leave_option(
+    event: Trigger<Pointer<Out>>,
+    mut option_query: Query<(&mut BackgroundColor, &ChoiceOption, &Children), With<ChoiceOptionRoot>>,
+    mut query_text_base: Query<&mut TextColor>,
+) {
+    if let Ok((mut background, option, children)) = option_query.get_mut(event.target) {
+        if option.selected {
+            background.0 = Colored::main_accent();
+        } else {
+            background.0 = Colored::white();
+        }
+        for child in children.iter() {
+            if let Ok(mut text_color) = query_text_base.get_mut(*child) {
+                if option.selected {
+                    text_color.0 = Colored::white();
+                } else {
+                    text_color.0 = Colored::font_black_100();
+                }
+            }
+        }
+    }
+}
+
+fn generate_child_selected_option(builder: &mut ChildBuilder, style: &ChoiceBoxStyle, view_port: Vec2, choice_box: &ChoiceBox) {
+    builder.spawn((
+        Node {
+            width: Val::Px(style.width.resolve(0.0, view_port).unwrap_or(50.0) - 50.),
+            height: Val::Percent(100.),
+            display: Display::Flex,
+            justify_content: JustifyContent::FlexStart,
+            flex_direction: FlexDirection::Row,
+            column_gap: Val::Px(10.),
+            align_items: AlignItems::Center,
+            padding: UiRect::all(Val::Percent(8.)),
+            ..default()
+        },
+        BorderRadius {
+            top_right: Val::Px(0.),
+            bottom_right: Val::Px(0.),
+            top_left: style.border_radius.top_left,
+            bottom_left: style.border_radius.bottom_left,
+        },
+        BackgroundColor(style.background_color),
+        RenderLayers::layer(1),
+        PickingBehavior::IGNORE,
+        SelectedOptionRoot
+    )).with_children(|builder| {
+
+        if let Some(icon) = choice_box.value.icon.clone() {
+            builder.spawn((
+                ImageNode {
+                    image: icon,
+                    ..default()
+                },
+                RenderLayers::layer(1),
+                PickingBehavior::IGNORE,
+            ));
+        }
+
+        builder.spawn((
+            Text::new(choice_box.value.label.clone()),
+            TextColor(Colored::font_black_100()),
+            TextFont {
+                font_size: 16.,
+                ..default()
+            },
+            RenderLayers::layer(1),
+            PickingBehavior::IGNORE,
+        ));
+
+    });
+
+    // Icon for drop down
+    builder.spawn((
+        Node {
+            width: Val::Px(50.),
+            height: Val::Percent(100.),
+            display: Display::Flex,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        BackgroundColor(Colored::blue_white()),
+        BorderRadius {
+            top_right: style.border_radius.top_right,
+            bottom_right: style.border_radius.bottom_right,
+            top_left: Val::Px(0.),
+            bottom_left: Val::Px(0.),
+        },
+        RenderLayers::layer(1),
+        PickingBehavior::IGNORE,
+        SelectedOptionRoot
+    )).with_children(|builder| {
+        if let Some(icon) = style.drop_icon.clone() {
+            builder.spawn((
+                ImageNode {
+                    image: icon,
+                    ..default()
+                },
+                RenderLayers::layer(1),
+                PickingBehavior::IGNORE
+            ));
+        }
+    });
 }
