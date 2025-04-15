@@ -308,8 +308,8 @@ fn setup_account_screen(
                     ..default()
                 },
                 RenderLayers::layer(1),
-            )).observe(|event: Trigger<Pointer<Click>>, mut next_state: ResMut<NextState<GameState>>| {
-
+            )).observe(|_event: Trigger<Pointer<Click>>| {
+                debug!("Click detected")
             })
                 .with_children(|inner| {
                 inner.spawn((
