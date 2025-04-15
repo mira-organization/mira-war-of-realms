@@ -5,6 +5,7 @@ use system::states::GameState;
 use crate::colors::Colored;
 use crate::elements::button::{ButtonStyle, UiButton};
 use crate::elements::check_box::CheckBox;
+use crate::elements::choice_box::{ChoiceBox, ChoiceBoxStyle};
 use crate::elements::input::{InputStyle, InputType, TextField};
 use crate::elements::slider::Slider;
 use crate::Radius;
@@ -142,6 +143,7 @@ fn setup_title_menu(
 fn setup_account_screen(
     mut commands: Commands,
     root_query: Query<Entity, With<MainContent>>,
+    asset_server: Res<AssetServer>,
 ) {
     let root = root_query.single();
     commands.entity(root).with_children(|ui| {
@@ -338,6 +340,15 @@ fn setup_account_screen(
             // Test Slider
             ui.spawn((Slider::default(), RenderLayers::layer(1)));
 
+            // Test Choice
+            ui.spawn((
+                ChoiceBox::default(),
+                ChoiceBoxStyle {
+                    drop_icon: Some(asset_server.load("images/icons/drop-down.png")),
+                    ..default()
+                },
+                RenderLayers::layer(1)
+            ));
         });
     });
 }

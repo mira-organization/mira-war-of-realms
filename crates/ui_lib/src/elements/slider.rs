@@ -74,9 +74,9 @@ pub struct SliderThumb {
     pub current_x: f32,
 }
 
-pub struct SliderUIPlugin;
+pub struct SliderUiPlugin;
 
-impl Plugin for SliderUIPlugin {
+impl Plugin for SliderUiPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Slider>();
         app.register_type::<SliderStyle>();
