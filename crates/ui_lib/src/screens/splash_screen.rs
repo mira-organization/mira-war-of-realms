@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 use system::states::GameState;
-use crate::colors::{BLACK, WHITE};
+use crate::colors::Colored;
 
 #[derive(Component)]
 struct SplashRoot;
@@ -62,7 +62,7 @@ fn create_studio_screen(mut commands: Commands) {
             flex_direction: FlexDirection::Column,
             ..default()
         },
-        BackgroundColor(BLACK),
+        BackgroundColor(Colored::main_gray()),
         ZIndex(1),
         RenderLayers::layer(1)
     ))
@@ -74,7 +74,7 @@ fn create_studio_screen(mut commands: Commands) {
                     font_size: 48.0,
                     ..default()
                 },
-                TextColor(WHITE),
+                TextColor(Colored::white()),
                 RenderLayers::layer(1),
             ));
         });
@@ -87,7 +87,7 @@ fn create_studio_screen(mut commands: Commands) {
             height: Val::Percent(100.0),
             ..default()
         },
-        BackgroundColor(BLACK),
+        BackgroundColor(Colored::main_gray()),
         ZIndex(10),
         RenderLayers::layer(1),
     ));
@@ -155,7 +155,7 @@ fn splash_screen_update(
                                 font_size: 20.0,
                                 ..default()
                             },
-                            TextColor(WHITE),
+                            TextColor(Colored::white()),
                             RenderLayers::layer(1),
                         ));
 
@@ -198,7 +198,7 @@ fn splash_screen_update(
                     commands.entity(fade_entity).despawn_recursive();
                 }
 
-                next_game_state.set(GameState::TitleScreen);
+                next_game_state.set(GameState::MainMenu);
             }
         }
     }

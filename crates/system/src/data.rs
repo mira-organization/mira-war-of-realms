@@ -1,6 +1,7 @@
 use std::fs;
 use bevy::asset::UntypedAssetId;
 use bevy::prelude::{Entity, Resource};
+use bevy::winit::cursor::CursorIcon;
 use serde::Deserialize;
 use crate::commons::Character;
 
@@ -116,3 +117,6 @@ pub struct CurrentWorldCharacter(pub Option<(Entity, Character)>);
 
 #[derive(Resource, Default, Clone, Debug)]
 pub struct AssetsToLoad(pub Vec<UntypedAssetId>);
+
+#[derive(Resource, Default, Clone, Debug)]
+pub struct CursorIcons(pub Vec<CursorIcon>);
