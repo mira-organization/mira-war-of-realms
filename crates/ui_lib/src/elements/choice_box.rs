@@ -1,6 +1,6 @@
+use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
-use bevy::window::PrimaryWindow;
 use crate::{Radius, UiGenID};
 use crate::colors::Colored;
 use crate::UiElementState;
@@ -72,7 +72,7 @@ pub struct ChoiceBoxStyle {
 impl Default for ChoiceBoxStyle {
     fn default() -> Self {
         Self {
-            width: Val::Px(300.),
+            width: Val::Percent(100.),
             height: Val::Px(50.),
             background_color: Colored::white(),
             border_color: Colored::main_gray(),
@@ -104,24 +104,21 @@ impl Plugin for ChoiceBoxUiPlugin {
         app.register_type::<ChoiceBox>();
         app.register_type::<ChoiceOption>();
         app.register_type::<ChoiceBoxStyle>();
-        app.add_systems(Update, build_detect_choice_box);
+        app.add_systems(Update, (build_detect_choice_box, handle_scroll_events));
     }
 }
 
 fn build_detect_choice_box(
     mut commands: Commands,
     query: Query<(Entity, &ChoiceBox, &ChoiceBoxStyle), Without<ChoiceRoot>>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
-
-    let window = window_query.single();
-    let view_port = Vec2::new(window.resolution.width(), window.resolution.height());
-
     for (entity, choice_box, style) in query.iter() {
         commands.entity(entity).insert((
             Node {
                 width: style.width,
                 min_width: Val::Px(125.0),
+                display: Display::Flex,
+                flex_direction: FlexDirection::Row,
                 height: style.height,
                 min_height: Val::Px(25.),
                 margin: UiRect::top(Val::Px(30.)),
@@ -149,7 +146,7 @@ fn build_detect_choice_box(
             .with_children(|builder| {
 
             // Choice Option Field
-            generate_child_selected_option(builder, &style, view_port, &choice_box);
+            generate_child_selected_option(builder, &style, &choice_box);
 
             // Option Layout Content
             builder.spawn((
@@ -189,12 +186,14 @@ fn build_detect_choice_box(
                         Node {
                             width: Val::Percent(100.),
                             height: Val::Px(50.),
-                            padding: UiRect::all(Val::Percent(8.)),
+                            min_height: Val::Px(50.),
+                            padding: UiRect::left(Val::Px(15.)),
                             display: Display::Flex,
                             justify_content: JustifyContent::FlexStart,
                             align_items: AlignItems::Center,
                             flex_direction: FlexDirection::Row,
                             column_gap: Val::Px(10.),
+                            flex_grow: 1.0,
                             ..default()
                         },
                         BackgroundColor(if option.selected { Colored::main_accent() } else { Colored::white() }),
@@ -256,7 +255,6 @@ fn on_click_main_root(
 fn on_click_option(
     event: Trigger<Pointer<Click>>,
     mut commands: Commands,
-    window_query: Query<&Window, With<PrimaryWindow>>,
     mut param_set: ParamSet<(
         Query<(Entity, &ChoiceOption, &Parent), With<ChoiceOptionRoot>>,
         Query<(&mut ChoiceOption, &mut BackgroundColor, &Children), With<ChoiceOptionRoot>>,
@@ -266,9 +264,6 @@ fn on_click_option(
     mut choice_box_query: Query<(&mut ChoiceBox, &ChoiceBoxStyle, &Children, Entity), With<ChoiceRoot>>,
     selected_query: Query<&SelectedOptionRoot>
 ) {
-    let window = window_query.single();
-    let view_port = Vec2::new(window.resolution.width(), window.resolution.height());
-
     let (clicked_entity, clicked_option_clone, layout_entity) = {
         let query = param_set.p0();
         match query.get(event.target) {
@@ -311,7 +306,7 @@ fn on_click_option(
             }
 
             commands.entity(entity).with_children(|builder| {
-                generate_child_selected_option(builder, style, view_port, &choice_box);
+                generate_child_selected_option(builder, style, &choice_box);
             });
         }
     }
@@ -360,17 +355,65 @@ fn on_leave_option(
     }
 }
 
-fn generate_child_selected_option(builder: &mut ChildBuilder, style: &ChoiceBoxStyle, view_port: Vec2, choice_box: &ChoiceBox) {
+fn handle_scroll_events(
+    mut scroll_events: EventReader<MouseWheel>,
+    mut layout_query: Query<(Entity, &Visibility, &Children), With<ChoiceLayoutBoxRoot>>,
+    mut option_query: Query<(&mut Node, &Parent), With<ChoiceOptionRoot>>,
+    time: Res<Time>,
+) {
+    let mut max_scroll = -0.0;
+    let min_scroll = 0.0;
+
+    let smooth_factor = 20.;
+
+    for event in scroll_events.read() {
+        for (layout_entity, visibility, children) in layout_query.iter_mut() {
+            if *visibility != Visibility::Visible {
+                continue;
+            }
+
+            if children.len() > 3 {
+                max_scroll = -50.0 * (children.len() - 3) as f32;
+            }
+
+            let scroll_amount = match event.unit {
+                MouseScrollUnit::Line => event.y * 25.0,
+                MouseScrollUnit::Pixel => event.y,
+            };
+
+            let inverted_scroll_amount = scroll_amount;
+
+            for (mut style, parent) in option_query.iter_mut() {
+                if parent.get() != layout_entity {
+                    continue;
+                }
+
+                let current_offset = match style.top {
+                    Val::Px(val) => val,
+                    _ => 0.0,
+                };
+
+                let target_offset = (current_offset + inverted_scroll_amount)
+                    .clamp(max_scroll, min_scroll);
+
+                let smoothed_offset = current_offset + (target_offset - current_offset) * smooth_factor * time.delta_secs();
+
+                style.top = Val::Px(smoothed_offset);
+            }
+        }
+    }
+}
+
+fn generate_child_selected_option(builder: &mut ChildBuilder, style: &ChoiceBoxStyle,  choice_box: &ChoiceBox) {
     builder.spawn((
         Node {
-            width: Val::Px(style.width.resolve(0.0, view_port).unwrap_or(50.0) - 50.),
-            height: Val::Percent(100.),
+            flex_grow: 1.0,
             display: Display::Flex,
             justify_content: JustifyContent::FlexStart,
             flex_direction: FlexDirection::Row,
             column_gap: Val::Px(10.),
             align_items: AlignItems::Center,
-            padding: UiRect::all(Val::Percent(8.)),
+            padding: UiRect::left(Val::Px(15.)),
             ..default()
         },
         BorderRadius {
@@ -413,6 +456,8 @@ fn generate_child_selected_option(builder: &mut ChildBuilder, style: &ChoiceBoxS
     builder.spawn((
         Node {
             width: Val::Px(50.),
+            min_width: Val::Px(25.),
+            max_width: Val::Px(50.),
             height: Val::Percent(100.),
             display: Display::Flex,
             justify_content: JustifyContent::Center,
