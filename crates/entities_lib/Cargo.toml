@@ -16,7 +16,7 @@ bevy_rapier3d = {version = "0.29.0", features = ["simd-nightly", "debug-render-3
 bevy_atmosphere = {version = "0.12.2", features = ["default"]}
 bevy_mod_outline = {version = "0.9.1"}
 
-rand = { version = "0.9.0" }
+rand = { version = "0.9.1" }
 
 [dependencies.bevy]
 version = "0.15.3"
