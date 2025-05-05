@@ -58,7 +58,7 @@ environment_lib = { path = "crates/environment_lib" }
 entities_lib = { path = "crates/entities_lib" }
 battle_lib = { path = "crates/battle_lib" }
 
-chrono = {version = "0.4.40", features = ["clock"]}
+chrono = {version = "0.4.41", features = ["clock"]}
 
 [dependencies.bevy]
 version = "0.15.3"
